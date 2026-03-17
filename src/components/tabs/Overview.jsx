@@ -142,13 +142,13 @@ function CohortCard({ cohort, prevCohort, isLast }) {
       {cohort.leadsCount > 0 && (
         <div style={{ marginTop: 14 }}>
           {[
-            ['Lead nuevo', 'nuevo', 'rgba(45,122,255,0.3)'],
+            ['Lead nuevo', 'Lead nuevo', 'rgba(45,122,255,0.3)'],
             ['En conversación', 'En conversación', 'rgba(45,122,255,0.45)'],
             ['Cliente potencial', 'Cliente potencial', 'rgba(45,122,255,0.55)'],
             ['Negociando', 'Negociando', 'rgba(45,122,255,0.7)'],
             ['Ganado', 'Ganado', ACCENT],
           ].map(([label, key, color]) => (
-            <FunnelBar key={key} label={label} value={cohort.funnelCount[key] || cohort.funnelCount['Lead nuevo'] && key === 'nuevo' ? (cohort.funnelCount[key] || cohort.funnelCount['Lead nuevo']) : 0} total={cohort.funnelCount['Lead nuevo'] || cohort.leadsCount} color={color} />
+            <FunnelBar key={key} label={label} value={cohort.funnelCount[key] || 0} total={cohort.funnelCount['Lead nuevo'] || cohort.leadsCount} color={color} />
           ))}
         </div>
       )}
