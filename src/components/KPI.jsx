@@ -13,20 +13,29 @@ export function Delta({ current, previous, inverse = false }) {
   )
 }
 
-export function KPI({ label, value, subtitle, accent, delta, highlight, ring }) {
+export function KPI({ label, value, subtitle, accent, delta, highlight, ring, fontWeight, onClick }) {
+  const fw = fontWeight || 700
+  const clickable = !!onClick
   return (
-    <div style={{
-      background: highlight ? 'rgba(45,122,255,0.06)' : 'rgba(255,255,255,0.025)',
-      border: highlight ? '1px solid rgba(45,122,255,0.2)' : ring ? '1px solid rgba(45,122,255,0.15)' : '1px solid rgba(255,255,255,0.06)',
-      borderRadius: 14, padding: highlight ? '22px 24px' : '16px 18px',
-      display: 'flex', flexDirection: 'column', gap: 3,
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: highlight ? 'rgba(45,122,255,0.08)' : ring ? 'rgba(45,122,255,0.05)' : 'rgba(255,255,255,0.06)',
+        border: highlight ? '1px solid rgba(45,122,255,0.25)' : ring ? '1px solid rgba(45,122,255,0.18)' : '1px solid rgba(255,255,255,0.13)',
+        borderRadius: 14, padding: highlight ? '22px 24px' : '16px 18px',
+        display: 'flex', flexDirection: 'column', gap: 3,
+        cursor: clickable ? 'pointer' : 'default',
+        transition: clickable ? 'border-color 0.15s, background 0.15s' : undefined,
+      }}
+      onMouseEnter={clickable ? e => { e.currentTarget.style.borderColor = 'rgba(45,122,255,0.45)' } : undefined}
+      onMouseLeave={clickable ? e => { e.currentTarget.style.borderColor = highlight ? 'rgba(45,122,255,0.25)' : ring ? 'rgba(45,122,255,0.18)' : 'rgba(255,255,255,0.13)' } : undefined}
+    >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.3)', fontWeight: 600 }}>{label}</span>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{label}</span>
         {delta}
       </div>
-      <span style={{ fontSize: highlight ? 32 : ring ? 26 : 22, fontWeight: 800, color: accent || '#fff', letterSpacing: -0.5 }}>{value}</span>
-      {subtitle && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', fontWeight: 500 }}>{subtitle}</span>}
+      <span style={{ fontSize: highlight ? 32 : ring ? 26 : 22, fontWeight: fw, color: accent || 'rgba(255,255,255,0.92)', letterSpacing: -0.5 }}>{value}</span>
+      {subtitle && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>{subtitle}</span>}
     </div>
   )
 }

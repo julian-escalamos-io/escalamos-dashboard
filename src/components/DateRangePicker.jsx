@@ -7,64 +7,88 @@ const ACCENT = '#2D7AFF'
 const ACCENT_DIM = 'rgba(45,122,255,0.15)'
 const ACCENT_BORDER = 'rgba(45,122,255,0.3)'
 
-// Minimal CSS for DayPicker dark theme
 const pickerCss = `
 .rdp-root {
-  --rdp-accent-color: ${ACCENT};
-  --rdp-accent-background-color: rgba(45,122,255,0.15);
+  --rdp-accent-color: #2D7AFF;
+  --rdp-accent-background-color: rgba(45,122,255,0.18);
+  --rdp-day-width: 36px;
+  --rdp-day-height: 36px;
+  --rdp-selected-border: none;
   font-family: 'Montserrat', sans-serif;
   font-size: 12px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.75);
+  margin: 0;
 }
-.rdp-day_button {
-  color: rgba(255,255,255,0.7);
-  border-radius: 6px;
-}
-.rdp-day_button:hover {
-  background: rgba(45,122,255,0.2);
-  color: #fff;
-}
-.rdp-selected .rdp-day_button {
-  background: ${ACCENT};
-  color: #fff;
-}
-.rdp-range_middle .rdp-day_button {
-  background: rgba(45,122,255,0.12);
-  color: rgba(255,255,255,0.8);
-  border-radius: 0;
-}
-.rdp-range_start .rdp-day_button, .rdp-range_end .rdp-day_button {
-  background: ${ACCENT};
-  color: #fff;
-}
+.rdp-months { display: flex; gap: 24px; }
 .rdp-month_caption {
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.55);
   font-weight: 700;
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1px;
+  padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
-.rdp-nav button {
-  color: rgba(255,255,255,0.4);
+.rdp-nav { display: flex; gap: 4px; }
+.rdp-button_previous, .rdp-button_next {
   background: transparent;
   border: none;
+  color: rgba(255,255,255,0.35);
   cursor: pointer;
-  padding: 4px 8px;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
 }
-.rdp-nav button:hover { color: #fff; }
+.rdp-button_previous:hover, .rdp-button_next:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.rdp-month_grid { border-collapse: collapse; width: 100%; }
+.rdp-weekdays { display: table-row; }
 .rdp-weekday {
   color: rgba(255,255,255,0.2);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
+  width: 36px;
+  height: 28px;
+  text-align: center;
+  padding: 0;
 }
+.rdp-week { display: table-row; }
+.rdp-day { width: 36px; height: 36px; padding: 1px; text-align: center; }
+.rdp-day_button {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 500;
+  color: rgba(255,255,255,0.65);
+  box-sizing: border-box;
+  transition: background 0.12s, color 0.12s;
+}
+.rdp-day_button:hover { background: rgba(45,122,255,0.2); color: #fff; }
+.rdp-selected .rdp-day_button { background: #2D7AFF; color: #fff; font-weight: 700; }
+.rdp-range_start .rdp-day_button, .rdp-range_end .rdp-day_button { background: #2D7AFF; color: #fff; font-weight: 700; }
+.rdp-range_middle .rdp-day_button { background: rgba(45,122,255,0.15); color: rgba(255,255,255,0.85); border-radius: 0; }
 .rdp-outside .rdp-day_button { color: rgba(255,255,255,0.15); }
-.rdp-today .rdp-day_button { color: ${ACCENT}; font-weight: 800; }
+.rdp-today .rdp-day_button { color: #2D7AFF; font-weight: 800; }
+.rdp-disabled .rdp-day_button { color: rgba(255,255,255,0.1); cursor: default; }
 `
 
 export function DateRangePicker({ value, onChange }) {
   const [open, setOpen] = useState(false)
-  const [activePreset, setActivePreset] = useState('mtd')
+  const [activeKey, setActiveKey] = useState('mtd')
   const [range, setRange] = useState(null)
   const ref = useRef(null)
 
@@ -77,95 +101,82 @@ export function DateRangePicker({ value, onChange }) {
   }, [])
 
   function applyPreset(preset) {
-    const r = preset.getRange()
-    setActivePreset(preset.key)
+    setActiveKey(preset.key)
     setRange(null)
-    onChange(r)
-    if (preset.key !== 'custom') setOpen(false)
+    setOpen(false)
+    onChange(preset.getRange())
+  }
+
+  function handleSelectClick() {
+    setActiveKey('custom')
+    setOpen(!open)
   }
 
   function handleRangeSelect(r) {
     setRange(r)
-    setActivePreset('custom')
     if (r?.from && r?.to) {
       onChange({ start: r.from, end: r.to })
       setOpen(false)
     }
   }
 
-  const displayLabel = activePreset !== 'custom'
-    ? PRESETS.find(p => p.key === activePreset)?.label || 'Período'
-    : value
-      ? `${format(value.start, 'd/M/yy')} → ${format(value.end, 'd/M/yy')}`
-      : 'Rango custom'
+  const customLabel = activeKey === 'custom' && value
+    ? `${format(value.start, 'd/M/yy')} → ${format(value.end, 'd/M/yy')}`
+    : 'Seleccionar'
+
+  const btnBase = {
+    padding: '8px 16px', borderRadius: 8, border: 'none',
+    fontSize: 12, fontWeight: 600, fontFamily: "'Montserrat'",
+    cursor: 'pointer', transition: 'all 0.15s',
+  }
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
       <style>{pickerCss}</style>
-      <button
-        onClick={() => setOpen(!open)}
-        style={{
-          padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
-          border: open ? `1px solid ${ACCENT_BORDER}` : '1px solid rgba(255,255,255,0.07)',
-          background: open ? ACCENT_DIM : 'rgba(255,255,255,0.025)',
-          color: open ? ACCENT : 'rgba(255,255,255,0.4)',
-          fontSize: 12, fontWeight: 600, fontFamily: 'Montserrat',
-          display: 'flex', alignItems: 'center', gap: 6,
-        }}
-      >
-        {displayLabel}
-        <span style={{ fontSize: 8, opacity: 0.4 }}>▼</span>
-      </button>
 
-      {open && (
+      {/* Button group */}
+      <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: 3, border: '1px solid rgba(255,255,255,0.04)' }}>
+        {PRESETS.map(p => (
+          <button
+            key={p.key}
+            onClick={() => applyPreset(p)}
+            style={{
+              ...btnBase,
+              background: activeKey === p.key ? ACCENT_DIM : 'transparent',
+              color: activeKey === p.key ? ACCENT : 'rgba(255,255,255,0.25)',
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+        <button
+          onClick={handleSelectClick}
+          style={{
+            ...btnBase,
+            background: activeKey === 'custom' ? ACCENT_DIM : 'transparent',
+            color: activeKey === 'custom' ? ACCENT : 'rgba(255,255,255,0.25)',
+            display: 'flex', alignItems: 'center', gap: 5,
+          }}
+        >
+          {customLabel}
+          <span style={{ fontSize: 8, opacity: 0.5 }}>▼</span>
+        </button>
+      </div>
+
+      {/* Calendar dropdown — only for "Seleccionar" */}
+      {open && activeKey === 'custom' && (
         <div style={{
-          position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 200,
+          position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 200,
           background: '#151820', border: '1px solid rgba(255,255,255,0.08)',
           borderRadius: 12, boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
-          display: 'flex', overflow: 'hidden', minWidth: 540,
+          padding: '16px 20px',
         }}>
-          {/* Presets column */}
-          <div style={{ width: 160, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '12px 8px' }}>
-            <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.2)', fontWeight: 700, padding: '4px 8px 10px' }}>Accesos rápidos</div>
-            {PRESETS.map(p => (
-              <button
-                key={p.key}
-                onClick={() => applyPreset(p)}
-                style={{
-                  display: 'block', width: '100%', padding: '9px 12px',
-                  border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: 7,
-                  background: activePreset === p.key ? ACCENT_DIM : 'transparent',
-                  color: activePreset === p.key ? ACCENT : 'rgba(255,255,255,0.4)',
-                  fontSize: 12, fontWeight: 600, fontFamily: 'Montserrat',
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-            <div style={{ margin: '10px 8px 4px', borderTop: '1px solid rgba(255,255,255,0.06)' }} />
-            <button
-              onClick={() => setActivePreset('custom')}
-              style={{
-                display: 'block', width: '100%', padding: '9px 12px',
-                border: 'none', textAlign: 'left', cursor: 'pointer', borderRadius: 7,
-                background: activePreset === 'custom' ? ACCENT_DIM : 'transparent',
-                color: activePreset === 'custom' ? ACCENT : 'rgba(255,255,255,0.4)',
-                fontSize: 12, fontWeight: 600, fontFamily: 'Montserrat',
-              }}
-            >
-              Rango custom
-            </button>
-          </div>
-
-          {/* Calendar */}
-          <div style={{ padding: '12px 16px', background: '#0f111a' }}>
-            <DayPicker
-              mode="range"
-              selected={range}
-              onSelect={handleRangeSelect}
-              numberOfMonths={2}
-            />
-          </div>
+          <DayPicker
+            mode="range"
+            selected={range}
+            onSelect={handleRangeSelect}
+            numberOfMonths={2}
+          />
         </div>
       )}
     </div>

@@ -18,6 +18,7 @@ export default function App() {
   const [modelFilter, setModelFilter] = useState('todos')
   const currentMonthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
   const [selectedERMonth, setSelectedERMonth] = useState(currentMonthKey)
+  const [finanzasSubTab, setFinanzasSubTab] = useState('pl')
   const [dateRange, setDateRange] = useState(() => PRESETS[0].getRange())
 
   // Cohort month derived from dateRange start — keeps Marketing in sync with the filter
@@ -162,8 +163,8 @@ export default function App() {
               <option value="Financiera" style={{ background: '#1a2236', color: '#fff' }}>Financiera</option>
             </select>
 
-            {/* ER month selector (Overview / Fulfillment / Finanzas) */}
-            {activeModule !== 'marketing' && er.length > 0 && (
+            {/* ER month selector — ocultar en Finanzas > Egresos (sin filtro de fecha) */}
+            {activeModule !== 'marketing' && !(activeModule === 'finanzas' && finanzasSubTab === 'egresos') && er.length > 0 && (
               <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.06)' }}>
                 {er.slice(-6).map(r => {
                   const isActive = (selectedERMonth || er[er.length - 1]?.monthKey) === r.monthKey
@@ -220,7 +221,7 @@ export default function App() {
                 <FulfillmentModule servicios={servicios} modelFilter={modelFilter} />
               )}
               {activeModule === 'finanzas' && (
-                <FinanzasModule er={er} egresos={egresos} selectedERMonth={selectedERMonth} modelFilter={modelFilter} />
+                <FinanzasModule er={er} egresos={egresos} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
               )}
             </>
           )}

@@ -93,17 +93,17 @@ function sortEgresos(rows) {
 }
 
 function EgresosTable({ rows, totalLabel, totalColor }) {
-  const total = rows.reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0)
-  const totalMonto = rows.reduce((s, e) => s + (e.monto || 0), 0)
+  const totalMes = rows.reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0)
 
   const cols = [
+    { key: 'modelo', label: 'Modelo', render: v => <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{v || '—'}</span> },
+    { key: 'tipoGasto', label: 'Tipo', render: v => <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{v || '—'}</span> },
+    { key: 'recurrencia', label: 'Recurrencia', render: v => <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{v || '—'}</span> },
     { key: 'proveedor', label: 'Proveedor' },
     { key: 'servicio', label: 'Servicio' },
-    { key: 'recurrencia', label: 'Recurrencia' },
-    { key: 'area', label: 'Área' },
-    { key: 'modelo', label: 'Modelo' },
+    { key: 'area', label: 'Área', render: v => <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{v || '—'}</span> },
     { key: '_total', label: 'Total', align: 'right', render: (_, row) => (
-      <span style={{ color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>
+      <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 500, fontSize: 11 }}>
         {row.monto ? fmt(row.monto) : '—'}
       </span>
     )},
@@ -116,16 +116,10 @@ function EgresosTable({ rows, totalLabel, totalColor }) {
 
   return (
     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, overflow: 'hidden', marginBottom: 10 }}>
-      <DataTable rows={sortEgresos(rows)} columns={cols} />
-      {/* Total row */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 40, padding: '10px 20px', borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-        {totalMonto > 0 && (
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
-            Total: <strong style={{ color: 'rgba(255,255,255,0.55)' }}>{fmt(totalMonto)}</strong>
-          </span>
-        )}
+      <DataTable rows={sortEgresos(rows)} columns={cols} compact />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 16px', borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
         <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)' }}>
-          {totalLabel}: <strong style={{ color: totalColor }}>{fmt(total)}/mes</strong>
+          {totalLabel}: <strong style={{ color: totalColor }}>{fmt(totalMes)}/mes</strong>
         </span>
       </div>
     </div>
@@ -141,8 +135,8 @@ function EgresosTab({ egresos, modelFilter }) {
     return egresos.filter(e => e.modelo?.toLowerCase() === activeModel.toLowerCase() || e.modelo?.toLowerCase() === 'todos')
   }, [egresos, activeModel])
 
-  const fijos = filtered.filter(e => e.recurrencia?.toLowerCase().includes('fijo'))
-  const variables = filtered.filter(e => !e.recurrencia?.toLowerCase().includes('fijo'))
+  const fijos = filtered.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
+  const variables = filtered.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
 
   const totalFijos = fijos.reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0)
   const totalVariables = variables.reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0)
@@ -198,8 +192,8 @@ function EgresosTab({ egresos, modelFilter }) {
   )
 }
 
-export function FinanzasModule({ er, egresos, selectedERMonth, modelFilter = 'todos' }) {
-  const [subTab, setSubTab] = useState('pl')
+export function FinanzasModule({ er, egresos, selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
+  const setSubTab = onSubTabChange || (() => {})
   const erRows = er || []
   const egresosData = egresos || []
 

@@ -1,6 +1,8 @@
 {
+  "public": true,
   "functions": {
     "api/sheets.js": { "maxDuration": 30 },
-    "api/insights.js": { "maxDuration": 30 }
+    "api/insights.js": { "maxDuration": 30 },
+    "api/thumbnails.js": { "maxDuration": 20 }
   }
 }

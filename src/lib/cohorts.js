@@ -17,6 +17,19 @@ export const FUNNEL_LABELS = [
 ]
 export const FUNNEL_ORDER = FUNNEL_LABELS.map(([l]) => l)
 
+export function normalizeSource(raw) {
+  if (!raw) return '(sin fuente)'
+  const s = raw.toLowerCase().trim()
+  if (s === 'ig' || s.includes('instagram') || s === 'social media' || s === 'social' || s.includes('redes')) return 'Instagram / Social Media'
+  if (s === 'fb' || s.includes('facebook')) return 'Instagram / Social Media'
+  if (s.includes('whatsapp') || s === 'ws' || s === 'wa') return 'WhatsApp'
+  if (s.includes('google') || s === 'gads' || s === 'sem') return 'Google'
+  if (s.includes('referido') || s.includes('referral') || s.includes('referral')) return 'Referido'
+  if (s.includes('linkedin')) return 'LinkedIn'
+  if (s.includes('email') || s.includes('mail')) return 'Email'
+  return raw
+}
+
 export function sf(val, def = 0) {
   if (val === null || val === undefined || val === '' || val === 'N/D') return def
   const n = parseFloat(String(val).replace(',', '').replace('$', ''))
@@ -28,6 +41,17 @@ export function buildCohorts(leadsRows, ventasRows, costosRows, dateRange) {
   const startMonth = start.toISOString().slice(0, 7)
   const endMonth = end.toISOString().slice(0, 7)
   const cohorts = []
+
+  // Build name → source map from all leads (col 1 = name, col 2/3 = source)
+  const leadSourceByName = {}
+  for (const lead of leadsRows) {
+    if (!lead || !lead[1]) continue
+    const name = String(lead[1]).trim().toLowerCase()
+    if (!leadSourceByName[name]) {
+      const raw = (lead[2] && String(lead[2]).trim()) || (lead[3] && String(lead[3]).trim()) || ''
+      if (raw) leadSourceByName[name] = normalizeSource(raw)
+    }
+  }
 
   for (const row of costosRows) {
     if (!row || !row[0]) continue
@@ -58,6 +82,9 @@ export function buildCohorts(leadsRows, ventasRows, costosRows, dateRange) {
     const cac = closuresCount > 0 && gasto > 0 ? gasto / closuresCount : 0
     const grossProfit = margenBruto > 0 && cohortAov > 0 ? cohortAov * margenBruto : 0
     const payback = grossProfit > 0 && cac > 0 ? (cac / grossProfit) * 30 : 0
+    const cicloVentas = closuresCount > 0
+      ? Math.round(cohortVentas.reduce((s, r) => s + (parseInt(r[8]) || 0), 0) / closuresCount)
+      : 0
 
     if (gasto === 0 && leadsCount === 0) continue
 
@@ -75,11 +102,20 @@ export function buildCohorts(leadsRows, ventasRows, costosRows, dateRange) {
       for (let i = 0; i <= stageIdx; i++) funnelCount[FUNNEL_ORDER[i]]++
     }
 
-    // Sources
+    // Sources — leads
     const sourceCounts = {}
     for (const lead of cohortLeads) {
-      const src = (lead[2] && String(lead[2]).trim()) || (lead[3] && String(lead[3]).trim()) || '(sin fuente)'
+      const raw = (lead[2] && String(lead[2]).trim()) || (lead[3] && String(lead[3]).trim()) || ''
+      const src = normalizeSource(raw)
       sourceCounts[src] = (sourceCounts[src] || 0) + 1
+    }
+
+    // Sources — ventas (lookup by contact name from leads map only)
+    const salesSourceCounts = {}
+    for (const r of cohortVentas) {
+      const name = String(r[2] || '').trim().toLowerCase()
+      const src = leadSourceByName[name] || '(sin fuente)'
+      salesSourceCounts[src] = (salesSourceCounts[src] || 0) + 1
     }
 
     // Clients
@@ -105,9 +141,11 @@ export function buildCohorts(leadsRows, ventasRows, costosRows, dateRange) {
       cac: Math.round(cac * 100) / 100,
       grossProfit: Math.round(grossProfit * 100) / 100,
       payback: Math.round(payback * 10) / 10,
+      cicloVentas,
       isOpen: activeCount > 0,
       funnelCount,
       sourceCounts,
+      salesSourceCounts,
       clients,
     })
   }

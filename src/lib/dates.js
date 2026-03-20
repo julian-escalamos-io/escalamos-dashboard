@@ -21,43 +21,16 @@ export const PRESETS = [
   {
     key: 'mtd',
     label: 'Este mes',
-    getRange: () => {
-      const now = new Date()
-      return { start: startOfMonth(now), end: now }
-    },
+    getRange: () => { const now = new Date(); return { start: startOfMonth(now), end: now } },
   },
   {
     key: '1m',
     label: 'Último mes',
-    getRange: () => {
-      const prev = subMonths(new Date(), 1)
-      return { start: startOfMonth(prev), end: endOfMonth(prev) }
-    },
-  },
-  {
-    key: '3m',
-    label: '3 meses',
-    getRange: () => ({
-      start: startOfMonth(subMonths(new Date(), 2)),
-      end: new Date(),
-    }),
-  },
-  {
-    key: 'ytd',
-    label: 'Año actual',
-    getRange: () => ({ start: startOfYear(new Date()), end: new Date() }),
+    getRange: () => { const prev = subMonths(new Date(), 1); return { start: startOfMonth(prev), end: endOfMonth(prev) } },
   },
   {
     key: '12m',
     label: '12 meses',
-    getRange: () => ({
-      start: startOfMonth(subMonths(new Date(), 11)),
-      end: new Date(),
-    }),
-  },
-  {
-    key: 'all',
-    label: 'Todo el historial',
-    getRange: () => ({ start: new Date(2025, 0, 1), end: new Date() }),
+    getRange: () => { const now = new Date(); return { start: subMonths(now, 12), end: now } },
   },
 ]

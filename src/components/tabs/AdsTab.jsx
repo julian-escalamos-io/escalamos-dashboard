@@ -1,6 +1,10 @@
+import useSWR from 'swr'
+
 const ACCENT = '#2D7AFF'
 const DANGER = '#FF6B6B'
 const GREEN = '#34D399'
+
+const fetcher = url => fetch(url).then(r => r.json())
 
 function StageBadge({ stage }) {
   const styles = {
@@ -12,10 +16,33 @@ function StageBadge({ stage }) {
   return <span style={{ fontSize: 10, padding: '3px 10px', borderRadius: 5, background: s.bg, color: s.text, fontWeight: 700, letterSpacing: 0.5 }}>{stage}</span>
 }
 
+function Thumbnail({ src, index }) {
+  if (src) {
+    return (
+      <div style={{ width: 56, height: 56, borderRadius: 10, overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(255,255,255,0.08)' }}>
+        <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => { e.target.style.display = 'none' }} />
+      </div>
+    )
+  }
+  return (
+    <div style={{ width: 56, height: 56, borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'rgba(255,255,255,0.2)', fontSize: 15, fontWeight: 700 }}>
+      {index + 1}
+    </div>
+  )
+}
+
 export function AdsTab({ ads }) {
+  const adIds = ads.map(a => a.adId).join(',')
+  const { data: thumbs } = useSWR(
+    ads.length ? `/api/thumbnails?ids=${adIds}` : null,
+    fetcher,
+    { revalidateOnFocus: false }
+  )
+
   if (!ads || ads.length === 0) {
     return <div style={{ color: 'rgba(255,255,255,0.2)', padding: 40, textAlign: 'center', fontSize: 14 }}>Sin datos de Meta Ads en el período.</div>
   }
+
   return (
     <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: 24 }}>
       <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.2)', fontWeight: 700, marginBottom: 20, display: 'block' }}>
@@ -23,9 +50,7 @@ export function AdsTab({ ads }) {
       </span>
       {ads.map((ad, i) => (
         <div key={ad.adId || i} style={{ display: 'flex', gap: 16, padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.03)', alignItems: 'center' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0, color: 'rgba(255,255,255,0.3)', fontWeight: 700 }}>
-            {(i + 1)}
-          </div>
+          <Thumbnail src={thumbs?.[ad.adId]} index={i} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.75)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ad.adName}</span>
