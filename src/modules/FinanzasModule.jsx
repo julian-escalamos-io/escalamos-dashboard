@@ -220,10 +220,13 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
   const share = isUnit ? shareOf(modelFilter) : null  // null = mostrar 100% en "todos"
   const factor = share !== null ? share : 1
 
-  const totalGrales = todosItems.reduce((s, e) => s + egresoMes(e) * factor, 0)
+  const todosF = todosItems.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
+  const todosV = todosItems.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
+  const totalGralesFijos = todosF.reduce((s, e) => s + egresoMes(e) * factor, 0)
+  const totalGralesVars  = todosV.reduce((s, e) => s + egresoMes(e) * factor, 0)
   const totalFijos  = fijos.reduce((s, e) => s + egresoMes(e), 0)
   const totalVars   = variables.reduce((s, e) => s + egresoMes(e), 0)
-  const total = totalGrales + totalFijos + totalVars
+  const total = totalGralesFijos + totalGralesVars + totalFijos + totalVars
 
   return (
     <>
