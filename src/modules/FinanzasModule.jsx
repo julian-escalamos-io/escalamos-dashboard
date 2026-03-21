@@ -235,6 +235,10 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
 
   const share = isUnit ? shareOf(modelFilter) : 0
 
+  const totalFijos     = fijos.reduce((s, e) => s + egresoMes(e), 0)     + todosFijos.reduce((s, e) => s + egresoMes(e), 0)     * share
+  const totalVariables = variables.reduce((s, e) => s + egresoMes(e), 0) + todosVariables.reduce((s, e) => s + egresoMes(e), 0) * share
+  const total = totalFijos + totalVariables
+
   return (
     <>
       {/* KPIs */}
