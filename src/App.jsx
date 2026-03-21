@@ -139,29 +139,26 @@ export default function App() {
 
           {/* Center/Right: filters */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {/* Model filter — dropdown */}
-            <select
-              value={modelFilter}
-              onChange={e => setModelFilter(e.target.value)}
-              style={{
-                padding: '6px 28px 6px 12px', borderRadius: 8,
-                background: 'rgba(255,255,255,0.04)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: modelFilter !== 'todos' ? '#2D7AFF' : 'rgba(255,255,255,0.5)',
-                fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                fontFamily: "'Montserrat'", outline: 'none',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(255,255,255,0.3)' strokeWidth='1.5' fill='none' strokeLinecap='round'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 10px center',
-              }}
-            >
-              <option value="todos" style={{ background: '#1a2236', color: '#fff' }}>Todos los modelos</option>
-              <option value="Boutique" style={{ background: '#1a2236', color: '#fff' }}>Boutique</option>
-              <option value="Agencia" style={{ background: '#1a2236', color: '#fff' }}>Agencia</option>
-              <option value="Soft" style={{ background: '#1a2236', color: '#fff' }}>Soft</option>
-              <option value="Financiera" style={{ background: '#1a2236', color: '#fff' }}>Financiera</option>
-            </select>
+            {/* Model filter — pills con colores por modelo */}
+            {[
+              { value: 'todos',      label: 'Todos',      bg: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.55)', border: 'rgba(255,255,255,0.12)', activeBg: 'rgba(255,255,255,0.14)' },
+              { value: 'Boutique',   label: 'Boutique',   bg: 'rgba(245,158,11,0.08)',  color: '#F59E0B',               border: 'rgba(245,158,11,0.25)',  activeBg: 'rgba(245,158,11,0.22)' },
+              { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.08)',  color: '#60A5FA',               border: 'rgba(59,130,246,0.25)',  activeBg: 'rgba(59,130,246,0.22)' },
+              { value: 'Soft',       label: 'Soft',       bg: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)', border: 'rgba(255,255,255,0.1)',  activeBg: 'rgba(255,255,255,0.1)'  },
+              { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.08)',  color: '#34D399',               border: 'rgba(16,185,129,0.25)',  activeBg: 'rgba(16,185,129,0.22)' },
+            ].map(m => {
+              const isActive = modelFilter === m.value
+              return (
+                <button key={m.value} onClick={() => setModelFilter(m.value)} style={{
+                  padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'Montserrat'",
+                  background: isActive ? m.activeBg : m.bg,
+                  color: isActive ? m.color : 'rgba(255,255,255,0.35)',
+                  border: `1px solid ${isActive ? m.border : 'rgba(255,255,255,0.06)'}`,
+                  opacity: isActive ? 1 : 0.7,
+                  transition: 'all 0.15s',
+                }}>{m.label}</button>
+              )
+            })}
 
             {/* ER month selector — ocultar en Finanzas > Egresos (sin filtro de fecha) */}
             {activeModule !== 'marketing' && !(activeModule === 'finanzas' && finanzasSubTab === 'egresos') && er.length > 0 && (

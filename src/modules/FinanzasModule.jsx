@@ -102,11 +102,17 @@ function modeloRank(m) {
   return MODELO_ORDER[m] ?? 99
 }
 
+const RECURRENCIA_ORDER = { Mensual: 0, Trimestral: 1, Semestral: 2, Anual: 3 }
+
 function sortEgresos(rows) {
   return [...rows].sort((a, b) => {
     const mo = modeloRank(a.modelo) - modeloRank(b.modelo)
     if (mo !== 0) return mo
-    return (b.montoPorMes || b.monto) - (a.montoPorMes || a.monto)
+    const ro = (RECURRENCIA_ORDER[a.recurrencia] ?? 99) - (RECURRENCIA_ORDER[b.recurrencia] ?? 99)
+    if (ro !== 0) return ro
+    const mo2 = (b.montoPorMes || b.monto || 0) - (a.montoPorMes || a.monto || 0)
+    if (mo2 !== 0) return mo2
+    return String(a.area || '').localeCompare(String(b.area || ''))
   })
 }
 
@@ -144,13 +150,10 @@ function EgresosTable({ rows, totalLabel, totalColor }) {
 }
 
 function EgresosTab({ egresos, modelFilter }) {
-  const [localModel, setLocalModel] = useState('Todos')
-  const activeModel = modelFilter !== 'todos' ? modelFilter : localModel
-
   const filtered = useMemo(() => {
-    if (activeModel === 'Todos') return egresos
-    return egresos.filter(e => e.modelo?.toLowerCase() === activeModel.toLowerCase() || e.modelo?.toLowerCase() === 'todos')
-  }, [egresos, activeModel])
+    if (!modelFilter || modelFilter === 'todos') return egresos
+    return egresos.filter(e => e.modelo?.toLowerCase() === modelFilter.toLowerCase() || e.modelo?.toLowerCase() === 'todos')
+  }, [egresos, modelFilter])
 
   const fijos = filtered.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
   const variables = filtered.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
@@ -177,17 +180,6 @@ function EgresosTab({ egresos, modelFilter }) {
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Total / mes</span>
           <span style={{ fontSize: 22, fontWeight: 700 }}>{fmt(total)}</span>
         </div>
-      </div>
-
-      {/* Filtro por modelo */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-        {MODELOS.map(m => (
-          <button key={m} onClick={() => setLocalModel(m)} style={{
-            padding: '5px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, border: 'none', cursor: 'pointer',
-            background: activeModel === m || (m === 'Todos' && activeModel === 'todos') ? ACCENT : 'rgba(255,255,255,0.05)',
-            color: activeModel === m || (m === 'Todos' && activeModel === 'todos') ? '#fff' : 'rgba(255,255,255,0.4)',
-          }}>{m}</button>
-        ))}
       </div>
 
       {/* Fijos */}
