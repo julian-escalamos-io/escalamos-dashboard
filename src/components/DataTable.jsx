@@ -34,7 +34,7 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
   return (
     <div>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: compact ? 'auto' : '100%', minWidth: compact ? '100%' : undefined, borderCollapse: 'collapse', fontSize: 12 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, tableLayout: compact ? 'fixed' : undefined }}>
           <thead>
             <tr>
               {columns.map(col => (
