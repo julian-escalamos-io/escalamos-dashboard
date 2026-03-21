@@ -127,7 +127,6 @@ function EgresosTable({ rows, totalLabel, totalColor, factor = 1 }) {
     { key: 'recurrencia', label: 'Rec.',       width: 72, render: v => <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{v || '—'}</span> },
     { key: 'proveedor',   label: 'Proveedor',  width: 130, render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
     { key: 'servicio',    label: 'Servicio',   width: 200, wrap: true },
-    { key: 'area',        label: 'Área',       width: 65, render: v => <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{v || '—'}</span> },
     { key: '_total',      label: 'Total',      width: 68, align: 'right', render: (_, row) => (
       <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>{row.monto ? fmt(row.monto * factor) : '—'}</span>
     )},

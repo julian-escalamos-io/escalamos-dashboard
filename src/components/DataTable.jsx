@@ -34,7 +34,7 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
   return (
     <div>
       <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <table style={{ width: compact ? 'auto' : '100%', minWidth: compact ? '100%' : undefined, borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
             <tr>
               {columns.map(col => (
@@ -42,7 +42,7 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
                   key={col.key}
                   onClick={col.sortable !== false ? () => handleSort(col.key) : undefined}
                   style={{
-                    padding: compact ? '6px 10px' : '8px 12px',
+                    padding: compact ? '5px 8px' : '8px 12px',
                     textAlign: col.align || 'left',
                     fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.8,
                     width: col.width || undefined,
@@ -74,7 +74,7 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
               <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                 {columns.map(col => (
                   <td key={col.key} style={{
-                    padding: compact ? '6px 10px' : '10px 12px',
+                    padding: compact ? '4px 8px' : '10px 12px',
                     textAlign: col.align || 'left',
                     color: 'rgba(255,255,255,0.65)',
                     fontWeight: 500,
