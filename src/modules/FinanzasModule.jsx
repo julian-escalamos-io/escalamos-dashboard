@@ -121,12 +121,14 @@ function sortEgresos(rows) {
 }
 
 // Tabla de egresos sin ponderado (reutilizable dentro de GastosGeneralesCard y secciones de unidad)
-function EgresosTable({ rows, totalLabel, totalColor, factor = 1 }) {
+function EgresosTable({ rows, totalLabel, totalColor, factor = 1, showModelo = false }) {
   const totalMes = rows.reduce((s, e) => s + egresoMes(e) * factor, 0)
+  const modeloCol = showModelo ? [{ key: 'modelo', label: 'Modelo', width: 90, render: v => <ModeloBadge value={v} /> }] : []
   const cols = [
+    ...modeloCol,
     { key: 'recurrencia', label: 'Rec.',       width: 72, render: v => <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{v || '—'}</span> },
     { key: 'proveedor',   label: 'Proveedor',  width: 130, render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
-    { key: 'servicio',    label: 'Servicio',   width: 200, wrap: true },
+    { key: 'servicio',    label: 'Servicio',   wrap: true },
     { key: '_total',      label: 'Total',      width: 68, align: 'right', render: (_, row) => (
       <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>{row.monto ? fmt(row.monto * factor) : '—'}</span>
     )},
@@ -253,7 +255,7 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
       {fijos.length > 0 && (
         <>
           <Divider title={`Gastos fijos — ${fmt(totalFijos)}/mes`} />
-          <EgresosTable rows={fijos} totalLabel="Total fijos" totalColor={DANGER} />
+          <EgresosTable rows={fijos} totalLabel="Total fijos" totalColor={DANGER} showModelo={!isUnit} />
         </>
       )}
 
@@ -261,7 +263,7 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
       {variables.length > 0 && (
         <>
           <Divider title={`Gastos variables — ${fmt(totalVars)}/mes`} />
-          <EgresosTable rows={variables} totalLabel="Total variables" totalColor={DANGER} />
+          <EgresosTable rows={variables} totalLabel="Total variables" totalColor={DANGER} showModelo={!isUnit} />
         </>
       )}
     </>
