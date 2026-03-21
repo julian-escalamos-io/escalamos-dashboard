@@ -128,7 +128,7 @@ function EgresosTable({ rows, totalLabel, totalColor, factor = 1, showModelo = f
     ...modeloCol,
     { key: 'recurrencia', label: 'Rec.',       width: 72, render: v => <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{v || '—'}</span> },
     { key: 'proveedor',   label: 'Proveedor',  width: 130, render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
-    { key: 'servicio',    label: 'Servicio',   wrap: true },
+    { key: 'servicio',    label: 'Servicio',   width: 220, wrap: true },
     { key: '_total',      label: 'Total',      width: 68, align: 'right', render: (_, row) => (
       <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>{row.monto ? fmt(row.monto * factor) : '—'}</span>
     )},
