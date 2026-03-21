@@ -80,6 +80,24 @@ function InsightsBlock({ currentER, prevER }) {
 const MODELO_ORDER = { todos: 0, Todos: 0, boutique: 1, Boutique: 1, agencia: 2, Agencia: 2, soft: 3, Soft: 3, financiera: 4, Financiera: 4 }
 const MODELOS = ['Todos', 'Boutique', 'Agencia', 'Soft', 'Financiera']
 
+const MODELO_COLORS = {
+  Todos:      { bg: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.55)', border: 'rgba(255,255,255,0.12)' },
+  Boutique:   { bg: 'rgba(245,158,11,0.15)',  color: '#F59E0B',               border: 'rgba(245,158,11,0.3)'  },
+  Agencia:    { bg: 'rgba(59,130,246,0.15)',  color: '#60A5FA',               border: 'rgba(59,130,246,0.3)'  },
+  Soft:       { bg: 'rgba(15,15,15,0.6)',     color: 'rgba(255,255,255,0.45)', border: 'rgba(255,255,255,0.1)' },
+  Financiera: { bg: 'rgba(16,185,129,0.15)',  color: '#34D399',               border: 'rgba(16,185,129,0.3)'  },
+}
+
+function ModeloBadge({ value }) {
+  const c = MODELO_COLORS[value] || MODELO_COLORS.Todos
+  return (
+    <span style={{
+      display: 'inline-block', padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+      background: c.bg, color: c.color, border: `1px solid ${c.border}`, whiteSpace: 'nowrap',
+    }}>{value || '—'}</span>
+  )
+}
+
 function modeloRank(m) {
   return MODELO_ORDER[m] ?? 99
 }
@@ -96,8 +114,7 @@ function EgresosTable({ rows, totalLabel, totalColor }) {
   const totalMes = rows.reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0)
 
   const cols = [
-    { key: 'modelo',     label: 'Modelo',      width: 90,  render: v => <span style={{ color: 'rgba(255,255,255,0.5)' }}>{v || '—'}</span> },
-    { key: 'tipoGasto',  label: 'Tipo',         width: 60,  render: v => <span style={{ color: 'rgba(255,255,255,0.4)' }}>{v || '—'}</span> },
+    { key: 'modelo', label: 'Modelo', width: 100, render: v => <ModeloBadge value={v} /> },
     { key: 'recurrencia',label: 'Recurrencia',  width: 95,  render: v => <span style={{ color: 'rgba(255,255,255,0.4)' }}>{v || '—'}</span> },
     { key: 'proveedor',  label: 'Proveedor',    width: 160 },
     { key: 'servicio',   label: 'Servicio',     wrap: true },
