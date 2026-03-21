@@ -149,8 +149,8 @@ function EgresosTable({ rows, totalLabel, totalColor, factor = 1 }) {
 // Sección "Gastos generales" — muestra items con modelo="Todos", colapsable por tipo
 function GastosGeneralesCard({ items, share }) {
   const isUnit = share !== null
-  const [openFijos, setOpenFijos] = useState(!isUnit)
-  const [openVars, setOpenVars] = useState(!isUnit)
+  const [openFijos, setOpenFijos] = useState(false)
+  const [openVars, setOpenVars] = useState(false)
   const factor = share !== null ? share : 1
   const pct = share !== null ? Math.round(share * 100) : null
   const fijos = items.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
