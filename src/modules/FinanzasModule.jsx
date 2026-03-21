@@ -149,8 +149,9 @@ function EgresosTable({ rows, totalLabel, totalColor, factor = 1 }) {
 
 // Sección "Gastos generales" — muestra items con modelo="Todos", colapsable por tipo
 function GastosGeneralesCard({ items, share }) {
-  const [openFijos, setOpenFijos] = useState(true)
-  const [openVars, setOpenVars] = useState(true)
+  const isUnit = share !== null
+  const [openFijos, setOpenFijos] = useState(!isUnit)
+  const [openVars, setOpenVars] = useState(!isUnit)
   const factor = share !== null ? share : 1
   const pct = share !== null ? Math.round(share * 100) : null
   const fijos = items.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
@@ -230,16 +231,16 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24, maxWidth: 660 }}>
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos generales / mes</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalGrales)}</span>
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Fijos + variables propios</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalFijos + totalVars)}</span>
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Total / mes</span>
           <span style={{ fontSize: 22, fontWeight: 700 }}>{fmt(total)}</span>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos fijos / mes</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalGrales + totalFijos)}</span>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos variables / mes</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalVars)}</span>
         </div>
       </div>
 
