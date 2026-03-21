@@ -10,7 +10,7 @@ const GREEN = '#34D399'
 const ACCENT_DIM = 'rgba(45,122,255,0.12)'
 const ACCENT_BORDER = 'rgba(45,122,255,0.28)'
 
-const SUB_TABS = [['pl', 'P&L'], ['egresos', 'Egresos']]
+const SUB_TABS = [['pl', 'P&L'], ['egresos', 'Detalle egresos']]
 
 function fmt(v) { return (v !== undefined && v !== null && v !== 0) ? `$${Math.round(v).toLocaleString('en-US')}` : '—' }
 function fmtPct(v) { return v ? `${(v * 100).toFixed(1)}%` : '—' }
