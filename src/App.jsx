@@ -218,7 +218,7 @@ export default function App() {
                 <FulfillmentModule servicios={servicios} modelFilter={modelFilter} />
               )}
               {activeModule === 'finanzas' && (
-                <FinanzasModule er={er} egresos={egresos} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
+                <FinanzasModule er={er} egresos={egresos} servicios={servicios} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
               )}
             </>
           )}
