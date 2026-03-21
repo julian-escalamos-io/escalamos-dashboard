@@ -96,18 +96,18 @@ function EgresosTable({ rows, totalLabel, totalColor }) {
   const totalMes = rows.reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0)
 
   const cols = [
-    { key: 'modelo', label: 'Modelo', render: v => <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{v || '—'}</span> },
-    { key: 'tipoGasto', label: 'Tipo', render: v => <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{v || '—'}</span> },
-    { key: 'recurrencia', label: 'Recurrencia', render: v => <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{v || '—'}</span> },
-    { key: 'proveedor', label: 'Proveedor' },
-    { key: 'servicio', label: 'Servicio' },
-    { key: 'area', label: 'Área', render: v => <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{v || '—'}</span> },
-    { key: '_total', label: 'Total', align: 'right', render: (_, row) => (
-      <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 500, fontSize: 11 }}>
+    { key: 'modelo',     label: 'Modelo',      width: 90,  render: v => <span style={{ color: 'rgba(255,255,255,0.5)' }}>{v || '—'}</span> },
+    { key: 'tipoGasto',  label: 'Tipo',         width: 60,  render: v => <span style={{ color: 'rgba(255,255,255,0.4)' }}>{v || '—'}</span> },
+    { key: 'recurrencia',label: 'Recurrencia',  width: 95,  render: v => <span style={{ color: 'rgba(255,255,255,0.4)' }}>{v || '—'}</span> },
+    { key: 'proveedor',  label: 'Proveedor',    width: 160 },
+    { key: 'servicio',   label: 'Servicio',     wrap: true },
+    { key: 'area',       label: 'Área',         width: 90,  render: v => <span style={{ color: 'rgba(255,255,255,0.4)' }}>{v || '—'}</span> },
+    { key: '_total',     label: 'Total',        width: 80,  align: 'right', render: (_, row) => (
+      <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>
         {row.monto ? fmt(row.monto) : '—'}
       </span>
     )},
-    { key: '_mes', label: '$ / mes', align: 'right', render: (_, row) => (
+    { key: '_mes', label: '$ / mes', width: 80, align: 'right', render: (_, row) => (
       <span style={{ color: totalColor, fontWeight: 700 }}>
         {fmt(row.montoPorMes || row.monto)}
       </span>

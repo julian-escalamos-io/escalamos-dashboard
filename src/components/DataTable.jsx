@@ -42,9 +42,11 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
                   key={col.key}
                   onClick={col.sortable !== false ? () => handleSort(col.key) : undefined}
                   style={{
-                    padding: compact ? '5px 8px' : '8px 12px',
+                    padding: compact ? '6px 10px' : '8px 12px',
                     textAlign: col.align || 'left',
                     fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.8,
+                    width: col.width || undefined,
+                    maxWidth: col.width || undefined,
                     color: sortKey === col.key ? ACCENT : 'rgba(255,255,255,0.25)',
                     fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.06)',
                     cursor: col.sortable !== false ? 'pointer' : 'default',
@@ -72,11 +74,15 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
               <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                 {columns.map(col => (
                   <td key={col.key} style={{
-                    padding: compact ? '4px 8px' : '10px 12px',
+                    padding: compact ? '6px 10px' : '10px 12px',
                     textAlign: col.align || 'left',
                     color: 'rgba(255,255,255,0.65)',
                     fontWeight: 500,
-                    fontSize: compact ? 11 : undefined,
+                    width: col.width || undefined,
+                    maxWidth: col.width || undefined,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: col.wrap ? 'normal' : 'nowrap',
                     verticalAlign: 'middle',
                   }}>
                     {col.render ? col.render(row[col.key], row) : (row[col.key] ?? '—')}
