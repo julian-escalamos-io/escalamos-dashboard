@@ -120,93 +120,79 @@ function sortEgresos(rows) {
   })
 }
 
-// Fila colapsable que muestra el ponderado de gastos "Todos" para una unidad
-function PonderadoRow({ items, share, totalColor }) {
-  const [open, setOpen] = useState(false)
-  const total = items.reduce((s, e) => s + egresoMes(e), 0) * share
-  const pct = Math.round(share * 100)
-
+// Tabla de egresos sin ponderado (reutilizable dentro de GastosGeneralesCard y secciones de unidad)
+function EgresosTable({ rows, totalLabel, totalColor, factor = 1 }) {
+  const totalMes = rows.reduce((s, e) => s + egresoMes(e) * factor, 0)
+  const cols = [
+    { key: 'recurrencia', label: 'Rec.',       width: 72, render: v => <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{v || '—'}</span> },
+    { key: 'proveedor',   label: 'Proveedor',  width: 130, render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
+    { key: 'servicio',    label: 'Servicio',   width: 200, wrap: true },
+    { key: 'area',        label: 'Área',       width: 65, render: v => <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }}>{v || '—'}</span> },
+    { key: '_total',      label: 'Total',      width: 68, align: 'right', render: (_, row) => (
+      <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11 }}>{row.monto ? fmt(row.monto * factor) : '—'}</span>
+    )},
+    { key: '_mes', label: '$ / mes', width: 78, align: 'right', render: (_, row) => (
+      <span style={{ color: totalColor, fontWeight: 700, fontSize: 13 }}>{fmt(egresoMes(row) * factor)}</span>
+    )},
+  ]
   return (
-    <div style={{ marginBottom: 6 }}>
-      <div
-        onClick={() => setOpen(o => !o)}
-        style={{
-          display: 'flex', alignItems: 'center', gap: 10, padding: '7px 14px',
-          background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: open ? '10px 10px 0 0' : 10, cursor: 'pointer', userSelect: 'none',
-        }}
-      >
-        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', width: 12 }}>{open ? '▾' : '▸'}</span>
-        <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
-          Todos ponderado <span style={{ opacity: 0.5, fontSize: 11 }}>({pct}% del MRR)</span>
+    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden', marginBottom: 8 }}>
+      <DataTable rows={sortEgresos(rows)} columns={cols} compact />
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+          {totalLabel}: <strong style={{ color: totalColor }}>{fmt(totalMes)}/mes</strong>
         </span>
-        <span style={{ marginLeft: 'auto', color: totalColor, fontWeight: 700, fontSize: 13 }}>{fmt(total)}/mes</span>
       </div>
-      {open && (
-        <div style={{ border: '1px solid rgba(255,255,255,0.07)', borderTop: 'none', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
-          {sortEgresos(items).map((e, i) => {
-            const weighted = egresoMes(e) * share
-            return (
-              <div key={i} style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '5px 14px',
-                borderBottom: i < items.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-              }}>
-                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, width: 70, flexShrink: 0 }}>{e.recurrencia}</span>
-                <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12, width: 130, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.proveedor}</span>
-                <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.servicio}</span>
-                <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: 11, marginLeft: 8, whiteSpace: 'nowrap' }}>{fmt(egresoMes(e))} × {pct}%</span>
-                <span style={{ color: totalColor, fontSize: 12, fontWeight: 700, width: 65, textAlign: 'right', flexShrink: 0 }}>{fmt(weighted)}</span>
-              </div>
-            )
-          })}
-        </div>
-      )}
     </div>
   )
 }
 
-function EgresosTable({ rows, todosPonderado, share, totalLabel, totalColor }) {
-  const totalMes = rows.reduce((s, e) => s + egresoMes(e), 0)
-  const todosTotal = todosPonderado ? todosPonderado.reduce((s, e) => s + egresoMes(e), 0) * share : 0
-
-  const cols = [
-    { key: 'modelo',      label: 'Modelo',      width: 100, render: v => <ModeloBadge value={v} /> },
-    { key: 'recurrencia', label: 'Recurrencia',  width: 88,  render: v => <span style={{ color: 'rgba(255,255,255,0.4)' }}>{v || '—'}</span> },
-    { key: 'proveedor',   label: 'Proveedor',    width: 140 },
-    { key: 'servicio',    label: 'Servicio',     width: 220, wrap: true },
-    { key: 'area',        label: 'Área',         width: 75,  render: v => <span style={{ color: 'rgba(255,255,255,0.4)' }}>{v || '—'}</span> },
-    { key: '_total',      label: 'Total',        width: 72,  align: 'right', render: (_, row) => (
-      <span style={{ color: 'rgba(255,255,255,0.28)', fontWeight: 500 }}>{row.monto ? fmt(row.monto) : '—'}</span>
-    )},
-    { key: '_mes', label: '$ / mes', width: 72, align: 'right', render: (_, row) => (
-      <span style={{ color: totalColor, fontWeight: 700 }}>{fmt(egresoMes(row))}</span>
-    )},
-  ]
+// Sección "Gastos generales" — muestra items con modelo="Todos", colapsable por tipo
+function GastosGeneralesCard({ items, share }) {
+  const [openFijos, setOpenFijos] = useState(true)
+  const [openVars, setOpenVars] = useState(true)
+  const factor = share !== null ? share : 1
+  const pct = share !== null ? Math.round(share * 100) : null
+  const fijos = items.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
+  const vars  = items.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
+  const totalFijos = fijos.reduce((s, e) => s + egresoMes(e) * factor, 0)
+  const totalVars  = vars.reduce((s, e)  => s + egresoMes(e) * factor, 0)
+  const total = totalFijos + totalVars
 
   return (
-    <div style={{ marginBottom: 10 }}>
-      {todosPonderado && todosPonderado.length > 0 && (
-        <PonderadoRow items={todosPonderado} share={share} totalColor={totalColor} />
-      )}
-      <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, overflow: 'hidden' }}>
-        <DataTable rows={sortEgresos(rows)} columns={cols} compact />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 24, padding: '7px 14px', borderTop: '1px solid rgba(255,255,255,0.07)', background: 'rgba(255,255,255,0.02)' }}>
-          {todosTotal !== 0 && (
-            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-              Propios: <strong style={{ color: totalColor }}>{fmt(totalMes)}/mes</strong>
-            </span>
-          )}
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
-            {totalLabel}: <strong style={{ color: totalColor }}>{fmt(totalMes + todosTotal)}/mes</strong>
-          </span>
-        </div>
+    <div style={{ marginBottom: 28, background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 16, padding: '18px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
+        <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(255,255,255,0.6)', fontWeight: 700 }}>Gastos Generales</span>
+        {pct !== null && <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>ponderado {pct}% del MRR</span>}
+        <span style={{ marginLeft: 'auto', fontSize: 18, fontWeight: 700, color: DANGER }}>{fmt(total)}/mes</span>
       </div>
+
+      {/* Fijos */}
+      {fijos.length > 0 && (
+        <>
+          <div onClick={() => setOpenFijos(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, cursor: 'pointer', userSelect: 'none' }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>{openFijos ? '▾' : '▸'}</span>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700 }}>Fijos — {fmt(totalFijos)}/mes</span>
+          </div>
+          {openFijos && <EgresosTable rows={fijos} totalLabel="Subtotal fijos" totalColor={DANGER} factor={factor} />}
+        </>
+      )}
+
+      {/* Variables */}
+      {vars.length > 0 && (
+        <>
+          <div onClick={() => setOpenVars(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 6, cursor: 'pointer', userSelect: 'none' }}>
+            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>{openVars ? '▾' : '▸'}</span>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700 }}>Variables — {fmt(totalVars)}/mes</span>
+          </div>
+          {openVars && <EgresosTable rows={vars} totalLabel="Subtotal variables" totalColor={DANGER} factor={factor} />}
+        </>
+      )}
     </div>
   )
 }
 
 function EgresosTab({ egresos, modelFilter, servicios }) {
-  // MRR por unidad para calcular ponderado
   const mrrByUnit = useMemo(() => {
     const active = (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo')
     const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, total: 0 }
@@ -220,36 +206,36 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
 
   const shareOf = (unit) => mrrByUnit.total > 0 ? mrrByUnit[unit] / mrrByUnit.total : 0
 
-  const todosItems  = egresos.filter(e => e.modelo?.toLowerCase() === 'todos')
+  const todosItems = egresos.filter(e => e.modelo?.toLowerCase() === 'todos')
   const isUnit = modelFilter && modelFilter !== 'todos'
-  const unitItems   = isUnit ? egresos.filter(e => e.modelo?.toLowerCase() === modelFilter.toLowerCase()) : []
 
-  // En vista "todos" mostramos todos los gastos; en unidad, solo los propios (el ponderado se agrega aparte)
-  const displayItems = isUnit ? unitItems : egresos
+  // Items específicos de la unidad (o de todas las unidades si es "todos")
+  const unitSpecific = isUnit
+    ? egresos.filter(e => e.modelo?.toLowerCase() === modelFilter.toLowerCase())
+    : egresos.filter(e => e.modelo?.toLowerCase() !== 'todos')
 
-  const fijos    = displayItems.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
-  const variables = displayItems.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
+  const fijos    = unitSpecific.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
+  const variables = unitSpecific.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
 
-  const todosFijos    = isUnit ? todosItems.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))    : []
-  const todosVariables = isUnit ? todosItems.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo')) : []
+  const share = isUnit ? shareOf(modelFilter) : null  // null = mostrar 100% en "todos"
+  const factor = share !== null ? share : 1
 
-  const share = isUnit ? shareOf(modelFilter) : 0
-
-  const totalFijos     = fijos.reduce((s, e) => s + egresoMes(e), 0)     + todosFijos.reduce((s, e) => s + egresoMes(e), 0)     * share
-  const totalVariables = variables.reduce((s, e) => s + egresoMes(e), 0) + todosVariables.reduce((s, e) => s + egresoMes(e), 0) * share
-  const total = totalFijos + totalVariables
+  const totalGrales = todosItems.reduce((s, e) => s + egresoMes(e) * factor, 0)
+  const totalFijos  = fijos.reduce((s, e) => s + egresoMes(e), 0)
+  const totalVars   = variables.reduce((s, e) => s + egresoMes(e), 0)
+  const total = totalGrales + totalFijos + totalVars
 
   return (
     <>
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 20, maxWidth: 660 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24, maxWidth: 660 }}>
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos fijos / mes</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalFijos)}</span>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos generales / mes</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalGrales)}</span>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos variables / mes</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: '#FBBF24' }}>{fmt(totalVariables)}</span>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Fijos + variables propios</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalFijos + totalVars)}</span>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '14px 18px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Total / mes</span>
@@ -257,19 +243,22 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
         </div>
       </div>
 
-      {/* Fijos */}
-      {(fijos.length > 0 || todosFijos.length > 0) && (
+      {/* Gastos Generales */}
+      {todosItems.length > 0 && <GastosGeneralesCard items={todosItems} share={share} />}
+
+      {/* Fijos propios */}
+      {fijos.length > 0 && (
         <>
           <Divider title={`Gastos fijos — ${fmt(totalFijos)}/mes`} />
-          <EgresosTable rows={fijos} todosPonderado={todosFijos} share={share} totalLabel="Total fijos" totalColor={DANGER} />
+          <EgresosTable rows={fijos} totalLabel="Total fijos" totalColor={DANGER} />
         </>
       )}
 
-      {/* Variables */}
-      {(variables.length > 0 || todosVariables.length > 0) && (
+      {/* Variables propios */}
+      {variables.length > 0 && (
         <>
-          <Divider title={`Gastos variables — ${fmt(totalVariables)}/mes`} />
-          <EgresosTable rows={variables} todosPonderado={todosVariables} share={share} totalLabel="Total variables" totalColor="#FBBF24" />
+          <Divider title={`Gastos variables — ${fmt(totalVars)}/mes`} />
+          <EgresosTable rows={variables} totalLabel="Total variables" totalColor={DANGER} />
         </>
       )}
     </>
