@@ -57,7 +57,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
     <div style={{
       width: collapsed ? 56 : 220,
       minHeight: '100vh',
-      background: '#E8EDF8',
+      background: 'linear-gradient(180deg, #1e2d4f 0%, #172240 100%)',
       borderRight: 'none',
       display: 'flex',
       flexDirection: 'column',
@@ -70,13 +70,13 @@ export function Sidebar({ activeModule, onModuleChange }) {
     }}>
       {/* Logo */}
       <div style={{ padding: collapsed ? '20px 0' : '20px 18px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)', height: 64, flexShrink: 0 }}>
-        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, filter: 'brightness(0)', opacity: 0.6 }} />}
-        {collapsed && <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(45,122,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 10, height: 10, background: '#2D7AFF', borderRadius: 2 }} />
+        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, filter: 'brightness(0) invert(1)', opacity: 0.85 }} />}
+        {collapsed && <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 10, height: 10, background: '#fff', borderRadius: 2 }} />
         </div>}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          style={{ background: 'none', border: 'none', color: 'rgba(26,31,54,0.3)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             {collapsed
@@ -90,7 +90,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
       {/* Nav items */}
       <nav style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 0, flexShrink: 0 }}>
         {!collapsed && (
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.3)', padding: '4px 16px 8px', display: 'block' }}>Home</span>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)', padding: '4px 16px 8px', display: 'block' }}>Home</span>
         )}
         {NAV_ITEMS.map(({ key, label, icon }) => {
           const active = activeModule === key
@@ -108,7 +108,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
                   marginRight: active && !collapsed ? 0 : 8,
                   background: active ? '#FFFFFF' : 'transparent',
                   border: 'none',
-                  color: active ? '#2D7AFF' : 'rgba(26,31,54,0.5)',
+                  color: active ? '#2D7AFF' : 'rgba(255,255,255,0.5)',
                   fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   fontFamily: "'Montserrat'", transition: 'background 0.15s, color 0.15s',
                   width: active && !collapsed ? 'calc(100% - 8px)' : 'calc(100% - 16px)',
@@ -128,7 +128,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
       {/* User */}
       <div style={{
         padding: collapsed ? '16px 0' : '14px 16px',
-        borderTop: '1px solid rgba(0,0,0,0.07)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
         display: 'flex', alignItems: 'center', gap: 10,
         justifyContent: collapsed ? 'center' : 'flex-start',
         flexShrink: 0,
@@ -141,8 +141,8 @@ export function Sidebar({ activeModule, onModuleChange }) {
         }}>J</div>
         {!collapsed && (
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.8)', lineHeight: 1.3 }}>Julián Mercurio</div>
-            <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600 }}>Admin</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)', lineHeight: 1.3 }}>Julián Mercurio</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>Admin</div>
           </div>
         )}
       </div>

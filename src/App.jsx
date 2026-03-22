@@ -114,7 +114,7 @@ export default function App() {
   return (
     <div style={{
       display: 'flex', minHeight: '100vh',
-      background: '#E8EDF8', color: '#1a1f36',
+      background: '#1e2d4f', color: '#1a1f36',
       fontFamily: "'Montserrat', sans-serif",
     }}>
       {/* Sidebar */}
