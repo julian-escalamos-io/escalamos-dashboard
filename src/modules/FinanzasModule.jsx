@@ -243,12 +243,12 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
         </div>
         {/* Fijos — gris */}
         <div style={{ background: 'rgba(26,31,54,0.04)', border: '1px solid rgba(26,31,54,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Gastos fijos / mes</span>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Fijos</span>
           <span style={{ fontSize: 28, fontWeight: 800, color: 'rgba(26,31,54,0.55)', letterSpacing: -0.5 }}>{fmt(totalGralesFijos + totalFijos)}</span>
         </div>
         {/* Variables — gris */}
         <div style={{ background: 'rgba(26,31,54,0.04)', border: '1px solid rgba(26,31,54,0.08)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Gastos variables / mes</span>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Variables</span>
           <span style={{ fontSize: 28, fontWeight: 800, color: 'rgba(26,31,54,0.55)', letterSpacing: -0.5 }}>{fmt(totalVars)}</span>
         </div>
       </div>
