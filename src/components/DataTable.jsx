@@ -47,8 +47,8 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
                     fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.8,
                     width: col.width || undefined,
                     maxWidth: col.width || undefined,
-                    color: sortKey === col.key ? ACCENT : 'rgba(255,255,255,0.25)',
-                    fontWeight: 700, borderBottom: '1px solid rgba(255,255,255,0.06)',
+                    color: sortKey === col.key ? ACCENT : 'rgba(26,31,54,0.35)',
+                    fontWeight: 700, borderBottom: '1px solid rgba(0,0,0,0.07)',
                     cursor: col.sortable !== false ? 'pointer' : 'default',
                     whiteSpace: 'nowrap', userSelect: 'none',
                     transition: 'color 0.15s',
@@ -65,18 +65,18 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
           <tbody>
             {visible.length === 0 && (
               <tr>
-                <td colSpan={columns.length} style={{ padding: '24px 12px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>
+                <td colSpan={columns.length} style={{ padding: '24px 12px', textAlign: 'center', color: 'rgba(26,31,54,0.25)', fontSize: 13 }}>
                   {emptyText}
                 </td>
               </tr>
             )}
             {visible.map((row, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <tr key={i} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
                 {columns.map(col => (
                   <td key={col.key} style={{
                     padding: compact ? '4px 8px' : '10px 12px',
                     textAlign: col.align || 'left',
-                    color: 'rgba(255,255,255,0.65)',
+                    color: 'rgba(26,31,54,0.75)',
                     fontWeight: 500,
                     width: col.width || undefined,
                     maxWidth: col.width || undefined,
@@ -96,7 +96,7 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
       {!showAll && rows.length > maxRows && (
         <button
           onClick={() => setShowAll(true)}
-          style={{ marginTop: 12, padding: '7px 16px', borderRadius: 7, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.35)', fontSize: 11, cursor: 'pointer', fontFamily: "'Montserrat'", fontWeight: 600 }}
+          style={{ marginTop: 12, padding: '7px 16px', borderRadius: 7, border: '1px solid rgba(0,0,0,0.08)', background: 'transparent', color: 'rgba(26,31,54,0.45)', fontSize: 11, cursor: 'pointer', fontFamily: "'Montserrat'", fontWeight: 600 }}
         >
           Ver todos ({rows.length})
         </button>

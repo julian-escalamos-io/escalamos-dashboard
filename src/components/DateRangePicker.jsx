@@ -10,18 +10,18 @@ const ACCENT_BORDER = 'rgba(45,122,255,0.3)'
 const pickerCss = `
 .rdp-root {
   --rdp-accent-color: #2D7AFF;
-  --rdp-accent-background-color: rgba(45,122,255,0.18);
+  --rdp-accent-background-color: rgba(45,122,255,0.15);
   --rdp-day-width: 36px;
   --rdp-day-height: 36px;
   --rdp-selected-border: none;
   font-family: 'Montserrat', sans-serif;
   font-size: 12px;
-  color: rgba(255,255,255,0.75);
+  color: rgba(26,31,54,0.8);
   margin: 0;
 }
 .rdp-months { display: flex; gap: 24px; }
 .rdp-month_caption {
-  color: rgba(255,255,255,0.55);
+  color: rgba(26,31,54,0.6);
   font-weight: 700;
   font-size: 11px;
   text-transform: uppercase;
@@ -35,18 +35,18 @@ const pickerCss = `
 .rdp-button_previous, .rdp-button_next {
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.35);
+  color: rgba(26,31,54,0.4);
   cursor: pointer;
   font-size: 14px;
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Montserrat', sans-serif;
 }
-.rdp-button_previous:hover, .rdp-button_next:hover { color: #fff; background: rgba(255,255,255,0.06); }
+.rdp-button_previous:hover, .rdp-button_next:hover { color: #1a1f36; background: rgba(0,0,0,0.06); }
 .rdp-month_grid { border-collapse: collapse; width: 100%; }
 .rdp-weekdays { display: table-row; }
 .rdp-weekday {
-  color: rgba(255,255,255,0.2);
+  color: rgba(26,31,54,0.25);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -73,17 +73,17 @@ const pickerCss = `
   font-size: 12px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 500;
-  color: rgba(255,255,255,0.65);
+  color: rgba(26,31,54,0.75);
   box-sizing: border-box;
   transition: background 0.12s, color 0.12s;
 }
-.rdp-day_button:hover { background: rgba(45,122,255,0.2); color: #fff; }
+.rdp-day_button:hover { background: rgba(45,122,255,0.15); color: #1a1f36; }
 .rdp-selected .rdp-day_button { background: #2D7AFF; color: #fff; font-weight: 700; }
 .rdp-range_start .rdp-day_button, .rdp-range_end .rdp-day_button { background: #2D7AFF; color: #fff; font-weight: 700; }
-.rdp-range_middle .rdp-day_button { background: rgba(45,122,255,0.15); color: rgba(255,255,255,0.85); border-radius: 0; }
-.rdp-outside .rdp-day_button { color: rgba(255,255,255,0.15); }
+.rdp-range_middle .rdp-day_button { background: rgba(45,122,255,0.12); color: rgba(26,31,54,0.85); border-radius: 0; }
+.rdp-outside .rdp-day_button { color: rgba(26,31,54,0.2); }
 .rdp-today .rdp-day_button { color: #2D7AFF; font-weight: 800; }
-.rdp-disabled .rdp-day_button { color: rgba(255,255,255,0.1); cursor: default; }
+.rdp-disabled .rdp-day_button { color: rgba(26,31,54,0.15); cursor: default; }
 `
 
 export function DateRangePicker({ value, onChange }) {
@@ -135,7 +135,7 @@ export function DateRangePicker({ value, onChange }) {
       <style>{pickerCss}</style>
 
       {/* Button group */}
-      <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.02)', borderRadius: 10, padding: 3, border: '1px solid rgba(255,255,255,0.04)' }}>
+      <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.02)', borderRadius: 10, padding: 3, border: '1px solid rgba(0,0,0,0.07)' }}>
         {PRESETS.map(p => (
           <button
             key={p.key}
@@ -143,7 +143,7 @@ export function DateRangePicker({ value, onChange }) {
             style={{
               ...btnBase,
               background: activeKey === p.key ? ACCENT_DIM : 'transparent',
-              color: activeKey === p.key ? ACCENT : 'rgba(255,255,255,0.25)',
+              color: activeKey === p.key ? ACCENT : 'rgba(26,31,54,0.4)',
             }}
           >
             {p.label}
@@ -154,7 +154,7 @@ export function DateRangePicker({ value, onChange }) {
           style={{
             ...btnBase,
             background: activeKey === 'custom' ? ACCENT_DIM : 'transparent',
-            color: activeKey === 'custom' ? ACCENT : 'rgba(255,255,255,0.25)',
+            color: activeKey === 'custom' ? ACCENT : 'rgba(26,31,54,0.4)',
             display: 'flex', alignItems: 'center', gap: 5,
           }}
         >
@@ -167,8 +167,8 @@ export function DateRangePicker({ value, onChange }) {
       {open && activeKey === 'custom' && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 200,
-          background: '#151820', border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 12, boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+          background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)',
+          borderRadius: 12, boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
           padding: '16px 20px',
         }}>
           <DayPicker

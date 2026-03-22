@@ -64,10 +64,10 @@ export function MiniChart({ data, dataKey, color, height = 170, prefix = '' }) {
         {yTicks.map((t, i) => (
           <g key={i}>
             <line x1={pl} y1={t.y} x2={W - pr} y2={t.y}
-              stroke={i === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}
+              stroke={i === 0 ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.06)'}
               strokeWidth="0.8" />
             <text x={pl - 5} y={t.y + 2.5} textAnchor="end"
-              fill="rgba(255,255,255,0.3)" fontSize="9" fontFamily="Montserrat, sans-serif" fontWeight="600">
+              fill="rgba(26,31,54,0.38)" fontSize="9" fontFamily="Montserrat, sans-serif" fontWeight="600">
               {fmtY(t.val)}
             </text>
           </g>
@@ -76,7 +76,7 @@ export function MiniChart({ data, dataKey, color, height = 170, prefix = '' }) {
         {/* Hover vertical line */}
         {hp && (
           <line x1={hp.x} y1={pt} x2={hp.x} y2={pt + iH}
-            stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3" />
+            stroke="rgba(0,0,0,0.15)" strokeWidth="1" strokeDasharray="3 3" />
         )}
 
         {/* Area + Line */}
@@ -93,7 +93,7 @@ export function MiniChart({ data, dataKey, color, height = 170, prefix = '' }) {
             )}
             {showLabel(i) && (
               <text x={p.x} y={H - 5} textAnchor="middle"
-                fill={hovered === i ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.35)'}
+                fill={hovered === i ? 'rgba(26,31,54,0.8)' : 'rgba(26,31,54,0.45)'}
                 fontSize="8.5" fontFamily="Montserrat, sans-serif" fontWeight={hovered === i ? '700' : '600'}>
                 {p.label}
               </text>
@@ -119,7 +119,7 @@ export function MiniChart({ data, dataKey, color, height = 170, prefix = '' }) {
           top: 0,
           left: `calc(${((hp.x - pl) / iW) * 100}% + ${pl / W * 100 - 2}%)`,
           transform: hp.x > W * 0.65 ? 'translateX(-100%)' : 'translateX(8px)',
-          background: '#1a2236',
+          background: '#FFFFFF',
           border: `1px solid ${color}44`,
           borderRadius: 8,
           padding: '6px 10px',
@@ -127,7 +127,7 @@ export function MiniChart({ data, dataKey, color, height = 170, prefix = '' }) {
           zIndex: 10,
           whiteSpace: 'nowrap',
         }}>
-          <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', fontWeight: 600, marginBottom: 2 }}>{hp.label}</div>
+          <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.55)', fontWeight: 600, marginBottom: 2 }}>{hp.label}</div>
           <div style={{ fontSize: 14, color, fontWeight: 800 }}>{fmtTooltip(hp.val)}</div>
         </div>
       )}

@@ -98,20 +98,17 @@ export default function App() {
   }, [activeModule, data, selectedCohort, prevCohort, er, servicios, egresos, modelFilter, selectedERMonth])
 
   const statusMsg = isLoading
-    ? { text: '● cargando...', color: 'rgba(255,255,255,0.2)' }
+    ? { text: '● cargando...', color: 'rgba(26,31,54,0.25)' }
     : error
-    ? { text: '⚠ Error de conexión', color: '#FF6B6B' }
-    : { text: `● ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, color: 'rgba(255,255,255,0.12)' }
+    ? { text: '⚠ Error de conexión', color: '#E03E3E' }
+    : { text: `● ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, color: 'rgba(26,31,54,0.2)' }
 
   return (
     <div style={{
       display: 'flex', minHeight: '100vh',
-      background: '#0E1220', color: '#fff',
+      background: '#F0F2F8', color: '#1a1f36',
       fontFamily: "'Montserrat', sans-serif",
-      backgroundImage: `
-        radial-gradient(ellipse 70% 50% at 65% -5%, rgba(45,122,255,0.22) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 30% at 95% 80%, rgba(45,122,255,0.07) 0%, transparent 55%)
-      `,
+      backgroundImage: `radial-gradient(ellipse 70% 50% at 65% -5%, rgba(45,122,255,0.08) 0%, transparent 60%), radial-gradient(ellipse 40% 30% at 95% 80%, rgba(45,122,255,0.03) 0%, transparent 55%)`,
     }}>
       {/* Sidebar */}
       <Sidebar
@@ -126,11 +123,11 @@ export default function App() {
         {/* Top bar */}
         <div style={{
           padding: '0 28px', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.07)',
           height: 56, flexShrink: 0, gap: 12,
         }}>
           {/* Left: title */}
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.55)', flexShrink: 0 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(26,31,54,0.65)', flexShrink: 0 }}>
             {activeModule === 'overview' && 'Overview'}
             {activeModule === 'marketing' && 'Marketing'}
             {activeModule === 'fulfillment' && 'Fulfillment'}
@@ -141,19 +138,19 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {/* Model filter — pills con colores por modelo */}
             {[
-              { value: 'todos',      label: 'Todos',      bg: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.55)', border: 'rgba(255,255,255,0.12)', activeBg: 'rgba(255,255,255,0.14)' },
-              { value: 'Boutique',   label: 'Boutique',   bg: 'rgba(245,158,11,0.08)',  color: '#F59E0B',               border: 'rgba(245,158,11,0.25)',  activeBg: 'rgba(245,158,11,0.22)' },
-              { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.08)',  color: '#60A5FA',               border: 'rgba(59,130,246,0.25)',  activeBg: 'rgba(59,130,246,0.22)' },
-              { value: 'Soft',       label: 'Soft',       bg: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.45)', border: 'rgba(255,255,255,0.1)',  activeBg: 'rgba(255,255,255,0.1)'  },
-              { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.08)',  color: '#34D399',               border: 'rgba(16,185,129,0.25)',  activeBg: 'rgba(16,185,129,0.22)' },
+              { value: 'todos',      label: 'Todos',      bg: 'rgba(0,0,0,0.04)', color: 'rgba(26,31,54,0.55)', border: 'rgba(0,0,0,0.1)', activeBg: 'rgba(0,0,0,0.08)' },
+              { value: 'Boutique',   label: 'Boutique',   bg: 'rgba(245,158,11,0.08)',  color: '#D97706',               border: 'rgba(245,158,11,0.25)',  activeBg: 'rgba(245,158,11,0.18)' },
+              { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.08)',  color: '#2D7AFF',               border: 'rgba(59,130,246,0.25)',  activeBg: 'rgba(59,130,246,0.15)' },
+              { value: 'Soft',       label: 'Soft',       bg: 'rgba(0,0,0,0.03)',       color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)',        activeBg: 'rgba(0,0,0,0.07)'  },
+              { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.08)',  color: '#059669',               border: 'rgba(16,185,129,0.25)',  activeBg: 'rgba(16,185,129,0.15)' },
             ].map(m => {
               const isActive = modelFilter === m.value
               return (
                 <button key={m.value} onClick={() => setModelFilter(m.value)} style={{
                   padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'Montserrat'",
                   background: isActive ? m.activeBg : m.bg,
-                  color: isActive ? m.color : 'rgba(255,255,255,0.35)',
-                  border: `1px solid ${isActive ? m.border : 'rgba(255,255,255,0.06)'}`,
+                  color: isActive ? m.color : 'rgba(26,31,54,0.45)',
+                  border: `1px solid ${isActive ? m.border : 'rgba(0,0,0,0.07)'}`,
                   opacity: isActive ? 1 : 0.7,
                   transition: 'all 0.15s',
                 }}>{m.label}</button>
@@ -162,14 +159,14 @@ export default function App() {
 
             {/* ER month selector — ocultar en Finanzas > Egresos (sin filtro de fecha) */}
             {activeModule !== 'marketing' && !(activeModule === 'finanzas' && finanzasSubTab === 'egresos') && er.length > 0 && (
-              <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.03)', borderRadius: 8, padding: 3, border: '1px solid rgba(0,0,0,0.07)' }}>
                 {er.slice(-6).map(r => {
                   const isActive = (selectedERMonth || er[er.length - 1]?.monthKey) === r.monthKey
                   return (
                     <button key={r.monthKey} onClick={() => setSelectedERMonth(r.monthKey)} style={{
                       padding: '5px 11px', borderRadius: 6, border: 'none',
-                      background: isActive ? 'rgba(45,122,255,0.18)' : 'transparent',
-                      color: isActive ? '#2D7AFF' : 'rgba(255,255,255,0.28)',
+                      background: isActive ? 'rgba(45,122,255,0.1)' : 'transparent',
+                      color: isActive ? '#2D7AFF' : 'rgba(26,31,54,0.35)',
                       fontSize: 11, cursor: 'pointer', fontWeight: 700, fontFamily: "'Montserrat'",
                     }}>
                       {['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][r.month - 1]} {String(r.year).slice(-2)}
@@ -191,13 +188,13 @@ export default function App() {
         <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>
           {isLoading && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300 }}>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', fontWeight: 600 }}>Cargando datos...</span>
+              <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.25)', fontWeight: 600 }}>Cargando datos...</span>
             </div>
           )}
           {!isLoading && error && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 300, gap: 12 }}>
-              <span style={{ fontSize: 13, color: '#FF6B6B', fontWeight: 600 }}>No se pudo conectar con la API</span>
-              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)' }}>{error.message}</span>
+              <span style={{ fontSize: 13, color: '#E03E3E', fontWeight: 600 }}>No se pudo conectar con la API</span>
+              <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.25)' }}>{error.message}</span>
             </div>
           )}
           {!isLoading && !error && data && (

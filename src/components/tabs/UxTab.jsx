@@ -1,9 +1,9 @@
 import { KPI, Delta } from '../KPI.jsx'
 const ACCENT = '#2D7AFF'
-const DANGER = '#FF6B6B'
+const DANGER = '#E03E3E'
 
 export function UxTab({ data, prevData }) {
-  if (!data) return <div style={{ color: 'rgba(255,255,255,0.2)', padding: 40, textAlign: 'center', fontSize: 14 }}>Sin datos de UX.</div>
+  if (!data) return <div style={{ color: 'rgba(26,31,54,0.3)', padding: 40, textAlign: 'center', fontSize: 14 }}>Sin datos de UX.</div>
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 12 }}>

@@ -40,10 +40,10 @@ function Message({ msg }) {
         maxWidth: '85%',
         padding: '10px 14px',
         borderRadius: isUser ? '14px 14px 4px 14px' : '14px 14px 14px 4px',
-        background: isUser ? ACCENT : 'rgba(255,255,255,0.06)',
-        border: isUser ? 'none' : '1px solid rgba(255,255,255,0.08)',
+        background: isUser ? ACCENT : 'rgba(0,0,0,0.04)',
+        border: isUser ? 'none' : '1px solid rgba(0,0,0,0.08)',
         fontSize: 13,
-        color: isUser ? '#fff' : 'rgba(255,255,255,0.8)',
+        color: isUser ? '#fff' : 'rgba(26,31,54,0.85)',
         lineHeight: 1.6,
         fontWeight: 500,
         whiteSpace: 'pre-wrap',
@@ -169,8 +169,8 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
           right: 0,
           width: 380,
           height: '100vh',
-          background: '#0E1220',
-          borderLeft: '1px solid rgba(255,255,255,0.08)',
+          background: '#FFFFFF',
+          borderLeft: '1px solid rgba(0,0,0,0.08)',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 999,
@@ -179,7 +179,7 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
           {/* Header */}
           <div style={{
             padding: '16px 20px',
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            borderBottom: '1px solid rgba(0,0,0,0.07)',
             display: 'flex',
             alignItems: 'center',
             gap: 10,
@@ -189,15 +189,15 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
               <ChatIcon />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.85)' }}>Chat</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(26,31,54,0.9)' }}>Chat</div>
+              <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>
                 {moduleLabel} · {formatPeriod()}
               </div>
             </div>
             {messages.length > 0 && (
               <button
                 onClick={() => { setMessages([]); setError(null) }}
-                style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: 'rgba(255,255,255,0.3)', fontSize: 10, cursor: 'pointer', fontFamily: 'Montserrat', fontWeight: 600 }}
+                style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.08)', background: 'transparent', color: 'rgba(26,31,54,0.38)', fontSize: 10, cursor: 'pointer', fontFamily: 'Montserrat', fontWeight: 600 }}
               >
                 limpiar
               </button>
@@ -212,7 +212,7 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
           }}>
             {messages.length === 0 && (
               <div style={{ padding: '20px 4px' }}>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
+                <p style={{ fontSize: 13, color: 'rgba(26,31,54,0.45)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>
                   Preguntame sobre los datos de <span style={{ color: ACCENT }}>{moduleLabel}</span>. Tengo acceso a todos los KPIs del período seleccionado.
                 </p>
                 <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -225,8 +225,8 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
                       key={i}
                       onClick={() => { setInput(s); inputRef.current?.focus() }}
                       style={{
-                        padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.08)',
-                        background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.5)',
+                        padding: '8px 12px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.08)',
+                        background: 'rgba(0,0,0,0.03)', color: 'rgba(26,31,54,0.6)',
                         fontSize: 12, cursor: 'pointer', fontFamily: 'Montserrat', fontWeight: 500,
                         textAlign: 'left', transition: 'all 0.12s',
                       }}
@@ -238,14 +238,14 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
             {messages.map((msg, i) => <Message key={i} msg={msg} />)}
             {loading && (
               <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 12 }}>
-                <div style={{ padding: '10px 16px', borderRadius: '14px 14px 14px 4px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ padding: '10px 16px', borderRadius: '14px 14px 14px 4px', background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}>
                   <span style={{ fontSize: 18, color: ACCENT, letterSpacing: 4, animation: 'pulse 1s infinite' }}>···</span>
                 </div>
               </div>
             )}
             {error && (
-              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.2)', marginBottom: 12 }}>
-                <span style={{ fontSize: 12, color: '#FF6B6B' }}>Error: {error}</span>
+              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(224,62,62,0.06)', border: '1px solid rgba(224,62,62,0.18)', marginBottom: 12 }}>
+                <span style={{ fontSize: 12, color: '#E03E3E' }}>Error: {error}</span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -254,15 +254,15 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
           {/* Input */}
           <div style={{
             padding: '12px 16px 20px',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
+            borderTop: '1px solid rgba(0,0,0,0.07)',
             flexShrink: 0,
           }}>
             <div style={{
               display: 'flex',
               gap: 8,
               alignItems: 'flex-end',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              background: 'rgba(0,0,0,0.03)',
+              border: '1px solid rgba(0,0,0,0.1)',
               borderRadius: 12,
               padding: '8px 8px 8px 14px',
             }}>
@@ -278,7 +278,7 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
                   background: 'transparent',
                   border: 'none',
                   outline: 'none',
-                  color: 'rgba(255,255,255,0.85)',
+                  color: 'rgba(26,31,54,0.9)',
                   fontSize: 13,
                   fontFamily: 'Montserrat, sans-serif',
                   fontWeight: 500,
@@ -299,9 +299,9 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
                   width: 32,
                   height: 32,
                   borderRadius: 8,
-                  background: input.trim() && !loading ? ACCENT : 'rgba(255,255,255,0.06)',
+                  background: input.trim() && !loading ? ACCENT : 'rgba(0,0,0,0.06)',
                   border: 'none',
-                  color: input.trim() && !loading ? '#fff' : 'rgba(255,255,255,0.2)',
+                  color: input.trim() && !loading ? '#fff' : 'rgba(26,31,54,0.25)',
                   cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
                   display: 'flex',
                   alignItems: 'center',
@@ -313,7 +313,7 @@ export function ChatPanel({ activeModule, dateRange, contextData }) {
                 <SendIcon />
               </button>
             </div>
-            <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.18)', margin: '6px 2px 0', fontWeight: 500 }}>Enter para enviar · Shift+Enter nueva línea</p>
+            <p style={{ fontSize: 10, color: 'rgba(26,31,54,0.25)', margin: '6px 2px 0', fontWeight: 500 }}>Enter para enviar · Shift+Enter nueva línea</p>
           </div>
         </div>
       )}

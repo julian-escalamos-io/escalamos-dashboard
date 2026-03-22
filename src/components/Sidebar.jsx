@@ -60,8 +60,8 @@ export function Sidebar({ activeModule, onModuleChange }) {
     <div style={{
       width: collapsed ? 56 : 220,
       minHeight: '100vh',
-      background: 'rgba(255,255,255,0.04)',
-      borderRight: '1px solid rgba(255,255,255,0.08)',
+      background: '#FFFFFF',
+      borderRight: '1px solid rgba(0,0,0,0.08)',
       backdropFilter: 'blur(12px)',
       display: 'flex',
       flexDirection: 'column',
@@ -73,14 +73,14 @@ export function Sidebar({ activeModule, onModuleChange }) {
       height: '100vh',
     }}>
       {/* Logo */}
-      <div style={{ padding: collapsed ? '20px 0' : '20px 18px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid rgba(255,255,255,0.04)', height: 64, flexShrink: 0 }}>
-        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, opacity: 0.45 }} />}
+      <div style={{ padding: collapsed ? '20px 0' : '20px 18px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', height: 64, flexShrink: 0 }}>
+        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, opacity: 0.7 }} />}
         {collapsed && <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(45,122,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: 10, height: 10, background: ACCENT, borderRadius: 2 }} />
         </div>}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+          style={{ background: 'none', border: 'none', color: 'rgba(26,31,54,0.3)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             {collapsed
@@ -107,7 +107,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
                 borderRadius: 9,
                 background: active ? ACCENT_DIM : 'transparent',
                 border: active ? `1px solid ${ACCENT_BORDER}` : '1px solid transparent',
-                color: active ? ACCENT : 'rgba(255,255,255,0.35)',
+                color: active ? ACCENT : 'rgba(26,31,54,0.45)',
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 fontFamily: "'Montserrat'", transition: 'all 0.15s',
                 width: '100%',

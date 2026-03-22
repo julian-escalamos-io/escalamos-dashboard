@@ -4,8 +4,8 @@ import { Delta } from './KPI.jsx'
 import { monthLabel } from '../lib/formatters.js'
 
 const ACCENT = '#2D7AFF'
-const DANGER = '#FF6B6B'
-const GREEN = '#34D399'
+const DANGER = '#E03E3E'
+const GREEN = '#059669'
 
 export const METRIC_META = {
   revenue: {
@@ -157,13 +157,13 @@ export function MetricModal({ metricKey, cohort, prevCohort, allCohorts, onClose
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#141B2D',
-          border: '1px solid rgba(45,122,255,0.2)',
+          background: '#FFFFFF',
+          border: '1px solid rgba(45,122,255,0.15)',
           borderRadius: 20,
           padding: 32,
           maxWidth: 560,
           width: '100%',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(45,122,255,0.1)',
+          boxShadow: '0 24px 80px rgba(0,0,0,0.12), 0 0 0 1px rgba(45,122,255,0.08)',
           position: 'relative',
         }}
       >
@@ -172,9 +172,9 @@ export function MetricModal({ metricKey, cohort, prevCohort, allCohorts, onClose
           onClick={onClose}
           style={{
             position: 'absolute', top: 16, right: 16,
-            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+            background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)',
             borderRadius: 8, width: 32, height: 32, cursor: 'pointer',
-            color: 'rgba(255,255,255,0.5)', fontSize: 16, display: 'flex',
+            color: 'rgba(26,31,54,0.5)', fontSize: 16, display: 'flex',
             alignItems: 'center', justifyContent: 'center', fontFamily: 'Montserrat',
           }}
         >×</button>
@@ -183,7 +183,7 @@ export function MetricModal({ metricKey, cohort, prevCohort, allCohorts, onClose
         <div style={{ marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <span style={{ fontSize: 20 }}>{meta.icon}</span>
-            <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.45)', fontWeight: 700 }}>{meta.label}</span>
+            <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.55)', fontWeight: 700 }}>{meta.label}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
             <span style={{ fontSize: 40, fontWeight: 700, color: meta.color, letterSpacing: -1 }}>{fmtVal(current)}</span>
@@ -195,8 +195,8 @@ export function MetricModal({ metricKey, cohort, prevCohort, allCohorts, onClose
 
         {/* Chart */}
         {chartData.length > 1 && (
-          <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: 12, padding: '16px 16px 8px', marginBottom: 24 }}>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.3)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Evolución</span>
+          <div style={{ background: 'rgba(0,0,0,0.03)', borderRadius: 12, padding: '16px 16px 8px', marginBottom: 24 }}>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Evolución</span>
             <MiniChart data={chartData} dataKey="value" color={meta.color} prefix={meta.prefix || ''} height={140} />
           </div>
         )}
@@ -204,16 +204,16 @@ export function MetricModal({ metricKey, cohort, prevCohort, allCohorts, onClose
         {/* Meta info */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.3)', fontWeight: 700, display: 'block', marginBottom: 5 }}>Qué es</span>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, fontWeight: 500 }}>{meta.what}</p>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 5 }}>Qué es</span>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(26,31,54,0.75)', lineHeight: 1.6, fontWeight: 500 }}>{meta.what}</p>
           </div>
           <div>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.3)', fontWeight: 700, display: 'block', marginBottom: 5 }}>Por qué importa</span>
-            <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6, fontWeight: 500 }}>{meta.why}</p>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 5 }}>Por qué importa</span>
+            <p style={{ margin: 0, fontSize: 13, color: 'rgba(26,31,54,0.75)', lineHeight: 1.6, fontWeight: 500 }}>{meta.why}</p>
           </div>
           <div style={{ background: 'rgba(45,122,255,0.06)', border: '1px solid rgba(45,122,255,0.15)', borderRadius: 10, padding: '12px 14px' }}>
             <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: ACCENT, fontWeight: 700, display: 'block', marginBottom: 5 }}>Benchmark / Cómo leerlo</span>
-            <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, fontWeight: 500 }}>{meta.benchmark}</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'rgba(26,31,54,0.65)', lineHeight: 1.6, fontWeight: 500 }}>{meta.benchmark}</p>
           </div>
         </div>
       </div>

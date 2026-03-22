@@ -5,13 +5,13 @@ import { MetricModal } from '../MetricModal.jsx'
 import { monthLabel } from '../../lib/formatters.js'
 
 const ACCENT = '#2D7AFF'
-const DANGER = '#FF6B6B'
+const DANGER = '#E03E3E'
 
 const Divider = ({ title }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '32px 0 18px' }}>
     <div style={{ width: 3, height: 14, background: ACCENT, borderRadius: 2, flexShrink: 0 }} />
-    <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(255,255,255,0.55)', fontWeight: 700 }}>{title}</span>
-    <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+    <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.45)', fontWeight: 700 }}>{title}</span>
+    <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.08)' }} />
   </div>
 )
 
@@ -44,34 +44,34 @@ function InsightsBlock({ cohort }) {
   }
 
   return (
-    <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: 24 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: insights ? 16 : 0 }}>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>Conclusiones & Accionables</span>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700 }}>Conclusiones & Accionables</span>
         {!insights && (
           <button onClick={generate} disabled={loading} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${ACCENT}`, background: loading ? 'rgba(45,122,255,0.1)' : 'rgba(45,122,255,0.15)', color: ACCENT, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             {loading ? '✦ Analizando...' : '✦ Generar análisis'}
           </button>
         )}
         {insights && (
-          <button onClick={() => setInsights(null)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.07)', background: 'transparent', color: 'rgba(255,255,255,0.5)', fontSize: 10, cursor: 'pointer', fontFamily: 'Montserrat' }}>↺ regenerar</button>
+          <button onClick={() => setInsights(null)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.08)', background: 'transparent', color: 'rgba(26,31,54,0.45)', fontSize: 10, cursor: 'pointer', fontFamily: 'Montserrat' }}>↺ regenerar</button>
         )}
       </div>
       {error && <p style={{ color: DANGER, fontSize: 12, marginTop: 12 }}>Error: {error}</p>}
       {!insights && !loading && (
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 12, fontWeight: 500 }}>Clic en "Generar análisis" para que Claude analice el período seleccionado.</p>
+        <p style={{ fontSize: 13, color: 'rgba(26,31,54,0.45)', marginTop: 12, fontWeight: 500 }}>Clic en "Generar análisis" para que Claude analice el período seleccionado.</p>
       )}
       {insights && (
         <>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, margin: '0 0 16px', fontWeight: 500 }}>{insights.conclusion}</p>
+          <p style={{ fontSize: 14, color: 'rgba(26,31,54,0.75)', lineHeight: 1.7, margin: '0 0 16px', fontWeight: 500 }}>{insights.conclusion}</p>
           <div style={{ background: 'rgba(45,122,255,0.05)', border: '1px solid rgba(45,122,255,0.12)', borderRadius: 10, padding: '14px 18px', marginBottom: 16 }}>
             <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: ACCENT, fontWeight: 700, display: 'block', marginBottom: 6 }}>Cuello de botella</span>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{insights.bottleneck}</p>
+            <p style={{ fontSize: 13, color: 'rgba(26,31,54,0.65)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{insights.bottleneck}</p>
           </div>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', fontWeight: 700, display: 'block', marginBottom: 10 }}>Acciones priorizadas (80/20)</span>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 10 }}>Acciones priorizadas (80/20)</span>
           {(insights.actions || []).map((a, i) => (
             <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 10, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, minWidth: 20 }}>{i + 1}.</span>
-              <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', lineHeight: 1.6, fontWeight: 500 }}>{a}</span>
+              <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.7)', lineHeight: 1.6, fontWeight: 500 }}>{a}</span>
             </div>
           ))}
         </>
@@ -84,7 +84,7 @@ export function Overview({ cohort, prevCohort, allCohorts }) {
   const [openMetric, setOpenMetric] = useState(null)
 
   if (!cohort) return (
-    <div style={{ color: 'rgba(255,255,255,0.5)', padding: 40, textAlign: 'center', fontSize: 14 }}>Sin datos disponibles.</div>
+    <div style={{ color: 'rgba(26,31,54,0.35)', padding: 40, textAlign: 'center', fontSize: 14 }}>Sin datos disponibles.</div>
   )
 
   const prev = prevCohort
@@ -108,10 +108,10 @@ export function Overview({ cohort, prevCohort, allCohorts }) {
     <>
       {/* Cohort header */}
       <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700 }}>
           Cohorte {monthLabel(cohort.month)}
         </span>
-        <span style={{ fontSize: 10, padding: '3px 12px', borderRadius: 20, background: cohort.isOpen ? 'rgba(255,255,255,0.05)' : 'rgba(45,122,255,0.15)', color: cohort.isOpen ? 'rgba(255,255,255,0.7)' : ACCENT, fontWeight: 700 }}>
+        <span style={{ fontSize: 10, padding: '3px 12px', borderRadius: 20, background: cohort.isOpen ? 'rgba(0,0,0,0.05)' : 'rgba(45,122,255,0.15)', color: cohort.isOpen ? 'rgba(26,31,54,0.6)' : ACCENT, fontWeight: 700 }}>
           {cohort.isOpen ? `abierta · ${cohort.activeCount} activos` : 'completa'}
         </span>
       </div>
@@ -125,19 +125,19 @@ export function Overview({ cohort, prevCohort, allCohorts }) {
           onClick={() => setOpenMetric('revenue')}
           delta={prev && prev.revenue > 0 ? <Delta current={cohort.revenue} previous={prev.revenue} /> : null}
         />
-        <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.62)', fontWeight: 600 }}>Inversión total</span>
+            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(26,31,54,0.5)', fontWeight: 600 }}>Inversión total</span>
             {pGasto ? <Delta current={gasto} previous={pGasto} inverse /> : null}
           </div>
           <span style={{ fontSize: 24, fontWeight: 600 }}>{fmt(gasto)}</span>
           <div style={{ display: 'flex', gap: 8 }}>
-            <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px' }}>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', fontWeight: 600, display: 'block', marginBottom: 2 }}>Publicidad</span>
+            <div style={{ flex: 1, background: 'rgba(0,0,0,0.03)', borderRadius: 8, padding: '10px 12px' }}>
+              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.45)', fontWeight: 600, display: 'block', marginBottom: 2 }}>Publicidad</span>
               <span style={{ fontSize: 16, fontWeight: 600 }}>{fmt(cohort.gastoAds)}</span>
             </div>
-            <div style={{ flex: 1, background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '10px 12px' }}>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.5)', fontWeight: 600, display: 'block', marginBottom: 2 }}>Equipo</span>
+            <div style={{ flex: 1, background: 'rgba(0,0,0,0.03)', borderRadius: 8, padding: '10px 12px' }}>
+              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.45)', fontWeight: 600, display: 'block', marginBottom: 2 }}>Equipo</span>
               <span style={{ fontSize: 16, fontWeight: 600 }}>{fmt(cohort.gastoEquipo)}</span>
             </div>
           </div>
@@ -165,23 +165,23 @@ export function Overview({ cohort, prevCohort, allCohorts }) {
       <div style={{ padding: '16px 0', marginBottom: 10, maxWidth: 600 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
           <span style={{ fontSize: 20, fontWeight: 700, color: ACCENT }}>{cohort.clients.length}</span>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.58)', fontWeight: 700 }}>Clientes cerrados — {monthName}</span>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>Clientes cerrados — {monthName}</span>
         </div>
         {cohort.clients.length > 0 ? (
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '0 24px', padding: '0 0 8px', borderBottom: '1px solid rgba(255,255,255,0.04)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(255,255,255,0.15)', fontWeight: 700 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '0 24px', padding: '0 0 8px', borderBottom: '1px solid rgba(0,0,0,0.07)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.3)', fontWeight: 700 }}>
               <span>Cliente</span><span>Monto</span><span>Ciclo</span>
             </div>
             {cohort.clients.map((cl, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '0 24px', padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', fontWeight: 500 }}>{cl.name}</span>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '0 24px', padding: '10px 0', borderBottom: '1px solid rgba(0,0,0,0.05)', alignItems: 'center' }}>
+                <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.75)', fontWeight: 500 }}>{cl.name}</span>
                 <span style={{ fontSize: 13, color: ACCENT, fontWeight: 600 }}>{fmt(cl.value)}</span>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.58)', minWidth: 32 }}>{cl.days > 0 ? `${cl.days}d` : '—'}</span>
+                <span style={{ fontSize: 12, color: 'rgba(26,31,54,0.5)', minWidth: 32 }}>{cl.days > 0 ? `${cl.days}d` : '—'}</span>
               </div>
             ))}
           </div>
         ) : (
-          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Sin cierres en este período</span>
+          <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.4)' }}>Sin cierres en este período</span>
         )}
       </div>
 
@@ -190,15 +190,15 @@ export function Overview({ cohort, prevCohort, allCohorts }) {
         <>
           <Divider title="Evolución 12 meses" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 10 }}>
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '14px 18px' }}>
-              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 6, display: 'block' }}>Ingresos nuevos clientes</span>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '14px 18px' }}>
+              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 6, display: 'block' }}>Ingresos nuevos clientes</span>
               <MiniChart
                 data={allCohorts.filter(c => c.revenue > 0).map(c => ({ label: monthLabel(c.month).slice(0, 3), revenue: c.revenue }))}
                 dataKey="revenue" color={ACCENT} prefix="$" height={110}
               />
             </div>
-            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 14, padding: '14px 18px' }}>
-              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.5)', fontWeight: 700, marginBottom: 6, display: 'block' }}>CAC</span>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '14px 18px' }}>
+              <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 6, display: 'block' }}>CAC</span>
               <MiniChart
                 data={allCohorts.filter(c => c.cac > 0).map(c => ({ label: monthLabel(c.month).slice(0, 3), cac: c.cac }))}
                 dataKey="cac" color={DANGER} prefix="$" height={110}
