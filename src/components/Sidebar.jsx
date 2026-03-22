@@ -60,9 +60,9 @@ export function Sidebar({ activeModule, onModuleChange }) {
     <div style={{
       width: collapsed ? 56 : 220,
       minHeight: '100vh',
-      background: '#FFFFFF',
+      background: 'rgba(255,255,255,0.72)',
       borderRight: '1px solid rgba(0,0,0,0.08)',
-      backdropFilter: 'blur(12px)',
+      backdropFilter: 'blur(20px)',
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
