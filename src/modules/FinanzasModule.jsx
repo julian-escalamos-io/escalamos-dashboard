@@ -113,8 +113,32 @@ function PLTab({ er, historico, selectedERMonth, modelFilter }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
         <KPI label="Revenue" value={fmt(currentER.revenue)} highlight
           delta={<Delta current={currentER.revenue} previous={prevER?.revenue} />} />
-        <KPI label="Cash Collected" value={fmt(currentH?.cashCollected ?? currentER.cashCollected)} ring
-          delta={<Delta current={currentH?.cashCollected} previous={prevH?.cashCollected} />} />
+        {/* Cash Collected con barra de % cobrado */}
+        <div style={{ background: 'rgba(45,122,255,0.04)', border: '1px solid rgba(45,122,255,0.15)', borderRadius: 14, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(26,31,54,0.6)', fontWeight: 600 }}>Cash Collected</span>
+            <Delta current={currentH?.cashCollected} previous={prevH?.cashCollected} />
+          </div>
+          <span style={{ fontSize: 26, fontWeight: 800, color: '#1a1f36', letterSpacing: -0.5 }}>{fmt(currentH?.cashCollected ?? currentER.cashCollected)}</span>
+          {currentER.pctCobradosMes > 0 && (
+            <div style={{ marginTop: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(26,31,54,0.45)', textTransform: 'uppercase', letterSpacing: 1.5 }}>% cobrado del mes</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: currentER.pctCobradosMes > 0.8 ? GREEN : currentER.pctCobradosMes > 0.5 ? '#F59E0B' : DANGER }}>
+                  {Math.round(currentER.pctCobradosMes * 100)}%
+                </span>
+              </div>
+              <div style={{ height: 6, borderRadius: 99, background: 'rgba(26,31,54,0.08)', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 99,
+                  width: `${Math.min(currentER.pctCobradosMes * 100, 100)}%`,
+                  background: currentER.pctCobradosMes > 0.8 ? GREEN : currentER.pctCobradosMes > 0.5 ? '#F59E0B' : DANGER,
+                  transition: 'width 0.4s ease',
+                }} />
+              </div>
+            </div>
+          )}
+        </div>
         <KPI label="Ganancia Bruta" value={fmt(currentH?.gananciaBruta)}
           accent={currentH?.gananciaBruta > 0 ? GREEN : DANGER}
           delta={<Delta current={currentH?.gananciaBruta} previous={prevH?.gananciaBruta} />} />
