@@ -46,7 +46,6 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
                     textAlign: col.align || 'left',
                     fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.8,
                     width: col.width || undefined,
-                    maxWidth: col.width || undefined,
                     color: sortKey === col.key ? ACCENT : 'rgba(26,31,54,0.35)',
                     fontWeight: 700, borderBottom: '1px solid rgba(0,0,0,0.07)',
                     cursor: col.sortable !== false ? 'pointer' : 'default',
@@ -79,9 +78,6 @@ export function DataTable({ columns, rows, maxRows = 50, emptyText = 'Sin datos'
                     color: 'rgba(26,31,54,0.75)',
                     fontWeight: 500,
                     width: col.width || undefined,
-                    maxWidth: col.width || undefined,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
                     whiteSpace: col.wrap ? 'normal' : 'nowrap',
                     verticalAlign: 'middle',
                   }}>
