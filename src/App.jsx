@@ -9,7 +9,7 @@ import { FulfillmentModule } from './modules/FulfillmentModule.jsx'
 import { FinanzasModule } from './modules/FinanzasModule.jsx'
 import { PRESETS } from './lib/dates.js'
 import { buildCohorts, buildMetaAds, buildInstagram, buildSeo, buildUx } from './lib/cohorts.js'
-import { parseServicios, parseEgresos, parseER, computeOverviewKPIs } from './lib/maestro.js'
+import { parseServicios, parseEgresos, parseER, parseHistorico, computeOverviewKPIs } from './lib/maestro.js'
 
 const fetcher = (url) => fetch(url).then(r => r.json())
 
@@ -59,6 +59,7 @@ export default function App() {
   const servicios = useMemo(() => data?.servicios ? parseServicios(data.servicios) : [], [data])
   const egresos = useMemo(() => data?.egresos ? parseEgresos(data.egresos) : [], [data])
   const er = useMemo(() => data?.er ? parseER(data.er) : [], [data])
+  const historico = useMemo(() => data?.historico ? parseHistorico(data.historico) : [], [data])
 
   // ── Hero KPIs (always-on top banner) ─────────────────────────────────────
   const heroData = useMemo(() => {
@@ -175,7 +176,7 @@ export default function App() {
             })}
 
             {/* ER month selector — ocultar en Finanzas > Egresos (sin filtro de fecha) */}
-            {activeModule !== 'marketing' && !(activeModule === 'finanzas' && finanzasSubTab === 'egresos') && er.length > 0 && (
+            {activeModule !== 'marketing' && !(activeModule === 'finanzas' && ['egresos', 'ingresos', 'deudas'].includes(finanzasSubTab)) && er.length > 0 && (
               <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.08)' }}>
                 {er.slice(-6).map(r => {
                   const isActive = (selectedERMonth || er[er.length - 1]?.monthKey) === r.monthKey
@@ -265,7 +266,7 @@ export default function App() {
                 <FulfillmentModule servicios={servicios} modelFilter={modelFilter} />
               )}
               {activeModule === 'finanzas' && (
-                <FinanzasModule er={er} egresos={egresos} servicios={servicios} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
+                <FinanzasModule er={er} egresos={egresos} servicios={servicios} historico={historico} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
               )}
             </>
           )}

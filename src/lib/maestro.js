@@ -85,17 +85,92 @@ export function parseER(raw = []) {
       monthKey: monthKey(r[0], r[1]),
       monthLabel: `${r[1]} ${r[0]}`,
       revenue: +r[3] || 0,
+      pctMensual: +r[4] || 0,        // %+- vs mes anterior
+      pctAnual: +r[5] || 0,          // %+- vs mismo mes año anterior
       proyectada: +r[6] || 0,
       acierto: r[7] || '',
       cashCollected: +r[8] || 0,
+      cobrosMes: +r[11] || 0,        // cobros del mes corriente
+      pctCobradosMes: +r[12] || 0,   // % cobrado del mes
       deudasCobradas: +r[13] || 0,
       deudasAFavor: +r[14] || 0,
+      deudasNueva: +r[15] || 0,      // corriente (< 1 mes)
+      deudasHistorica: +r[16] || 0,  // morosa (> 1 mes)
+      deudasIncobrable: +r[17] || 0, // incobrable
+      pctDeudaRec: +r[18] || 0,      // % deuda recuperada
       gastos: +r[19] || 0,
       ganancia: +r[22] || 0,
-      margenNeto: +r[23] || 0, // decimal (0.35 = 35%)
-      delMes: +r[26] || 0,
+      margenNeto: +r[23] || 0,
+      delMes: +r[26] || 0,           // ganancia solo del período (sin deudas cobradas)
     }))
     .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
+}
+
+export function parseHistorico(raw = []) {
+  return raw
+    .filter(r => r[0] && typeof r[0] === 'number')
+    .map(r => ({
+      year: +r[0],
+      month: toMonthNum(r[1]),
+      monthKey: monthKey(r[0], r[1]),
+      monthLabel: String(r[1]),
+      modelo: String(r[3] || ''),
+      area: String(r[4] || ''),
+      clientesActivos: +r[5] || 0,
+      cNuevos: +r[7] || 0,
+      cPerdidos: +r[11] || 0,
+      pctChurnTri: +r[15] || 0,
+      nrr: +r[17] || 0,
+      lifeSpan: +r[20] || 0,
+      aov: +r[21] || 0,
+      mrr: +r[24] || 0,
+      cashCollected: +r[25] || 0,
+      comisiones: +r[28] || 0,
+      extraccion: +r[29] || 0,
+      margenTransaccion: +r[30] || 0,
+      gastosDirectos: +r[32] || 0,
+      gastosIndirectos: +r[33] || 0,
+      gananciaBruta: +r[34] || 0,
+      pctBruto: +r[35] || 0,
+      gastosAdm: +r[36] || 0,
+      totalGastosAdm: +r[37] || 0,
+      margenNeto: +r[39] || 0,
+      pctNeto: +r[40] || 0,
+    }))
+    .sort((a, b) => a.monthKey.localeCompare(b.monthKey) || a.modelo.localeCompare(b.modelo))
+}
+
+// Agrega filas de Histórico por monthKey y modelFilter (suma numéricos, recalcula %)
+export function aggregateHistorico(historico, targetMonthKey, modelFilter) {
+  let rows = historico.filter(r => r.monthKey === targetMonthKey)
+  if (modelFilter && modelFilter !== 'todos') {
+    rows = rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
+  }
+  if (!rows.length) return null
+  const s = (f) => rows.reduce((acc, r) => acc + (r[f] || 0), 0)
+  const cashCollected = s('cashCollected')
+  const gananciaBruta = s('gananciaBruta')
+  const margenNeto = s('margenNeto')
+  return {
+    clientesActivos: s('clientesActivos'),
+    cashCollected,
+    comisiones: s('comisiones'),
+    extraccion: s('extraccion'),
+    margenTransaccion: s('margenTransaccion'),
+    gastosDirectos: s('gastosDirectos'),
+    gastosIndirectos: s('gastosIndirectos'),
+    gananciaBruta,
+    pctBruto: cashCollected ? gananciaBruta / cashCollected : 0,
+    gastosAdm: s('gastosAdm'),
+    totalGastosAdm: s('totalGastosAdm'),
+    margenNeto,
+    pctNeto: cashCollected ? margenNeto / cashCollected : 0,
+    mrr: s('mrr'),
+    nrr: rows.length ? rows.reduce((a, r) => a + r.nrr, 0) / rows.length : 0,
+    pctChurnTri: rows.length ? rows.reduce((a, r) => a + r.pctChurnTri, 0) / rows.length : 0,
+    lifeSpan: rows.length ? rows.reduce((a, r) => a + r.lifeSpan, 0) / rows.length : 0,
+    aov: rows.length ? rows.reduce((a, r) => a + r.aov, 0) / rows.length : 0,
+  }
 }
 
 // ─── Overview KPIs ────────────────────────────────────────────────────────────
