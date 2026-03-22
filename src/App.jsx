@@ -138,11 +138,11 @@ export default function App() {
           justifyContent: 'space-between',
           borderBottom: '1px solid rgba(0,0,0,0.08)',
           height: 60, flexShrink: 0, gap: 12,
-          background: '#F0F4FF',
-          boxShadow: '0 1px 0 rgba(0,0,0,0.06)',
+          background: '#1a1f36',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
         }}>
           {/* Left: title */}
-          <span style={{ fontSize: 18, fontWeight: 800, color: '#1a1f36', flexShrink: 0, letterSpacing: -0.3 }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#ffffff', flexShrink: 0, letterSpacing: -0.3 }}>
             {activeModule === 'overview' && 'Overview'}
             {activeModule === 'marketing' && 'Marketing'}
             {activeModule === 'fulfillment' && 'Fulfillment'}
@@ -153,19 +153,19 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
             {/* Model filter — pills con colores por modelo */}
             {[
-              { value: 'todos',      label: 'Todos',      bg: 'rgba(0,0,0,0.04)', color: 'rgba(26,31,54,0.55)', border: 'rgba(0,0,0,0.1)', activeBg: 'rgba(0,0,0,0.08)' },
-              { value: 'Boutique',   label: 'Boutique',   bg: 'rgba(245,158,11,0.08)',  color: '#D97706',               border: 'rgba(245,158,11,0.25)',  activeBg: 'rgba(245,158,11,0.18)' },
-              { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.08)',  color: '#2D7AFF',               border: 'rgba(59,130,246,0.25)',  activeBg: 'rgba(59,130,246,0.15)' },
-              { value: 'Soft',       label: 'Soft',       bg: 'rgba(0,0,0,0.03)',       color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)',        activeBg: 'rgba(0,0,0,0.07)'  },
-              { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.08)',  color: '#059669',               border: 'rgba(16,185,129,0.25)',  activeBg: 'rgba(16,185,129,0.15)' },
+              { value: 'todos',      label: 'Todos',      bg: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', border: 'rgba(255,255,255,0.12)', activeBg: 'rgba(255,255,255,0.16)' },
+              { value: 'Boutique',   label: 'Boutique',   bg: 'rgba(245,158,11,0.12)', color: '#F59E0B',               border: 'rgba(245,158,11,0.3)',   activeBg: 'rgba(245,158,11,0.25)' },
+              { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.12)', color: '#60A5FA',               border: 'rgba(59,130,246,0.3)',   activeBg: 'rgba(59,130,246,0.25)' },
+              { value: 'Soft',       label: 'Soft',       bg: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: 'rgba(255,255,255,0.1)',  activeBg: 'rgba(255,255,255,0.12)' },
+              { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.12)', color: '#34D399',               border: 'rgba(16,185,129,0.3)',   activeBg: 'rgba(16,185,129,0.25)' },
             ].map(m => {
               const isActive = modelFilter === m.value
               return (
                 <button key={m.value} onClick={() => setModelFilter(m.value)} style={{
                   padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'Montserrat'",
                   background: isActive ? m.activeBg : m.bg,
-                  color: isActive ? m.color : 'rgba(26,31,54,0.45)',
-                  border: `1px solid ${isActive ? m.border : 'rgba(0,0,0,0.07)'}`,
+                  color: isActive ? m.color : 'rgba(255,255,255,0.4)',
+                  border: `1px solid ${isActive ? m.border : 'rgba(255,255,255,0.08)'}`,
                   opacity: isActive ? 1 : 0.7,
                   transition: 'all 0.15s',
                 }}>{m.label}</button>
@@ -174,14 +174,14 @@ export default function App() {
 
             {/* ER month selector — ocultar en Finanzas > Egresos (sin filtro de fecha) */}
             {activeModule !== 'marketing' && !(activeModule === 'finanzas' && finanzasSubTab === 'egresos') && er.length > 0 && (
-              <div style={{ display: 'flex', gap: 2, background: 'rgba(0,0,0,0.03)', borderRadius: 8, padding: 3, border: '1px solid rgba(0,0,0,0.07)' }}>
+              <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.08)' }}>
                 {er.slice(-6).map(r => {
                   const isActive = (selectedERMonth || er[er.length - 1]?.monthKey) === r.monthKey
                   return (
                     <button key={r.monthKey} onClick={() => setSelectedERMonth(r.monthKey)} style={{
                       padding: '5px 11px', borderRadius: 6, border: 'none',
                       background: isActive ? 'rgba(45,122,255,0.1)' : 'transparent',
-                      color: isActive ? '#2D7AFF' : 'rgba(26,31,54,0.35)',
+                      color: isActive ? '#60A5FA' : 'rgba(255,255,255,0.35)',
                       fontSize: 11, cursor: 'pointer', fontWeight: 700, fontFamily: "'Montserrat'",
                     }}>
                       {['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][r.month - 1]} {String(r.year).slice(-2)}
@@ -195,7 +195,7 @@ export default function App() {
             {/* Date range picker — always visible */}
             <DateRangePicker value={dateRange} onChange={setDateRange} />
 
-            <span style={{ fontSize: 10, fontWeight: 600, color: statusMsg.color }}>{statusMsg.text}</span>
+            <span style={{ fontSize: 10, fontWeight: 600, color: statusMsg.color === 'rgba(255,255,255,0.12)' ? 'rgba(255,255,255,0.2)' : statusMsg.color }}>{statusMsg.text}</span>
           </div>
         </div>
 
