@@ -176,7 +176,7 @@ export default function App() {
             })}
 
             {/* ER month selector — ocultar en Finanzas > Egresos (sin filtro de fecha) */}
-            {activeModule !== 'marketing' && !(activeModule === 'finanzas' && ['egresos', 'ingresos', 'deudas'].includes(finanzasSubTab)) && er.length > 0 && (
+            {activeModule !== 'marketing' && activeModule !== 'finanzas' && er.length > 0 && (
               <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.08)' }}>
                 {er.slice(-6).map(r => {
                   const isActive = (selectedERMonth || er[er.length - 1]?.monthKey) === r.monthKey
