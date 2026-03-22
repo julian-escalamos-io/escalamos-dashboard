@@ -135,12 +135,14 @@ export default function App() {
         {/* Top bar */}
         <div style={{
           padding: '0 28px', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.07)',
-          height: 56, flexShrink: 0, gap: 12,
-          background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid rgba(0,0,0,0.08)',
+          height: 60, flexShrink: 0, gap: 12,
+          background: '#F0F4FF',
+          boxShadow: '0 1px 0 rgba(0,0,0,0.06)',
         }}>
           {/* Left: title */}
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(26,31,54,0.65)', flexShrink: 0 }}>
+          <span style={{ fontSize: 18, fontWeight: 800, color: '#1a1f36', flexShrink: 0, letterSpacing: -0.3 }}>
             {activeModule === 'overview' && 'Overview'}
             {activeModule === 'marketing' && 'Marketing'}
             {activeModule === 'fulfillment' && 'Fulfillment'}
