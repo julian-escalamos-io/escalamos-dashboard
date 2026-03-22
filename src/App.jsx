@@ -130,7 +130,7 @@ export default function App() {
         flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0,
         background: '#FFFFFF',
         backgroundImage: `radial-gradient(ellipse 80% 50% at 75% -5%, rgba(45,122,255,0.15) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 100% 80%, rgba(99,102,241,0.08) 0%, transparent 60%)`,
-        borderRadius: '20px 0 0 20px',
+        borderRadius: 0,
       }}>
         {/* Top bar */}
         <div style={{

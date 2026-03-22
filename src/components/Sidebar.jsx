@@ -58,7 +58,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
       width: collapsed ? 56 : 220,
       minHeight: '100vh',
       background: '#E8EDF8',
-      borderRight: '1px solid rgba(0,0,0,0.07)',
+      borderRight: 'none',
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
@@ -88,21 +88,21 @@ export function Sidebar({ activeModule, onModuleChange }) {
       </div>
 
       {/* Nav items */}
-      <nav style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
+      <nav style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 0, flexShrink: 0 }}>
         {!collapsed && (
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.3)', padding: '4px 16px 8px', display: 'block' }}>Home</span>
         )}
         {NAV_ITEMS.map(({ key, label, icon }) => {
           const active = activeModule === key
           return (
-            <div key={key} style={{ position: 'relative' }}>
+            <div key={key} style={{ position: 'relative', padding: '2px 0' }}>
               {/* Concave corners for active tab */}
               {active && !collapsed && (<>
-                <div style={{ position: 'absolute', top: -12, right: 0, width: 12, height: 12, background: '#FFFFFF', pointerEvents: 'none' }}>
-                  <svg width="12" height="12" viewBox="0 0 12 12"><path d="M12 0 Q0 0 0 12 L12 12Z" fill="#E8EDF8"/></svg>
+                <div style={{ position: 'absolute', top: -14, right: 0, width: 14, height: 14, pointerEvents: 'none', zIndex: 2 }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14"><path d="M14 0 C14 0 0 0 0 14 L14 14 Z" fill="#FFFFFF"/><path d="M14 0 C14 0 2 0 2 12 L14 12 Z" fill="#E8EDF8"/></svg>
                 </div>
-                <div style={{ position: 'absolute', bottom: -12, right: 0, width: 12, height: 12, background: '#FFFFFF', pointerEvents: 'none' }}>
-                  <svg width="12" height="12" viewBox="0 0 12 12"><path d="M12 12 Q0 12 0 0 L12 0Z" fill="#E8EDF8"/></svg>
+                <div style={{ position: 'absolute', bottom: -14, right: 0, width: 14, height: 14, pointerEvents: 'none', zIndex: 2 }}>
+                  <svg width="14" height="14" viewBox="0 0 14 14"><path d="M14 14 C14 14 0 14 0 0 L14 0 Z" fill="#FFFFFF"/><path d="M14 14 C14 14 2 14 2 2 L14 2 Z" fill="#E8EDF8"/></svg>
                 </div>
               </>)}
               <button
@@ -113,15 +113,14 @@ export function Sidebar({ activeModule, onModuleChange }) {
                   padding: collapsed ? '10px 0' : '10px 16px',
                   justifyContent: collapsed ? 'center' : 'flex-start',
                   borderRadius: active && !collapsed ? '10px 0 0 10px' : 9,
-                  marginLeft: collapsed ? 8 : 8,
+                  marginLeft: 8,
                   marginRight: active && !collapsed ? 0 : 8,
                   background: active ? '#FFFFFF' : 'transparent',
                   border: 'none',
                   color: active ? '#2D7AFF' : 'rgba(26,31,54,0.5)',
                   fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                  fontFamily: "'Montserrat'", transition: 'all 0.15s',
+                  fontFamily: "'Montserrat'", transition: 'background 0.15s, color 0.15s',
                   width: active && !collapsed ? 'calc(100% - 8px)' : 'calc(100% - 16px)',
-                  boxShadow: active && !collapsed ? '0 2px 12px rgba(0,0,0,0.06)' : 'none',
                 }}
               >
                 <span style={{ flexShrink: 0, lineHeight: 0 }}>{icon}</span>
@@ -145,7 +144,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
       }}>
         <div style={{
           width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-          background: 'linear-gradient(135deg, #2D7AFF 0%, #5B9BFF 100%)',
+          background: '#1a1f36',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 12, fontWeight: 700, color: '#fff',
         }}>J</div>
