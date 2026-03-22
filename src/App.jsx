@@ -197,12 +197,12 @@ export default function App() {
           </div>
         </div>
 
-        {/* Hero strip */}
-        {heroData && (
+        {/* Hero strip — solo Overview */}
+        {heroData && activeModule === 'overview' && (
           <div style={{
             flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0,
             background: 'linear-gradient(90deg, #1e3fa3 0%, #2D7AFF 60%, #4f8fff 100%)',
-            padding: '0 32px', height: 72,
+            padding: '0 32px', height: 96,
           }}>
             {[
               { label: 'MRR', value: heroData.kpis.mrr > 0 ? `$${Math.round(heroData.kpis.mrr).toLocaleString('en-US')}` : '—', icon: '◈' },
