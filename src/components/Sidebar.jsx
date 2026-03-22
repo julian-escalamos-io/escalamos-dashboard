@@ -96,15 +96,6 @@ export function Sidebar({ activeModule, onModuleChange }) {
           const active = activeModule === key
           return (
             <div key={key} style={{ position: 'relative', padding: '2px 0' }}>
-              {/* Concave corners for active tab */}
-              {active && !collapsed && (<>
-                <div style={{ position: 'absolute', top: -14, right: 0, width: 14, height: 14, pointerEvents: 'none', zIndex: 2 }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14"><path d="M14 0 C14 0 0 0 0 14 L14 14 Z" fill="#FFFFFF"/><path d="M14 0 C14 0 2 0 2 12 L14 12 Z" fill="#E8EDF8"/></svg>
-                </div>
-                <div style={{ position: 'absolute', bottom: -14, right: 0, width: 14, height: 14, pointerEvents: 'none', zIndex: 2 }}>
-                  <svg width="14" height="14" viewBox="0 0 14 14"><path d="M14 14 C14 14 0 14 0 0 L14 0 Z" fill="#FFFFFF"/><path d="M14 14 C14 14 2 14 2 2 L14 2 Z" fill="#E8EDF8"/></svg>
-                </div>
-              </>)}
               <button
                 onClick={() => onModuleChange(key)}
                 title={collapsed ? label : undefined}

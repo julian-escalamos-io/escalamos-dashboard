@@ -197,46 +197,36 @@ export default function App() {
           </div>
         </div>
 
-        {/* Hero banner */}
+        {/* Hero strip */}
         {heroData && (
           <div style={{
-            position: 'relative', overflow: 'hidden', flexShrink: 0,
-            background: 'linear-gradient(135deg, #1a3a6b 0%, #2D7AFF 55%, #5b9bff 100%)',
-            padding: '28px 32px',
+            flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0,
+            background: 'linear-gradient(90deg, #1e3fa3 0%, #2D7AFF 60%, #4f8fff 100%)',
+            padding: '0 32px', height: 72,
           }}>
-            {/* Decorative circles */}
-            <div style={{ position: 'absolute', top: -60, right: 80, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', top: 20, right: 20, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', bottom: -40, right: 260, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
-
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 32 }}>
-              {/* Label */}
-              <div style={{ flexShrink: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Estado actual</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>Escalamos.io</div>
-              </div>
-
-              {/* Divider */}
-              <div style={{ width: 1, height: 48, background: 'rgba(255,255,255,0.18)', flexShrink: 0 }} />
-
-              {/* KPI cards */}
-              {[
-                { label: 'MRR', value: heroData.kpis.mrr > 0 ? `$${Math.round(heroData.kpis.mrr).toLocaleString('en-US')}` : '—' },
-                { label: 'Clientes activos', value: heroData.kpis.clientesActivos || '—' },
-                { label: 'Revenue del mes', value: heroData.currentER?.revenue > 0 ? `$${Math.round(heroData.currentER.revenue).toLocaleString('en-US')}` : '—' },
-                { label: 'Margen neto', value: heroData.currentER?.margenNeto > 0 ? `${(heroData.currentER.margenNeto * 100).toFixed(1)}%` : '—' },
-                { label: 'AOV', value: heroData.kpis.aov > 0 ? `$${Math.round(heroData.kpis.aov).toLocaleString('en-US')}` : '—' },
-              ].map(({ label, value }) => (
-                <div key={label} style={{
-                  background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14,
-                  padding: '12px 20px', flexShrink: 0,
-                }}>
-                  <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{value}</div>
+            {[
+              { label: 'MRR', value: heroData.kpis.mrr > 0 ? `$${Math.round(heroData.kpis.mrr).toLocaleString('en-US')}` : '—', icon: '◈' },
+              { label: 'Clientes', value: heroData.kpis.clientesActivos || '—', icon: '◉' },
+              { label: 'Revenue mes', value: heroData.currentER?.revenue > 0 ? `$${Math.round(heroData.currentER.revenue).toLocaleString('en-US')}` : '—', icon: '◎' },
+              { label: 'Margen neto', value: heroData.currentER?.margenNeto > 0 ? `${(heroData.currentER.margenNeto * 100).toFixed(1)}%` : '—', icon: '◇' },
+              { label: 'AOV', value: heroData.kpis.aov > 0 ? `$${Math.round(heroData.kpis.aov).toLocaleString('en-US')}` : '—', icon: '◆' },
+            ].map(({ label, value, icon }, i) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                {i > 0 && <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.15)', margin: '0 24px' }} />}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 16, color: 'rgba(255,255,255,0.9)',
+                  }}>{icon}</div>
+                  <div>
+                    <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 1.8, textTransform: 'uppercase' }}>{label}</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{value}</div>
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
 
