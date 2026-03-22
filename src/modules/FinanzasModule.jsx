@@ -126,19 +126,19 @@ function EgresosTable({ rows, totalLabel, totalColor, factor = 1, showModelo = f
   const modeloCol = showModelo ? [{ key: 'modelo', label: 'Modelo', width: 90, render: v => <ModeloBadge value={v} /> }] : []
   const cols = [
     ...modeloCol,
-    { key: 'recurrencia', label: 'Rec.',       width: 72, render: v => <span style={{ color: 'rgba(26,31,54,0.45)', fontSize: 11 }}>{v || '—'}</span> },
-    { key: 'proveedor',   label: 'Proveedor',  width: 130, render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
-    { key: 'servicio',    label: 'Servicio',   width: 220, wrap: true },
-    { key: '_total',      label: 'Total',      width: 68, align: 'right', render: (_, row) => (
+    { key: 'recurrencia', label: 'Rec.',      width: 70, render: v => <span style={{ color: 'rgba(26,31,54,0.45)', fontSize: 11 }}>{v || '—'}</span> },
+    { key: 'proveedor',   label: 'Proveedor', width: 120, render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
+    { key: 'servicio',    label: 'Servicio',  wrap: true },
+    { key: '_total',      label: 'Total',     width: 68, align: 'right', render: (_, row) => (
       <span style={{ color: 'rgba(26,31,54,0.3)', fontSize: 11 }}>{row.monto ? fmt(row.monto * factor) : '—'}</span>
     )},
-    { key: '_mes', label: '$ / mes', width: 78, align: 'right', render: (_, row) => (
+    { key: '_mes', label: '$ / mes', width: 80, align: 'right', render: (_, row) => (
       <span style={{ color: totalColor, fontWeight: 700, fontSize: 13 }}>{fmt(egresoMes(row) * factor)}</span>
     )},
   ]
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, overflow: 'hidden', marginBottom: 8 }}>
-      <DataTable rows={sortEgresos(rows)} columns={cols} compact />
+      <DataTable rows={sortEgresos(rows)} columns={cols} />
       <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 12px', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
         <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.38)' }}>
           {totalLabel}: <strong style={{ color: totalColor }}>{fmt(totalMes)}/mes</strong>
@@ -164,32 +164,34 @@ function GastosGeneralesCard({ items, share }) {
   return (
     <div style={{ marginBottom: 28, background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
-        <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>Gastos Generales</span>
-        {pct !== null && <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.38)' }}>ponderado {pct}% del MRR</span>}
-        <span style={{ marginLeft: 'auto', fontSize: 18, fontWeight: 700, color: DANGER }}>{fmt(total)}/mes</span>
+        <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>Gastos Generales (ponderado)</span>
+        {pct !== null && <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.38)' }}>{pct}% del MRR</span>}
+        <span style={{ marginLeft: 'auto', fontSize: 22, fontWeight: 800, color: DANGER }}>{fmt(total)}/mes</span>
       </div>
 
-      {/* Fijos */}
-      {fijos.length > 0 && (
-        <>
-          <div onClick={() => setOpenFijos(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, cursor: 'pointer', userSelect: 'none' }}>
-            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.3)' }}>{openFijos ? '▾' : '▸'}</span>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700 }}>Fijos — {fmt(totalFijos)}/mes</span>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* Fijos */}
+        {fijos.length > 0 && (
+          <div>
+            <div onClick={() => setOpenFijos(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, cursor: 'pointer', userSelect: 'none' }}>
+              <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.3)' }}>{openFijos ? '▾' : '▸'}</span>
+              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700 }}>Fijos — {fmt(totalFijos)}/mes</span>
+            </div>
+            {openFijos && <EgresosTable rows={fijos} totalLabel="Subtotal fijos" totalColor={DANGER} factor={factor} />}
           </div>
-          {openFijos && <EgresosTable rows={fijos} totalLabel="Subtotal fijos" totalColor={DANGER} factor={factor} />}
-        </>
-      )}
+        )}
 
-      {/* Variables */}
-      {vars.length > 0 && (
-        <>
-          <div onClick={() => setOpenVars(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 6, cursor: 'pointer', userSelect: 'none' }}>
-            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.3)' }}>{openVars ? '▾' : '▸'}</span>
-            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700 }}>Variables — {fmt(totalVars)}/mes</span>
+        {/* Variables */}
+        {vars.length > 0 && (
+          <div>
+            <div onClick={() => setOpenVars(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, cursor: 'pointer', userSelect: 'none' }}>
+              <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.3)' }}>{openVars ? '▾' : '▸'}</span>
+              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700 }}>Variables — {fmt(totalVars)}/mes</span>
+            </div>
+            {openVars && <EgresosTable rows={vars} totalLabel="Subtotal variables" totalColor={DANGER} factor={factor} />}
           </div>
-          {openVars && <EgresosTable rows={vars} totalLabel="Subtotal variables" totalColor={DANGER} factor={factor} />}
-        </>
-      )}
+        )}
+      </div>
     </div>
   )
 }
@@ -234,42 +236,48 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
     <>
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24, maxWidth: 660 }}>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Total / mes</span>
-          <span style={{ fontSize: 22, fontWeight: 700 }}>{fmt(total)}</span>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Total / mes</span>
+          <span style={{ fontSize: 28, fontWeight: 800, letterSpacing: -0.5 }}>{fmt(total)}</span>
         </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos fijos / mes</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalGralesFijos + totalFijos)}</span>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Gastos fijos / mes</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(totalGralesFijos + totalFijos)}</span>
         </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos variables / mes</span>
-          <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalVars)}</span>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Gastos variables / mes</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(totalVars)}</span>
         </div>
       </div>
 
       {/* Gastos Generales */}
       {todosItems.length > 0 && <GastosGeneralesCard items={todosItems} share={share} />}
 
-      {/* Fijos + Variables lado a lado */}
+      {/* Gastos de la Unidad */}
       {(fijos.length > 0 || variables.length > 0) && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
-          {fijos.length > 0 && (
-            <div>
-              <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 8 }}>
-                Fijos — <span style={{ color: DANGER }}>{fmt(totalFijos)}/mes</span>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 20px', marginBottom: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
+            <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>Gastos de la Unidad</span>
+            <span style={{ marginLeft: 'auto', fontSize: 22, fontWeight: 800, color: DANGER }}>{fmt(totalFijos + totalVars)}/mes</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+            {fijos.length > 0 && (
+              <div>
+                <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 8 }}>
+                  Fijos — <span style={{ color: DANGER }}>{fmt(totalFijos)}/mes</span>
+                </div>
+                <EgresosTable rows={fijos} totalLabel="Total fijos" totalColor={DANGER} showModelo={!isUnit} />
               </div>
-              <EgresosTable rows={fijos} totalLabel="Total fijos" totalColor={DANGER} showModelo={!isUnit} />
-            </div>
-          )}
-          {variables.length > 0 && (
-            <div>
-              <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 8 }}>
-                Variables — <span style={{ color: DANGER }}>{fmt(totalVars)}/mes</span>
+            )}
+            {variables.length > 0 && (
+              <div>
+                <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 8 }}>
+                  Variables — <span style={{ color: DANGER }}>{fmt(totalVars)}/mes</span>
+                </div>
+                <EgresosTable rows={variables} totalLabel="Total variables" totalColor={DANGER} showModelo={!isUnit} />
               </div>
-              <EgresosTable rows={variables} totalLabel="Total variables" totalColor={DANGER} showModelo={!isUnit} />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </>
