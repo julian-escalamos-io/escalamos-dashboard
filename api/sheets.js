@@ -51,7 +51,7 @@ export default async function handler(_req, res) {
       readSheet(token, maestroId, '1- Servicios \u{1F504}', 'A2:P'),
       readSheet(token, maestroId, '2- Egresos \u{1FAF0}', 'A2:H'),
       readSheet(token, maestroId, '3- E.R \u{1F4D2}', 'A2:AA'),
-      readSheet(token, maestroId, '4- Historico \u{1F4CA}', 'A1:ZZ'),
+      readSheet(token, maestroId, '4- Hist\u00F3rico \u{1F4CA}', 'A1:AZ'),
     ] : []
 
     const [marketingResults, maestroResults] = await Promise.all([
