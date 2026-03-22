@@ -74,7 +74,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
     }}>
       {/* Logo */}
       <div style={{ padding: collapsed ? '20px 0' : '20px 18px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', height: 64, flexShrink: 0 }}>
-        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, opacity: 0.7 }} />}
+        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, filter: 'brightness(0)', opacity: 0.55 }} />}
         {collapsed && <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(45,122,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ width: 10, height: 10, background: ACCENT, borderRadius: 2 }} />
         </div>}
