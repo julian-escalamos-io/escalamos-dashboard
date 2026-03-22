@@ -57,7 +57,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
     <div style={{
       width: collapsed ? 72 : 220,
       minHeight: '100vh',
-      background: '#FFFFFF',
+      background: '#EBF0F9',
       boxShadow: '2px 0 12px rgba(0,0,0,0.06)',
       display: 'flex',
       flexDirection: 'column',

@@ -129,17 +129,17 @@ export default function App() {
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0,
         background: '#FFFFFF',
-        backgroundImage: `radial-gradient(ellipse 80% 50% at 75% -5%, rgba(45,122,255,0.15) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 100% 80%, rgba(99,102,241,0.08) 0%, transparent 60%)`,
+        backgroundImage: `linear-gradient(180deg, rgba(26,31,54,0.05) 0%, transparent 56px), radial-gradient(ellipse 80% 50% at 75% -5%, rgba(45,122,255,0.12) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 100% 80%, rgba(99,102,241,0.08) 0%, transparent 60%)`,
         borderRadius: 0,
       }}>
         {/* Top bar */}
         <div style={{
           padding: '0 28px', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid rgba(0,0,0,0.08)',
           height: 60, flexShrink: 0, gap: 12,
           background: '#1a1f36',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          boxShadow: '0 4px 24px rgba(26,31,54,0.22)',
+          position: 'relative', zIndex: 10,
         }}>
           {/* Left: title */}
           <span style={{ fontSize: 18, fontWeight: 800, color: '#ffffff', flexShrink: 0, letterSpacing: -0.3 }}>
