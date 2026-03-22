@@ -135,7 +135,7 @@ export function DateRangePicker({ value, onChange }) {
       <style>{pickerCss}</style>
 
       {/* Button group */}
-      <div style={{ display: 'flex', gap: 3, background: 'rgba(0,0,0,0.02)', borderRadius: 10, padding: 3, border: '1px solid rgba(0,0,0,0.07)' }}>
+      <div style={{ display: 'flex', gap: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 10, padding: 3, border: '1px solid rgba(255,255,255,0.1)' }}>
         {PRESETS.map(p => (
           <button
             key={p.key}
@@ -143,7 +143,7 @@ export function DateRangePicker({ value, onChange }) {
             style={{
               ...btnBase,
               background: activeKey === p.key ? ACCENT_DIM : 'transparent',
-              color: activeKey === p.key ? ACCENT : 'rgba(26,31,54,0.4)',
+              color: activeKey === p.key ? '#fff' : 'rgba(255,255,255,0.45)',
             }}
           >
             {p.label}
@@ -154,7 +154,7 @@ export function DateRangePicker({ value, onChange }) {
           style={{
             ...btnBase,
             background: activeKey === 'custom' ? ACCENT_DIM : 'transparent',
-            color: activeKey === 'custom' ? ACCENT : 'rgba(26,31,54,0.4)',
+            color: activeKey === 'custom' ? ACCENT : 'rgba(255,255,255,0.45)',
             display: 'flex', alignItems: 'center', gap: 5,
           }}
         >
