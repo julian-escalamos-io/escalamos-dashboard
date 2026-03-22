@@ -114,9 +114,8 @@ export default function App() {
   return (
     <div style={{
       display: 'flex', minHeight: '100vh',
-      background: '#EEF1F8', color: '#1a1f36',
+      background: '#1a2f5e', color: '#1a1f36',
       fontFamily: "'Montserrat', sans-serif",
-      backgroundImage: `radial-gradient(ellipse 70% 55% at 60% -10%, rgba(45,122,255,0.18) 0%, transparent 65%), radial-gradient(ellipse 45% 35% at 100% 85%, rgba(45,122,255,0.09) 0%, transparent 60%)`,
     }}>
       {/* Sidebar */}
       <Sidebar
@@ -127,13 +126,18 @@ export default function App() {
       />
 
       {/* Main content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0,
+        background: '#F4F6FB',
+        backgroundImage: `radial-gradient(ellipse 65% 45% at 70% 0%, rgba(45,122,255,0.12) 0%, transparent 60%), radial-gradient(ellipse 40% 30% at 100% 90%, rgba(45,122,255,0.06) 0%, transparent 55%)`,
+        borderRadius: '16px 0 0 16px',
+      }}>
         {/* Top bar */}
         <div style={{
           padding: '0 28px', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.07)',
           height: 56, flexShrink: 0, gap: 12,
-          background: 'rgba(255,255,255,0.65)', backdropFilter: 'blur(20px)',
+          background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(20px)',
         }}>
           {/* Left: title */}
           <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(26,31,54,0.65)', flexShrink: 0 }}>

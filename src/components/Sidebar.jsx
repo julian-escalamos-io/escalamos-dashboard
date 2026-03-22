@@ -1,8 +1,5 @@
 import { useState } from 'react'
 
-const ACCENT = '#2D7AFF'
-const ACCENT_DIM = 'rgba(45,122,255,0.12)'
-const ACCENT_BORDER = 'rgba(45,122,255,0.28)'
 
 const NAV_ITEMS = [
   {
@@ -60,9 +57,8 @@ export function Sidebar({ activeModule, onModuleChange }) {
     <div style={{
       width: collapsed ? 56 : 220,
       minHeight: '100vh',
-      background: 'rgba(255,255,255,0.72)',
-      borderRight: '1px solid rgba(0,0,0,0.08)',
-      backdropFilter: 'blur(20px)',
+      background: 'linear-gradient(180deg, #1a2f5e 0%, #152348 100%)',
+      borderRight: 'none',
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
@@ -73,14 +69,14 @@ export function Sidebar({ activeModule, onModuleChange }) {
       height: '100vh',
     }}>
       {/* Logo */}
-      <div style={{ padding: collapsed ? '20px 0' : '20px 18px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)', height: 64, flexShrink: 0 }}>
-        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, filter: 'brightness(0)', opacity: 0.55 }} />}
-        {collapsed && <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(45,122,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ width: 10, height: 10, background: ACCENT, borderRadius: 2 }} />
+      <div style={{ padding: collapsed ? '20px 0' : '20px 18px', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)', height: 64, flexShrink: 0 }}>
+        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, filter: 'brightness(0) invert(1)', opacity: 0.85 }} />}
+        {collapsed && <div style={{ width: 26, height: 26, borderRadius: 6, background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 10, height: 10, background: '#fff', borderRadius: 2 }} />
         </div>}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          style={{ background: 'none', border: 'none', color: 'rgba(26,31,54,0.3)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
+          style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.35)', cursor: 'pointer', padding: 4, display: 'flex', alignItems: 'center', flexShrink: 0 }}
         >
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
             {collapsed
@@ -94,7 +90,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
       {/* Nav items */}
       <nav style={{ padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
         {!collapsed && (
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.3)', padding: '4px 12px 8px' }}>Home</span>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)', padding: '4px 12px 8px' }}>Home</span>
         )}
         {NAV_ITEMS.map(({ key, label, icon }) => {
           const active = activeModule === key
@@ -108,9 +104,9 @@ export function Sidebar({ activeModule, onModuleChange }) {
                 padding: collapsed ? '10px 0' : '10px 12px',
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 borderRadius: 9,
-                background: active ? ACCENT_DIM : 'transparent',
-                border: active ? `1px solid ${ACCENT_BORDER}` : '1px solid transparent',
-                color: active ? ACCENT : 'rgba(26,31,54,0.45)',
+                background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                border: active ? '1px solid rgba(255,255,255,0.15)' : '1px solid transparent',
+                color: active ? '#fff' : 'rgba(255,255,255,0.45)',
                 fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 fontFamily: "'Montserrat'", transition: 'all 0.15s',
                 width: '100%',
@@ -129,7 +125,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
       {/* User */}
       <div style={{
         padding: collapsed ? '16px 0' : '14px 16px',
-        borderTop: '1px solid rgba(0,0,0,0.07)',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
         display: 'flex', alignItems: 'center', gap: 10,
         justifyContent: collapsed ? 'center' : 'flex-start',
         flexShrink: 0,
@@ -142,8 +138,8 @@ export function Sidebar({ activeModule, onModuleChange }) {
         }}>J</div>
         {!collapsed && (
           <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.8)', lineHeight: 1.3 }}>Julián Mercurio</div>
-            <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>Admin</div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(255,255,255,0.85)', lineHeight: 1.3 }}>Julián Mercurio</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', fontWeight: 600 }}>Admin</div>
           </div>
         )}
       </div>
