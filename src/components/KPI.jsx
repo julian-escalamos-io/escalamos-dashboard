@@ -21,8 +21,9 @@ export function KPI({ label, value, subtitle, accent, delta, highlight, ring, fo
       onClick={onClick}
       style={{
         background: highlight ? 'rgba(45,122,255,0.07)' : ring ? 'rgba(45,122,255,0.04)' : '#FFFFFF',
-        border: highlight ? '1px solid rgba(45,122,255,0.25)' : ring ? '1px solid rgba(45,122,255,0.18)' : '1px solid rgba(0,0,0,0.08)',
+        border: highlight ? '1px solid rgba(45,122,255,0.2)' : ring ? '1px solid rgba(45,122,255,0.15)' : '1px solid rgba(0,0,0,0.07)',
         borderRadius: 14, padding: highlight ? '22px 24px' : '16px 18px',
+        boxShadow: highlight ? '0 4px 16px rgba(45,122,255,0.1)' : '0 2px 8px rgba(0,0,0,0.05)',
         display: 'flex', flexDirection: 'column', gap: 3,
         cursor: clickable ? 'pointer' : 'default',
         transition: clickable ? 'border-color 0.15s, background 0.15s' : undefined,

@@ -48,7 +48,7 @@ function InsightsBlock({ currentER, prevER }) {
   }
 
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 24 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: insights ? 16 : 0 }}>
         <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>Análisis financiero</span>
         {!insights && <button onClick={generate} disabled={loading} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${ACCENT}`, background: 'rgba(45,122,255,0.1)', color: ACCENT, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat', cursor: loading ? 'not-allowed' : 'pointer' }}>
@@ -137,7 +137,7 @@ function EgresosTable({ rows, totalLabel, totalColor, factor = 1, showModelo = f
     )},
   ]
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, overflow: 'hidden', marginBottom: 8 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, overflow: 'hidden', marginBottom: 8 }}>
       <DataTable rows={sortEgresos(rows)} columns={cols} compact />
       <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '6px 12px', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
         <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.38)' }}>
@@ -162,7 +162,7 @@ function GastosGeneralesCard({ items, share }) {
   const total = totalFijos + totalVars
 
   return (
-    <div style={{ marginBottom: 28, background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 16, padding: '18px 20px' }}>
+    <div style={{ marginBottom: 28, background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 20px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 16 }}>
         <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>Gastos Generales</span>
         {pct !== null && <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.38)' }}>ponderado {pct}% del MRR</span>}
@@ -234,15 +234,15 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
     <>
       {/* KPIs */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24, maxWidth: 660 }}>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: '14px 18px' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Total / mes</span>
           <span style={{ fontSize: 22, fontWeight: 700 }}>{fmt(total)}</span>
         </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: '14px 18px' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos fijos / mes</span>
           <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalGralesFijos + totalFijos)}</span>
         </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 12, padding: '14px 18px' }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 4 }}>Gastos variables / mes</span>
           <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalVars)}</span>
         </div>
@@ -353,7 +353,7 @@ export function FinanzasModule({ er, egresos, servicios, selectedERMonth, modelF
 
       {/* P&L 12 meses */}
       <Divider title="P&L mensual — últimos 12 meses" />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
         <DataTable
           rows={[...erRows].reverse().slice(0, 12).reverse()}
           columns={[
@@ -379,14 +379,14 @@ export function FinanzasModule({ er, egresos, servicios, selectedERMonth, modelF
         <>
           <Divider title="Evolución" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 10 }}>
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20 }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>Revenue vs Ganancia</span>
               <MiniChart
                 data={chart12.map(r => ({ label: `${r.month}/${String(r.year).slice(-2)}`, revenue: r.revenue }))}
                 dataKey="revenue" color={ACCENT} prefix="$"
               />
             </div>
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20 }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>Margen neto %</span>
               <MiniChart
                 data={chart12.map(r => ({ label: `${r.month}/${String(r.year).slice(-2)}`, margen: (r.margenNeto || 0) * 100 }))}
@@ -430,7 +430,7 @@ export function FinanzasModule({ er, egresos, servicios, selectedERMonth, modelF
         <>
           <Divider title="Estructura de gastos" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 10 }}>
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20 }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16 }}>
                 <span style={{ fontSize: 22, fontWeight: 700, color: DANGER }}>{fmt(totalEgresosMes)}</span>
                 <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1.5 }}>/mes</span>
@@ -443,7 +443,7 @@ export function FinanzasModule({ er, egresos, servicios, selectedERMonth, modelF
                 ]}
               />
             </div>
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20 }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 16, display: 'block' }}>Top gastos</span>
               <DataTable
                 rows={[...egresosData].sort((a, b) => {

@@ -54,7 +54,7 @@ export function FulfillmentModule({ servicios, modelFilter }) {
 
       {/* Clients table */}
       <Divider title={`Clientes activos${modelFilter !== 'todos' ? ` — ${modelFilter}` : ''}`} />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
         <DataTable
           rows={clients}
           columns={[
@@ -80,7 +80,7 @@ export function FulfillmentModule({ servicios, modelFilter }) {
       {/* Churn reciente */}
       <Divider title="Churn reciente (últimos 3 meses)" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 10 }}>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 16 }}>
             <span style={{ fontSize: 28, fontWeight: 700, color: churned.length > 3 ? DANGER : 'rgba(26,31,54,0.75)' }}>{churned.length}</span>
             <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700 }}>bajas recientes</span>
@@ -99,7 +99,7 @@ export function FulfillmentModule({ servicios, modelFilter }) {
         </div>
 
         {/* LTV por modelo */}
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 16, display: 'block' }}>LTV por modelo</span>
           <DataTable
             rows={ltvByModel.filter(m => m.count > 0)}
@@ -115,7 +115,7 @@ export function FulfillmentModule({ servicios, modelFilter }) {
 
       {/* Top 10 LTV */}
       <Divider title="Top 10 por LTV" />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20, maxWidth: 600, marginBottom: 10 }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, maxWidth: 600, marginBottom: 10 }}>
         <DataTable
           rows={topLTV}
           columns={[

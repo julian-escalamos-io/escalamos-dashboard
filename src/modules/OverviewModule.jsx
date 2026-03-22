@@ -44,7 +44,7 @@ function InsightsBlock({ erCurrent, serviciosKPIs }) {
   }
 
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 24 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: insights ? 16 : 0 }}>
         <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>Análisis ejecutivo</span>
         {!insights && <button onClick={generate} disabled={loading} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${ACCENT}`, background: 'rgba(45,122,255,0.1)', color: ACCENT, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat', cursor: loading ? 'not-allowed' : 'pointer' }}>
@@ -157,7 +157,7 @@ export function OverviewModule({ servicios, er, modelFilter, selectedERMonth }) 
               { label: 'Cash Collected', key: 'cashCollected', color: '#A78BFA', prefix: '$' },
               { label: 'Margen neto %', key: 'margenNeto', color: '#FBBF24', prefix: '%' },
             ].map(({ label, key, color, prefix }) => (
-              <div key={key} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20 }}>
+              <div key={key} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
                 <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>{label}</span>
                 <MiniChart
                   data={chartData12.map(r => ({
@@ -174,7 +174,7 @@ export function OverviewModule({ servicios, er, modelFilter, selectedERMonth }) 
 
       {/* Desglose por modelo */}
       <Divider title="Desglose por modelo" />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 20, maxWidth: 720, marginBottom: 10 }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, maxWidth: 720, marginBottom: 10 }}>
         <DataTable
           rows={modelBreakdown.filter(m => m.clientesActivos > 0)}
           columns={[

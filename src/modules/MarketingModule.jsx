@@ -164,7 +164,7 @@ function ChannelSummaryTable({ ads, instagram, seo, ux }) {
   if (!rows.length) return <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.38)' }}>Sin datos por canal</span>
 
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, overflow: 'hidden', maxWidth: 720 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, overflow: 'hidden', maxWidth: 720 }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 0.8fr 1fr 1.5fr', padding: '10px 18px', borderBottom: '1px solid rgba(0,0,0,0.07)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700 }}>
         <span>Canal</span>
         <span style={{ textAlign: 'right' }}>Inversión</span>
@@ -211,7 +211,7 @@ function InsightsBlock({ cohort, channel }) {
   }
 
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 24 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: insights ? 16 : 0 }}>
         <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>
           Análisis — {channelLabel}
@@ -301,7 +301,7 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
           onClick={() => setOpenMetric('revenue')}
           delta={prev && prev.revenue > 0 ? <Delta current={cohort.revenue} previous={prev.revenue} /> : null}
         />
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(26,31,54,0.6)', fontWeight: 600 }}>Inversión total</span>
             {pGasto ? <Delta current={gasto} previous={pGasto} inverse /> : null}
@@ -383,17 +383,17 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 16, marginBottom: 10, maxWidth: 980 }}>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 24 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 20, display: 'block' }}>
             Funnel — {monthName}
           </span>
           <Funnel cohort={cohort} prevCohort={prevCohort} />
         </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 24 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 20, display: 'block' }}>Leads por fuente</span>
           <SourcesDonut sourceCounts={cohort.sourceCounts} />
         </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: 24 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 20, display: 'block' }}>Ventas por fuente</span>
           <SourcesDonut sourceCounts={cohort.salesSourceCounts || {}} centerLabel="ventas" />
         </div>
@@ -404,14 +404,14 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
         <>
           <Divider title="Evolución 12 meses" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 10, maxWidth: 860 }}>
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '14px 18px' }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 6, display: 'block' }}>Ingresos nuevos clientes</span>
               <MiniChart
                 data={allCohorts.filter(c => c.revenue > 0).map(c => ({ label: monthLabel(c.month).slice(0, 3), revenue: c.revenue }))}
                 dataKey="revenue" color={ACCENT} prefix="$" height={110}
               />
             </div>
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14, padding: '14px 18px' }}>
+            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 6, display: 'block' }}>CAC</span>
               <MiniChart
                 data={allCohorts.filter(c => c.cac > 0).map(c => ({ label: monthLabel(c.month).slice(0, 3), cac: c.cac }))}
@@ -441,7 +441,7 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
       {channel === 'todos' && <ChannelSummaryTable ads={ads} instagram={instagram} seo={seo} ux={ux} />}
       {channel === 'meta' && <AdsTab ads={ads} />}
       {channel === 'gads' && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14 }}>
           <div style={{ textAlign: 'center' }}>
             <span style={{ fontSize: 28, display: 'block', marginBottom: 10, opacity: 0.15 }}>⏳</span>
             <span style={{ fontSize: 14, color: 'rgba(26,31,54,0.3)', fontWeight: 600 }}>Pendiente activación — token en proceso</span>
