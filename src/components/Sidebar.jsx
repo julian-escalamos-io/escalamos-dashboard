@@ -53,7 +53,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
     <div style={{
       width: 220,
       height: 'calc(100vh - 24px)',
-      background: '#EBF0F9',
+      background: '#F5F7FC',
       boxShadow: '0 2px 16px rgba(26,31,54,0.08)',
       borderRadius: 20,
       display: 'flex',
