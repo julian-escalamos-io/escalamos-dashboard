@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 const ACCENT = '#2D7AFF'
 
 const NAV_ITEMS = [
@@ -51,11 +49,9 @@ const NAV_ITEMS = [
 ]
 
 export function Sidebar({ activeModule, onModuleChange }) {
-  const [collapsed, setCollapsed] = useState(false)
-
   return (
     <div style={{
-      width: collapsed ? 72 : 220,
+      width: 220,
       height: 'calc(100vh - 24px)',
       background: '#EBF0F9',
       boxShadow: '0 2px 16px rgba(26,31,54,0.08)',
@@ -63,57 +59,33 @@ export function Sidebar({ activeModule, onModuleChange }) {
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
-      transition: 'width 0.2s ease',
       overflow: 'hidden',
       position: 'sticky',
       top: 0,
     }}>
       {/* Logo */}
       <div style={{
-        padding: collapsed ? '22px 0' : '22px 20px',
+        padding: '22px 20px',
         display: 'flex', alignItems: 'center',
-        justifyContent: collapsed ? 'center' : 'space-between',
         borderBottom: '1px solid rgba(0,0,0,0.06)',
         height: 68, flexShrink: 0,
       }}>
-        {!collapsed && <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, filter: 'brightness(0)', opacity: 0.75 }} />}
-        {collapsed && (
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ color: '#fff', fontWeight: 900, fontSize: 14 }}>E</span>
-          </div>
-        )}
-        {!collapsed && (
-          <button onClick={() => setCollapsed(!collapsed)} style={{ background: 'none', border: 'none', color: 'rgba(26,31,54,0.25)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M10 7H4 M7 4L4 7L7 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        )}
-        {collapsed && (
-          <button onClick={() => setCollapsed(!collapsed)} style={{ position: 'absolute', top: 24, right: -10, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.08)', zIndex: 10 }}>
-            <svg width="10" height="10" viewBox="0 0 14 14" fill="none">
-              <path d="M4 7H10 M7 4L10 7L7 10" stroke="rgba(26,31,54,0.5)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-        )}
+        <img src="/logo.png" alt="Escalamos.io" style={{ height: 18, filter: 'brightness(0)', opacity: 0.75 }} />
       </div>
 
       {/* Nav items */}
       <nav style={{ padding: '20px 12px', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
-        {!collapsed && (
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.28)', padding: '0 8px 12px', display: 'block' }}>Home</span>
-        )}
+        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.28)', padding: '0 8px 12px', display: 'block' }}>Home</span>
         {NAV_ITEMS.map(({ key, label, icon }) => {
           const active = activeModule === key
           return (
             <button
               key={key}
               onClick={() => onModuleChange(key)}
-              title={collapsed ? label : undefined}
               style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: collapsed ? '14px 0' : '12px 12px',
-                justifyContent: collapsed ? 'center' : 'flex-start',
+                padding: '12px 12px',
+                justifyContent: 'flex-start',
                 borderRadius: 10,
                 background: active ? 'rgba(45,122,255,0.08)' : 'transparent',
                 border: 'none',
@@ -131,7 +103,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
                 color: active ? '#fff' : 'rgba(26,31,54,0.45)',
                 transition: 'all 0.15s',
               }}>{icon}</span>
-              {!collapsed && label}
+              {label}
             </button>
           )
         })}
@@ -142,10 +114,9 @@ export function Sidebar({ activeModule, onModuleChange }) {
 
       {/* User */}
       <div style={{
-        padding: collapsed ? '16px 0' : '16px 20px',
+        padding: '16px 20px',
         borderTop: '1px solid rgba(0,0,0,0.06)',
         display: 'flex', alignItems: 'center', gap: 10,
-        justifyContent: collapsed ? 'center' : 'flex-start',
         flexShrink: 0,
       }}>
         <div style={{
@@ -154,12 +125,10 @@ export function Sidebar({ activeModule, onModuleChange }) {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 13, fontWeight: 700, color: '#fff',
         }}>J</div>
-        {!collapsed && (
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.8)', lineHeight: 1.3 }}>Julián Mercurio</div>
-            <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', fontWeight: 600 }}>Admin</div>
-          </div>
-        )}
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.8)', lineHeight: 1.3 }}>Julián Mercurio</div>
+          <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', fontWeight: 600 }}>Admin</div>
+        </div>
       </div>
     </div>
   )
