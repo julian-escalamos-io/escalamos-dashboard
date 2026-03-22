@@ -114,8 +114,9 @@ export default function App() {
   return (
     <div style={{
       display: 'flex', minHeight: '100vh',
-      background: '#1e2d4f', color: '#1a1f36',
+      background: '#E8EDF8', color: '#1a1f36',
       fontFamily: "'Montserrat', sans-serif",
+      padding: 12, gap: 12, alignItems: 'flex-start',
     }}>
       {/* Sidebar */}
       <Sidebar
@@ -129,8 +130,9 @@ export default function App() {
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0,
         background: '#FFFFFF',
-        backgroundImage: `linear-gradient(180deg, rgba(26,31,54,0.05) 0%, transparent 56px), radial-gradient(ellipse 80% 50% at 75% -5%, rgba(45,122,255,0.12) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 100% 80%, rgba(99,102,241,0.08) 0%, transparent 60%)`,
-        borderRadius: 0,
+        backgroundImage: `radial-gradient(ellipse 80% 50% at 75% -5%, rgba(45,122,255,0.12) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 100% 80%, rgba(99,102,241,0.08) 0%, transparent 60%)`,
+        borderRadius: 20, overflow: 'hidden',
+        minHeight: 'calc(100vh - 24px)',
       }}>
         {/* Top bar */}
         <div style={{

@@ -56,9 +56,10 @@ export function Sidebar({ activeModule, onModuleChange }) {
   return (
     <div style={{
       width: collapsed ? 72 : 220,
-      minHeight: '100vh',
+      height: 'calc(100vh - 24px)',
       background: '#EBF0F9',
-      boxShadow: '2px 0 12px rgba(0,0,0,0.06)',
+      boxShadow: '0 2px 16px rgba(26,31,54,0.08)',
+      borderRadius: 20,
       display: 'flex',
       flexDirection: 'column',
       flexShrink: 0,
@@ -66,7 +67,6 @@ export function Sidebar({ activeModule, onModuleChange }) {
       overflow: 'hidden',
       position: 'sticky',
       top: 0,
-      height: '100vh',
     }}>
       {/* Logo */}
       <div style={{
