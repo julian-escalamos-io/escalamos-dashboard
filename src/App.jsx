@@ -60,6 +60,14 @@ export default function App() {
   const egresos = useMemo(() => data?.egresos ? parseEgresos(data.egresos) : [], [data])
   const er = useMemo(() => data?.er ? parseER(data.er) : [], [data])
 
+  // ── Hero KPIs (always-on top banner) ─────────────────────────────────────
+  const heroData = useMemo(() => {
+    if (!data) return null
+    const kpis = computeOverviewKPIs(servicios, modelFilter)
+    const currentER = er.find(r => r.monthKey === selectedERMonth) || er[er.length - 1]
+    return { kpis, currentER }
+  }, [data, servicios, er, modelFilter, selectedERMonth])
+
   // ── Chat context (summary of current view data) ───────────────────────────
   const chatContext = useMemo(() => {
     if (!data) return {}
@@ -184,6 +192,49 @@ export default function App() {
             <span style={{ fontSize: 10, fontWeight: 600, color: statusMsg.color }}>{statusMsg.text}</span>
           </div>
         </div>
+
+        {/* Hero banner */}
+        {heroData && (
+          <div style={{
+            position: 'relative', overflow: 'hidden', flexShrink: 0,
+            background: 'linear-gradient(135deg, #1a3a6b 0%, #2D7AFF 55%, #5b9bff 100%)',
+            padding: '28px 32px',
+          }}>
+            {/* Decorative circles */}
+            <div style={{ position: 'absolute', top: -60, right: 80, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: 20, right: 20, width: 130, height: 130, borderRadius: '50%', background: 'rgba(255,255,255,0.08)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -40, right: 260, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,0.04)', pointerEvents: 'none' }} />
+
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 32 }}>
+              {/* Label */}
+              <div style={{ flexShrink: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Estado actual</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>Escalamos.io</div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ width: 1, height: 48, background: 'rgba(255,255,255,0.18)', flexShrink: 0 }} />
+
+              {/* KPI cards */}
+              {[
+                { label: 'MRR', value: heroData.kpis.mrr > 0 ? `$${Math.round(heroData.kpis.mrr).toLocaleString('en-US')}` : '—' },
+                { label: 'Clientes activos', value: heroData.kpis.clientesActivos || '—' },
+                { label: 'Revenue del mes', value: heroData.currentER?.revenue > 0 ? `$${Math.round(heroData.currentER.revenue).toLocaleString('en-US')}` : '—' },
+                { label: 'Margen neto', value: heroData.currentER?.margenNeto > 0 ? `${(heroData.currentER.margenNeto * 100).toFixed(1)}%` : '—' },
+                { label: 'AOV', value: heroData.kpis.aov > 0 ? `$${Math.round(heroData.kpis.aov).toLocaleString('en-US')}` : '—' },
+              ].map(({ label, value }) => (
+                <div key={label} style={{
+                  background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14,
+                  padding: '12px 20px', flexShrink: 0,
+                }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.6)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>

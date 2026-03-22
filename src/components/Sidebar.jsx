@@ -93,6 +93,9 @@ export function Sidebar({ activeModule, onModuleChange }) {
 
       {/* Nav items */}
       <nav style={{ padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
+        {!collapsed && (
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.3)', padding: '4px 12px 8px' }}>Home</span>
+        )}
         {NAV_ITEMS.map(({ key, label, icon }) => {
           const active = activeModule === key
           return (
@@ -122,6 +125,28 @@ export function Sidebar({ activeModule, onModuleChange }) {
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
+
+      {/* User */}
+      <div style={{
+        padding: collapsed ? '16px 0' : '14px 16px',
+        borderTop: '1px solid rgba(0,0,0,0.07)',
+        display: 'flex', alignItems: 'center', gap: 10,
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        flexShrink: 0,
+      }}>
+        <div style={{
+          width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
+          background: 'linear-gradient(135deg, #2D7AFF 0%, #5B9BFF 100%)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 12, fontWeight: 700, color: '#fff',
+        }}>J</div>
+        {!collapsed && (
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.8)', lineHeight: 1.3 }}>Julián Mercurio</div>
+            <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>Admin</div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
