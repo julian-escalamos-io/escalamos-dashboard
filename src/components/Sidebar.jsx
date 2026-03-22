@@ -88,33 +88,46 @@ export function Sidebar({ activeModule, onModuleChange }) {
       </div>
 
       {/* Nav items */}
-      <nav style={{ padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
+      <nav style={{ padding: '12px 0', display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
         {!collapsed && (
-          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.3)', padding: '4px 12px 8px' }}>Home</span>
+          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.3)', padding: '4px 16px 8px', display: 'block' }}>Home</span>
         )}
         {NAV_ITEMS.map(({ key, label, icon }) => {
           const active = activeModule === key
           return (
-            <button
-              key={key}
-              onClick={() => onModuleChange(key)}
-              title={collapsed ? label : undefined}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: collapsed ? '10px 0' : '10px 12px',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                borderRadius: 9,
-                background: active ? 'rgba(45,122,255,0.12)' : 'transparent',
-                border: active ? '1px solid rgba(45,122,255,0.2)' : '1px solid transparent',
-                color: active ? '#2D7AFF' : 'rgba(26,31,54,0.5)',
-                fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                fontFamily: "'Montserrat'", transition: 'all 0.15s',
-                width: '100%',
-              }}
-            >
-              <span style={{ flexShrink: 0, lineHeight: 0 }}>{icon}</span>
-              {!collapsed && label}
-            </button>
+            <div key={key} style={{ position: 'relative' }}>
+              {/* Concave corners for active tab */}
+              {active && !collapsed && (<>
+                <div style={{ position: 'absolute', top: -12, right: 0, width: 12, height: 12, background: '#FFFFFF', pointerEvents: 'none' }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12"><path d="M12 0 Q0 0 0 12 L12 12Z" fill="#E8EDF8"/></svg>
+                </div>
+                <div style={{ position: 'absolute', bottom: -12, right: 0, width: 12, height: 12, background: '#FFFFFF', pointerEvents: 'none' }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12"><path d="M12 12 Q0 12 0 0 L12 0Z" fill="#E8EDF8"/></svg>
+                </div>
+              </>)}
+              <button
+                onClick={() => onModuleChange(key)}
+                title={collapsed ? label : undefined}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: collapsed ? '10px 0' : '10px 16px',
+                  justifyContent: collapsed ? 'center' : 'flex-start',
+                  borderRadius: active && !collapsed ? '10px 0 0 10px' : 9,
+                  marginLeft: collapsed ? 8 : 8,
+                  marginRight: active && !collapsed ? 0 : 8,
+                  background: active ? '#FFFFFF' : 'transparent',
+                  border: 'none',
+                  color: active ? '#2D7AFF' : 'rgba(26,31,54,0.5)',
+                  fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  fontFamily: "'Montserrat'", transition: 'all 0.15s',
+                  width: active && !collapsed ? 'calc(100% - 8px)' : 'calc(100% - 16px)',
+                  boxShadow: active && !collapsed ? '0 2px 12px rgba(0,0,0,0.06)' : 'none',
+                }}
+              >
+                <span style={{ flexShrink: 0, lineHeight: 0 }}>{icon}</span>
+                {!collapsed && label}
+              </button>
+            </div>
           )
         })}
       </nav>
