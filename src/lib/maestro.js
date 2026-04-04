@@ -106,6 +106,63 @@ export function parseER(raw = []) {
     .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
 }
 
+// ─── Xero Raw Data — Facturas pendientes ─────────────────────────────────────
+// Raw Data columns (from EstadoResultados.gs):
+//   A(0):Fecha  C(2):Modelo  D(3):Tipo  E(4):Account Code
+//   G(6):Contact Name  K(10):Monto USD  N(13):Status  O(14):Fecha Pago
+
+export function parsePendingInvoices(raw = []) {
+  return raw
+    .filter(r => {
+      if (!r[0]) return false
+      const acCode = String(r[4] || '')
+      const tipo = String(r[3] || '')
+      const monto = +r[10] || 0
+      const fechaPago = r[14]
+      // Revenue items (account code starts with 2), positive amount, no payment date, not TRANSFER
+      return acCode.charAt(0) === '2' && monto > 0 && !fechaPago && tipo !== 'TRANSFER'
+    })
+    .map(r => {
+      const fecha = r[0]
+      // Calculate days pending
+      let daysPending = 0
+      if (fecha) {
+        const fechaDate = typeof fecha === 'number'
+          ? new Date((fecha - 25569) * 86400 * 1000) // Excel serial
+          : new Date(fecha)
+        daysPending = Math.floor((Date.now() - fechaDate.getTime()) / (1000 * 60 * 60 * 24))
+      }
+      return {
+        fecha: typeof fecha === 'number' ? new Date((fecha - 25569) * 86400 * 1000).toISOString().slice(0, 10) : String(fecha).slice(0, 10),
+        modelo: String(r[2] || ''),
+        tipo: String(r[3] || ''),
+        contactName: String(r[6] || ''),
+        monto: +r[10] || 0,
+        status: String(r[13] || ''),
+        daysPending,
+      }
+    })
+    .sort((a, b) => b.daysPending - a.daysPending) // más viejas primero
+}
+
+export function parseIncobrables(raw = []) {
+  return raw
+    .filter(r => {
+      if (!r[0]) return false
+      const acCode = String(r[4] || '')
+      return acCode === '114' // Account Code 114 = Incobrable
+    })
+    .map(r => {
+      const fecha = r[0]
+      return {
+        fecha: typeof fecha === 'number' ? new Date((fecha - 25569) * 86400 * 1000).toISOString().slice(0, 10) : String(fecha).slice(0, 10),
+        modelo: String(r[2] || ''),
+        contactName: String(r[6] || ''),
+        monto: +r[10] || 0,
+      }
+    })
+}
+
 // ─── E.R. Unificado (Xero) ───────────────────────────────────────────────────
 // Columns: A(0):Año B(1):Mes C(2):Modelo D(3):Revenue E(4):Cash Collected
 //   F(5):Cobros a tiempo G(6):Cobros de deuda H(7):Deuda nueva I(8):Incobrable

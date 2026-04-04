@@ -63,6 +63,7 @@ export default async function handler(req, res) {
 
     const xeroReads = xeroId ? [
       readSheet(token, xeroId, 'E.R. Unificado', 'A5:R'),
+      readSheet(token, xeroId, 'Xero - Raw Data', 'A2:O'),
     ] : []
 
     const [marketingResults, maestroResults, xeroResults] = await Promise.all([
@@ -81,8 +82,9 @@ export default async function handler(req, res) {
       response.historico = maestroResults[2]
     }
 
-    if (xeroId && xeroResults.length === 1) {
+    if (xeroId && xeroResults.length >= 1) {
       response.erUnificado = xeroResults[0]
+      if (xeroResults[1]) response.xeroRaw = xeroResults[1]
     }
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30')

@@ -11,7 +11,7 @@ import { FulfillmentModule } from './modules/FulfillmentModule.jsx'
 import { FinanzasModule } from './modules/FinanzasModule.jsx'
 import { PRESETS } from './lib/dates.js'
 import { buildCohorts, buildMetaAds, buildInstagram, buildSeo, buildUx } from './lib/cohorts.js'
-import { parseServicios, parseEgresos, parseER, parseHistorico, parseERUnificado, erUnificadoToOverview, computeOverviewKPIs } from './lib/maestro.js'
+import { parseServicios, parseEgresos, parseER, parseHistorico, parseERUnificado, erUnificadoToOverview, parsePendingInvoices, parseIncobrables, computeOverviewKPIs } from './lib/maestro.js'
 
 // ── Configuración de roles ─────────────────────────────────────────────────
 const MODULES_BY_ROLE = {
@@ -119,6 +119,9 @@ function Dashboard() {
   const erUnificado = useMemo(() => data?.erUnificado ? parseERUnificado(data.erUnificado) : [], [data])
   // Vista compatible para Overview (solo filas TOTAL mensuales)
   const er = useMemo(() => erUnificado.length ? erUnificadoToOverview(erUnificado) : (data?.er ? parseER(data.er) : []), [erUnificado, data])
+  // Facturas pendientes e incobrables (desde Xero Raw Data)
+  const pendingInvoices = useMemo(() => data?.xeroRaw ? parsePendingInvoices(data.xeroRaw) : [], [data])
+  const incobrables = useMemo(() => data?.xeroRaw ? parseIncobrables(data.xeroRaw) : [], [data])
 
   // ── Chat context ───────────────────────────────────────────────────────────
   const chatContext = useMemo(() => {
@@ -296,7 +299,7 @@ function Dashboard() {
                 <FulfillmentModule servicios={servicios} modelFilter={modelFilter} historico={historico} selectedERMonth={selectedERMonth} />
               )}
               {activeModule === 'finanzas' && allowedModules.includes('finanzas') && (
-                <FinanzasModule erUnificado={erUnificado} er={er} egresos={egresos} servicios={servicios} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
+                <FinanzasModule erUnificado={erUnificado} er={er} egresos={egresos} servicios={servicios} pendingInvoices={pendingInvoices} incobrables={incobrables} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
               )}
             </>
           )}

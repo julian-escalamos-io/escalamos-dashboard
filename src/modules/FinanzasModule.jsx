@@ -298,86 +298,142 @@ function PLTab({ erUnificado, modelFilter }) {
   )
 }
 
-// ─── Deudas Tab ─────���─────────────────────────────────���───────────────────────
-function DeudasTab({ erUnificado, modelFilter }) {
-  const modelRows = useMemo(() => getModelRows(erUnificado, modelFilter), [erUnificado, modelFilter])
-  const last12 = modelRows.slice(-12)
-  const current = modelRows[modelRows.length - 1]
-  const prev = modelRows.length > 1 ? modelRows[modelRows.length - 2] : null
+// ─── Deudas Tab ──────────────────────────────────────────────────────────────
+function DeudasTab({ pendingInvoices, incobrables, modelFilter }) {
+  const filtered = useMemo(() => {
+    if (modelFilter === 'todos') return pendingInvoices
+    return pendingInvoices.filter(i => i.modelo.toLowerCase() === modelFilter.toLowerCase())
+  }, [pendingInvoices, modelFilter])
 
-  if (!current) return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos.</div>
+  const filteredInc = useMemo(() => {
+    if (modelFilter === 'todos') return incobrables
+    return incobrables.filter(i => i.modelo.toLowerCase() === modelFilter.toLowerCase())
+  }, [incobrables, modelFilter])
+
+  const totalPending = filtered.reduce((s, i) => s + i.monto, 0)
+  const totalIncobrable = filteredInc.reduce((s, i) => s + i.monto, 0)
+
+  // Agrupar por modelo para resumen
+  const byModelo = useMemo(() => {
+    const groups = {}
+    for (const inv of filtered) {
+      const m = inv.modelo || 'Sin modelo'
+      if (!groups[m]) groups[m] = { modelo: m, count: 0, total: 0 }
+      groups[m].count++
+      groups[m].total += inv.monto
+    }
+    return Object.values(groups).sort((a, b) => b.total - a.total)
+  }, [filtered])
+
+  // Agrupar por antigüedad
+  const aging = useMemo(() => {
+    const buckets = { current: 0, d30: 0, d60: 0, d90: 0 }
+    for (const inv of filtered) {
+      if (inv.daysPending <= 30) buckets.current += inv.monto
+      else if (inv.daysPending <= 60) buckets.d30 += inv.monto
+      else if (inv.daysPending <= 90) buckets.d60 += inv.monto
+      else buckets.d90 += inv.monto
+    }
+    return buckets
+  }, [filtered])
 
   return (
     <>
       {/* KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
-        <div style={{ background: 'linear-gradient(135deg, #2D7AFF 0%, #1e5fd4 100%)', border: '1px solid rgba(45,122,255,0.3)', boxShadow: '0 4px 16px rgba(45,122,255,0.25)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Cash Collected</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>{fmt(current.cashCollected)}</span>
-          <Delta current={current.cashCollected} previous={prev?.cashCollected} />
-        </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Cobros a tiempo</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: GREEN, letterSpacing: -0.5 }}>{fmt(current.cobrosATiempo)}</span>
-          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>facturado y cobrado en el mes</span>
-        </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Cobros de deuda</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: '#F59E0B', letterSpacing: -0.5 }}>{fmt(current.cobrosDeuda)}</span>
-          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>facturado antes, cobrado ahora</span>
-        </div>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Deuda nueva</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(current.deudaNueva)}</span>
-          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>facturado pero no cobrado</span>
-        </div>
-      </div>
-
-      {/* Eficiencia + Incobrable */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>% Eficiencia de cobro</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: current.pctEficCobro > 0.8 ? GREEN : current.pctEficCobro > 0.5 ? '#F59E0B' : DANGER, letterSpacing: -0.5 }}>
-            {current.pctEficCobro ? `${(current.pctEficCobro * 100).toFixed(1)}%` : '—'}
-          </span>
-          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>Cash / Revenue</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>
+        <div style={{ background: 'linear-gradient(135deg, #b91c1c 0%, #E03E3E 100%)', border: '1px solid rgba(224,62,62,0.3)', boxShadow: '0 4px 16px rgba(224,62,62,0.25)', borderRadius: 12, padding: '16px 20px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Total pendiente</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>{fmt(totalPending)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', display: 'block', marginTop: 2 }}>{filtered.length} facturas</span>
         </div>
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Incobrable</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: current.incobrable !== 0 ? DANGER : 'rgba(26,31,54,0.35)', letterSpacing: -0.5 }}>{fmt(current.incobrable)}</span>
-          <Delta current={current.incobrable} previous={prev?.incobrable} inverse />
+          <span style={{ fontSize: 28, fontWeight: 800, color: totalIncobrable !== 0 ? DANGER : 'rgba(26,31,54,0.35)', letterSpacing: -0.5 }}>{fmt(totalIncobrable)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>{filteredInc.length} registros</span>
+        </div>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Antigüedad promedio</span>
+          <span style={{ fontSize: 28, fontWeight: 800, color: '#1a1f36', letterSpacing: -0.5 }}>
+            {filtered.length > 0 ? `${Math.round(filtered.reduce((s, i) => s + i.daysPending, 0) / filtered.length)}d` : '—'}
+          </span>
         </div>
       </div>
 
-      {/* Evolución */}
-      <Divider title="Evolución de cobros" />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
-        <DataTable
-          rows={[...last12].reverse()}
-          columns={[
-            { key: 'monthLabel', label: 'Período', sortable: false },
-            { key: 'revenue', label: 'Revenue', align: 'right', render: v => fmt(v) },
-            { key: 'cashCollected', label: 'Cash', align: 'right', render: v => fmt(v) },
-            { key: 'cobrosATiempo', label: 'A tiempo', align: 'right', render: v => (
-              <span style={{ color: v > 0 ? GREEN : 'rgba(26,31,54,0.3)' }}>{fmt(v)}</span>
-            )},
-            { key: 'cobrosDeuda', label: 'De deuda', align: 'right', render: v => (
-              <span style={{ color: v > 0 ? '#F59E0B' : 'rgba(26,31,54,0.3)' }}>{fmt(v)}</span>
-            )},
-            { key: 'deudaNueva', label: 'Deuda nueva', align: 'right', render: v => (
-              <span style={{ color: v > 0 ? DANGER : 'rgba(26,31,54,0.3)' }}>{fmt(v)}</span>
-            )},
-            { key: 'incobrable', label: 'Incobrable', align: 'right', render: v => (
-              <span style={{ color: v !== 0 ? DANGER : 'rgba(26,31,54,0.2)' }}>{fmt(v)}</span>
-            )},
-            { key: 'pctEficCobro', label: '% Efic.', align: 'right', render: v => (
-              <span style={{ color: v > 0.8 ? GREEN : v > 0.5 ? '#F59E0B' : DANGER, fontWeight: 600 }}>
-                {v ? `${(v * 100).toFixed(0)}%` : '—'}
-              </span>
-            )},
-          ]}
-        />
+      {/* Aging buckets */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 24 }}>
+        {[
+          { label: '0-30 días', value: aging.current, color: GREEN },
+          { label: '31-60 días', value: aging.d30, color: '#F59E0B' },
+          { label: '61-90 días', value: aging.d60, color: '#F97316' },
+          { label: '90+ días', value: aging.d90, color: DANGER },
+        ].map(b => (
+          <div key={b.label} style={{ background: 'rgba(26,31,54,0.03)', border: '1px solid rgba(26,31,54,0.08)', borderRadius: 10, padding: '12px 16px', textAlign: 'center' }}>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 4 }}>{b.label}</span>
+            <span style={{ fontSize: 18, fontWeight: 800, color: b.value > 0 ? b.color : 'rgba(26,31,54,0.25)' }}>{fmt(b.value)}</span>
+          </div>
+        ))}
       </div>
+
+      {/* Desglose por modelo */}
+      {byModelo.length > 1 && (
+        <>
+          <Divider title="Por modelo" />
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(byModelo.length, 5)}, 1fr)`, gap: 8, marginBottom: 24 }}>
+            {byModelo.map(g => (
+              <div key={g.modelo} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 10, padding: '12px 16px' }}>
+                <ModeloBadge value={g.modelo} />
+                <div style={{ marginTop: 8 }}>
+                  <span style={{ fontSize: 18, fontWeight: 800, color: DANGER }}>{fmt(g.total)}</span>
+                  <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>{g.count} facturas</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Tabla de facturas pendientes */}
+      <Divider title="Facturas pendientes" color={DANGER} />
+      {filtered.length > 0 ? (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+          <DataTable
+            rows={filtered}
+            columns={[
+              { key: 'contactName', label: 'Cliente', render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
+              { key: 'modelo', label: 'Modelo', width: 90, render: v => v ? <ModeloBadge value={v} /> : '—' },
+              { key: 'fecha', label: 'Fecha factura', width: 100 },
+              { key: 'daysPending', label: 'Días', width: 60, align: 'right', render: v => (
+                <span style={{ fontWeight: 700, color: v > 90 ? DANGER : v > 30 ? '#F59E0B' : 'rgba(26,31,54,0.6)' }}>{v}d</span>
+              )},
+              { key: 'monto', label: 'Monto', width: 100, align: 'right', render: v => (
+                <span style={{ fontWeight: 700, color: DANGER }}>{fmt(v)}</span>
+              )},
+            ]}
+          />
+        </div>
+      ) : (
+        <div style={{ padding: 30, textAlign: 'center', color: 'rgba(26,31,54,0.35)', fontSize: 13 }}>No hay facturas pendientes de cobro.</div>
+      )}
+
+      {/* Incobrables */}
+      {filteredInc.length > 0 && (
+        <>
+          <Divider title="Incobrables" color={DANGER} />
+          <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
+            <DataTable
+              rows={filteredInc}
+              columns={[
+                { key: 'contactName', label: 'Cliente', render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
+                { key: 'modelo', label: 'Modelo', width: 90, render: v => v ? <ModeloBadge value={v} /> : '—' },
+                { key: 'fecha', label: 'Fecha', width: 100 },
+                { key: 'monto', label: 'Monto', width: 100, align: 'right', render: v => (
+                  <span style={{ fontWeight: 700, color: DANGER }}>{fmt(v)}</span>
+                )},
+              ]}
+            />
+          </div>
+        </>
+      )}
     </>
   )
 }
@@ -713,7 +769,7 @@ function InsightsBlock({ currentRow, prevRow }) {
 }
 
 // ─── Main Module ──────────���──────────────────────────────────��────────────────
-export function FinanzasModule({ erUnificado = [], er, egresos, servicios, selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
+export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendingInvoices = [], incobrables = [], selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
   const setSubTab = onSubTabChange || (() => {})
   const erData = erUnificado || []
   const egresosData = egresos || []
@@ -738,7 +794,7 @@ export function FinanzasModule({ erUnificado = [], er, egresos, servicios, selec
       </div>
 
       {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} />}
-      {subTab === 'deudas'  && <DeudasTab erUnificado={erData} modelFilter={modelFilter} />}
+      {subTab === 'deudas'  && <DeudasTab pendingInvoices={pendingInvoices} incobrables={incobrables} modelFilter={modelFilter} />}
       {subTab === 'proyeccion' && (
         <>
           <Divider title="Ingresos" />
