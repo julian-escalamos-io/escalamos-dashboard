@@ -106,6 +106,79 @@ export function parseER(raw = []) {
     .sort((a, b) => a.monthKey.localeCompare(b.monthKey))
 }
 
+// ─── E.R. Unificado (Xero) ───────────────────────────────────────────────────
+// Columns: A(0):Año B(1):Mes C(2):Modelo D(3):Revenue E(4):Cash Collected
+//   F(5):Cobros a tiempo G(6):Cobros de deuda H(7):Deuda nueva I(8):Incobrable
+//   J(9):%Efic.Cobro K(10):Gastos Op L(11):Comisiones Stripe M(12):Gastos Admin
+//   N(13):Total Gastos O(14):Ganancia Bruta P(15):%Margen Bruto
+//   Q(16):Ganancia Neta R(17):%Margen Neto
+
+export function parseERUnificado(raw = []) {
+  return raw
+    .filter(r => r[0] && r[1] && r[2]) // skip empty/separator rows
+    .map(r => {
+      const year = +r[0]
+      const mesRaw = r[1]
+      const month = toMonthNum(mesRaw)
+      const modelo = String(r[2] || '')
+      const isAcumulado = String(mesRaw).toLowerCase() === 'acumulado'
+      const mk = isAcumulado ? `${year}-acum` : monthKey(year, mesRaw)
+      const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+      const label = isAcumulado ? `Acum ${year}` : `${MESES_LABEL[month - 1] || mesRaw} ${year}`
+      return {
+        year,
+        month: isAcumulado ? 0 : month,
+        monthKey: mk,
+        monthLabel: label,
+        modelo,
+        isTotal: modelo === 'TOTAL' || modelo === 'TOTAL ANUAL',
+        isAcumulado,
+        revenue: +r[3] || 0,
+        cashCollected: +r[4] || 0,
+        cobrosATiempo: +r[5] || 0,
+        cobrosDeuda: +r[6] || 0,
+        deudaNueva: +r[7] || 0,
+        incobrable: +r[8] || 0,
+        pctEficCobro: +r[9] || 0,
+        gastosOp: +r[10] || 0,
+        comisionesStripe: +r[11] || 0,
+        gastosAdmin: +r[12] || 0,
+        totalGastos: +r[13] || 0,
+        gananciaBruta: +r[14] || 0,
+        pctMargenBruto: +r[15] || 0,
+        gananciaNeta: +r[16] || 0,
+        pctMargenNeto: +r[17] || 0,
+      }
+    })
+    .sort((a, b) => {
+      if (a.isAcumulado !== b.isAcumulado) return a.isAcumulado ? 1 : -1
+      return a.monthKey.localeCompare(b.monthKey)
+    })
+}
+
+// Filas TOTAL mensuales para Overview (compatible con el shape viejo de er)
+export function erUnificadoToOverview(rows) {
+  return rows
+    .filter(r => r.isTotal && !r.isAcumulado)
+    .map(r => ({
+      year: r.year,
+      month: r.month,
+      monthKey: r.monthKey,
+      monthLabel: r.monthLabel,
+      revenue: r.revenue,
+      cashCollected: r.cashCollected,
+      ganancia: r.gananciaNeta,
+      margenNeto: r.pctMargenNeto,
+      gastos: r.totalGastos,
+      // Campos de deuda (simplificados)
+      deudasCobradas: r.cobrosDeuda,
+      cobrosMes: r.cobrosATiempo,
+      pctCobradosMes: r.pctEficCobro,
+      deudasNueva: r.deudaNueva,
+      deudasIncobrable: r.incobrable,
+    }))
+}
+
 export function parseHistorico(raw = []) {
   return raw
     .filter(r => r[0] && typeof r[0] === 'number')
@@ -116,15 +189,27 @@ export function parseHistorico(raw = []) {
       monthLabel: String(r[1]),
       modelo: String(r[3] || ''),
       area: String(r[4] || ''),
-      clientesActivos: +r[5] || 0,
-      cNuevos: +r[7] || 0,
-      cPerdidos: +r[11] || 0,
-      pctChurnTri: +r[15] || 0,
-      nrr: +r[17] || 0,
-      lifeSpan: +r[20] || 0,
-      aov: +r[21] || 0,
-      mrr: +r[24] || 0,
-      cashCollected: +r[25] || 0,
+      clientesActivos: +r[5] || 0,  // F
+      // G (6): Aux M.C — omitido
+      cNuevos: +r[7] || 0,          // H
+      upsells: +r[8] || 0,          // I
+      mNuevos: +r[9] || 0,          // J — $ nuevos
+      mUpsells: +r[10] || 0,        // K — $ upsells
+      cPerdidos: +r[11] || 0,       // L
+      downsells: +r[12] || 0,       // M
+      mDownsells: +r[13] || 0,      // N — $ downsells
+      mPerdidos: +r[14] || 0,       // O — $ perdidos
+      pctChurnTri: +r[15] || 0,     // P
+      pctChurnA: +r[16] || 0,       // Q — % Churn Anual
+      pctMRRNeto: +r[17] || 0,      // R — % MRR Neto
+      nrr: +r[18] || 0,             // S — (era r[17], corregido)
+      lifeRetention: +r[19] || 0,   // T
+      lifeSpan: +r[20] || 0,        // U
+      aov: +r[21] || 0,             // V
+      ltgp: +r[22] || 0,            // W
+      ltgpActual: +r[23] || 0,      // X
+      mrr: +r[24] || 0,             // Y
+      cashCollected: +r[25] || 0,   // Z
       comisiones: +r[28] || 0,
       extraccion: +r[29] || 0,
       margenTransaccion: +r[30] || 0,
@@ -151,8 +236,17 @@ export function aggregateHistorico(historico, targetMonthKey, modelFilter) {
   const cashCollected = s('cashCollected')
   const gananciaBruta = s('gananciaBruta')
   const margenNeto = s('margenNeto')
+  const avg = (f) => rows.length ? rows.reduce((a, r) => a + (r[f] || 0), 0) / rows.length : 0
   return {
     clientesActivos: s('clientesActivos'),
+    cNuevos: s('cNuevos'),
+    upsells: s('upsells'),
+    mNuevos: s('mNuevos'),
+    mUpsells: s('mUpsells'),
+    cPerdidos: s('cPerdidos'),
+    downsells: s('downsells'),
+    mDownsells: s('mDownsells'),
+    mPerdidos: s('mPerdidos'),
     cashCollected,
     comisiones: s('comisiones'),
     extraccion: s('extraccion'),
@@ -166,10 +260,15 @@ export function aggregateHistorico(historico, targetMonthKey, modelFilter) {
     margenNeto,
     pctNeto: cashCollected ? margenNeto / cashCollected : 0,
     mrr: s('mrr'),
-    nrr: rows.length ? rows.reduce((a, r) => a + r.nrr, 0) / rows.length : 0,
-    pctChurnTri: rows.length ? rows.reduce((a, r) => a + r.pctChurnTri, 0) / rows.length : 0,
-    lifeSpan: rows.length ? rows.reduce((a, r) => a + r.lifeSpan, 0) / rows.length : 0,
-    aov: rows.length ? rows.reduce((a, r) => a + r.aov, 0) / rows.length : 0,
+    nrr: avg('nrr'),
+    pctChurnTri: avg('pctChurnTri'),
+    pctChurnA: avg('pctChurnA'),
+    pctMRRNeto: avg('pctMRRNeto'),
+    lifeRetention: avg('lifeRetention'),
+    lifeSpan: avg('lifeSpan'),
+    aov: avg('aov'),
+    ltgp: avg('ltgp'),
+    ltgpActual: avg('ltgpActual'),
   }
 }
 

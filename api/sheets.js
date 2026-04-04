@@ -1,4 +1,5 @@
 import { GoogleAuth } from 'google-auth-library'
+import { requireAuth } from './_auth.js'
 
 const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets'
@@ -26,12 +27,19 @@ async function readSheet(token, spreadsheetId, sheetName, range = 'A2:ZZ') {
   return data.values || []
 }
 
-export default async function handler(_req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization')
+
+  if (req.method === 'OPTIONS') return res.status(200).end()
+
+  const auth = await requireAuth(req, res)
+  if (!auth) return
 
   const marketingId = process.env.SPREADSHEET_ID
   const maestroId = process.env.REGISTRO_MAESTRO_SPREADSHEET_ID
+  const xeroId = process.env.XERO_SPREADSHEET_ID
 
   try {
     const token = await getToken()
@@ -50,27 +58,34 @@ export default async function handler(_req, res) {
     const maestroReads = maestroId ? [
       readSheet(token, maestroId, '1- Servicios \u{1F504}', 'A2:P'),
       readSheet(token, maestroId, '2- Egresos \u{1FAF0}', 'A2:H'),
-      readSheet(token, maestroId, '3- E.R \u{1F4D2}', 'A2:AA'),
       readSheet(token, maestroId, '4- Hist\u00F3rico', 'A1:AZ'),
     ] : []
 
-    const [marketingResults, maestroResults] = await Promise.all([
+    const xeroReads = xeroId ? [
+      readSheet(token, xeroId, 'E.R. Unificado', 'A5:R'),
+    ] : []
+
+    const [marketingResults, maestroResults, xeroResults] = await Promise.all([
       Promise.all(marketingReads),
       Promise.all(maestroReads),
+      Promise.all(xeroReads),
     ])
 
     const [metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico] = marketingResults
 
     const response = { metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico }
 
-    if (maestroId && maestroResults.length === 4) {
+    if (maestroId && maestroResults.length === 3) {
       response.servicios = maestroResults[0]
       response.egresos = maestroResults[1]
-      response.er = maestroResults[2]
-      response.historico = maestroResults[3]
+      response.historico = maestroResults[2]
     }
 
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=60')
+    if (xeroId && xeroResults.length === 1) {
+      response.erUnificado = xeroResults[0]
+    }
+
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30')
     res.json(response)
   } catch (err) {
     console.error('Sheets error:', err)

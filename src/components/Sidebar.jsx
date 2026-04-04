@@ -1,6 +1,14 @@
+import { useClerk, useUser } from '@clerk/clerk-react'
+
 const ACCENT = '#2D7AFF'
 
-const NAV_ITEMS = [
+const ROLE_LABELS = {
+  admin:    'Admin',
+  ops:      'Operaciones',
+  finanzas: 'Finanzas',
+}
+
+const ALL_NAV_ITEMS = [
   {
     key: 'overview',
     label: 'Overview',
@@ -48,7 +56,17 @@ const NAV_ITEMS = [
   },
 ]
 
-export function Sidebar({ activeModule, onModuleChange }) {
+export function Sidebar({ activeModule, onModuleChange, allowedModules = [], role }) {
+  const { signOut } = useClerk()
+  const { user } = useUser()
+
+  const navItems = ALL_NAV_ITEMS.filter(item => allowedModules.includes(item.key))
+  const firstName = user?.firstName || ''
+  const lastName = user?.lastName || ''
+  const fullName = [firstName, lastName].filter(Boolean).join(' ') || user?.emailAddresses?.[0]?.emailAddress || 'Usuario'
+  const initial = fullName[0]?.toUpperCase() || 'U'
+  const roleLabel = ROLE_LABELS[role] || role || ''
+
   return (
     <div style={{
       width: 220,
@@ -76,7 +94,7 @@ export function Sidebar({ activeModule, onModuleChange }) {
       {/* Nav items */}
       <nav style={{ padding: '20px 12px', display: 'flex', flexDirection: 'column', gap: 4, flexShrink: 0 }}>
         <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,31,54,0.28)', padding: '0 8px 12px', display: 'block' }}>Home</span>
-        {NAV_ITEMS.map(({ key, label, icon }) => {
+        {navItems.map(({ key, label, icon }) => {
           const active = activeModule === key
           return (
             <button
@@ -112,23 +130,37 @@ export function Sidebar({ activeModule, onModuleChange }) {
       {/* Spacer */}
       <div style={{ flex: 1 }} />
 
-      {/* User */}
+      {/* User + Sign out */}
       <div style={{
         padding: '16px 20px',
         borderTop: '1px solid rgba(0,0,0,0.06)',
-        display: 'flex', alignItems: 'center', gap: 10,
+        display: 'flex', flexDirection: 'column', gap: 10,
         flexShrink: 0,
       }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-          background: '#1a1f36',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 13, fontWeight: 700, color: '#fff',
-        }}>J</div>
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.8)', lineHeight: 1.3 }}>Julián Mercurio</div>
-          <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', fontWeight: 600 }}>Admin</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+            background: '#1a1f36',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 13, fontWeight: 700, color: '#fff',
+          }}>{initial}</div>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.8)', lineHeight: 1.3 }}>{fullName}</div>
+            <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', fontWeight: 600 }}>{roleLabel}</div>
+          </div>
         </div>
+        <button
+          onClick={() => signOut()}
+          style={{
+            width: '100%', padding: '7px 0', borderRadius: 8, border: '1px solid rgba(26,31,54,0.1)',
+            background: 'transparent', color: 'rgba(26,31,54,0.4)', fontSize: 11, fontWeight: 600,
+            cursor: 'pointer', fontFamily: "'Montserrat'", transition: 'all 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(224,62,62,0.06)'; e.currentTarget.style.color = '#E03E3E'; e.currentTarget.style.borderColor = 'rgba(224,62,62,0.2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(26,31,54,0.4)'; e.currentTarget.style.borderColor = 'rgba(26,31,54,0.1)' }}
+        >
+          Cerrar sesión
+        </button>
       </div>
     </div>
   )

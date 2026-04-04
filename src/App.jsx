@@ -1,4 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
+import { SignedIn, SignedOut, useUser, useAuth } from '@clerk/clerk-react'
+import { LoginScreen } from './components/LoginScreen.jsx'
 import useSWR from 'swr'
 import { Sidebar } from './components/Sidebar.jsx'
 import { DateRangePicker } from './components/DateRangePicker.jsx'
@@ -9,25 +11,78 @@ import { FulfillmentModule } from './modules/FulfillmentModule.jsx'
 import { FinanzasModule } from './modules/FinanzasModule.jsx'
 import { PRESETS } from './lib/dates.js'
 import { buildCohorts, buildMetaAds, buildInstagram, buildSeo, buildUx } from './lib/cohorts.js'
-import { parseServicios, parseEgresos, parseER, parseHistorico, computeOverviewKPIs } from './lib/maestro.js'
+import { parseServicios, parseEgresos, parseER, parseHistorico, parseERUnificado, erUnificadoToOverview, computeOverviewKPIs } from './lib/maestro.js'
 
-const fetcher = (url) => fetch(url).then(r => r.json())
+// ── Configuración de roles ─────────────────────────────────────────────────
+const MODULES_BY_ROLE = {
+  admin:    ['overview', 'marketing', 'fulfillment', 'finanzas'],
+  ops:      ['marketing', 'fulfillment'],
+  finanzas: ['finanzas'],
+}
+
+const DEFAULT_MODULE_BY_ROLE = {
+  admin:    'overview',
+  ops:      'marketing',
+  finanzas: 'finanzas',
+}
 
 export default function App() {
+  return (
+    <>
+      <SignedIn>
+        <Dashboard />
+      </SignedIn>
+      <SignedOut>
+        <LoginScreen />
+      </SignedOut>
+    </>
+  )
+}
+
+function Dashboard() {
+  const { user, isLoaded } = useUser()
+  const { getToken } = useAuth()
+
+  const role = isLoaded ? (user?.publicMetadata?.role || 'ops') : null
+  const lockedModel = isLoaded ? (user?.publicMetadata?.model || null) : null
+  const allowedModules = MODULES_BY_ROLE[role] || []
+
   const [activeModule, setActiveModule] = useState('overview')
+  const [roleInitialized, setRoleInitialized] = useState(false)
+
+  // Redirigir al módulo correcto según rol al cargar
+  useEffect(() => {
+    if (isLoaded && role && !roleInitialized) {
+      setActiveModule(DEFAULT_MODULE_BY_ROLE[role] || 'overview')
+      setRoleInitialized(true)
+    }
+  }, [isLoaded, role, roleInitialized])
+
   const [modelFilter, setModelFilter] = useState('todos')
+
+  // Fijar el filtro de modelo si el usuario tiene uno asignado
+  useEffect(() => {
+    if (lockedModel) setModelFilter(lockedModel)
+  }, [lockedModel])
   const currentMonthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
   const [selectedERMonth, setSelectedERMonth] = useState(currentMonthKey)
-  const [finanzasSubTab, setFinanzasSubTab] = useState('pl')
+  const [finanzasSubTab, setFinanzasSubTab] = useState('proyeccion')
   const [dateRange, setDateRange] = useState(() => PRESETS[0].getRange())
 
-  // Cohort month derived from dateRange start — keeps Marketing in sync with the filter
   const selectedCohortMonth = useMemo(() => {
     const s = dateRange.start
     return `${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}`
   }, [dateRange])
 
-  const { data, error, isLoading } = useSWR('/api/sheets', fetcher, {
+  // Fetcher autenticado con token de Clerk
+  const authedFetcher = useCallback(
+    (url) => getToken().then(token =>
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json())
+    ),
+    [getToken]
+  )
+
+  const { data, error, isLoading } = useSWR('/api/sheets', authedFetcher, {
     revalidateOnFocus: false,
     refreshInterval: 5 * 60 * 1000,
   })
@@ -58,18 +113,14 @@ export default function App() {
   // ── Registro Maestro data ─────────────────────────────────────────────────
   const servicios = useMemo(() => data?.servicios ? parseServicios(data.servicios) : [], [data])
   const egresos = useMemo(() => data?.egresos ? parseEgresos(data.egresos) : [], [data])
-  const er = useMemo(() => data?.er ? parseER(data.er) : [], [data])
   const historico = useMemo(() => data?.historico ? parseHistorico(data.historico) : [], [data])
 
-  // ── Hero KPIs (always-on top banner) ─────────────────────────────────────
-  const heroData = useMemo(() => {
-    if (!data) return null
-    const kpis = computeOverviewKPIs(servicios, modelFilter)
-    const currentER = er.find(r => r.monthKey === selectedERMonth) || er[er.length - 1]
-    return { kpis, currentER }
-  }, [data, servicios, er, modelFilter, selectedERMonth])
+  // ── E.R. Unificado (Xero) ────────────────────────────────────────────────
+  const erUnificado = useMemo(() => data?.erUnificado ? parseERUnificado(data.erUnificado) : [], [data])
+  // Vista compatible para Overview (solo filas TOTAL mensuales)
+  const er = useMemo(() => erUnificado.length ? erUnificadoToOverview(erUnificado) : (data?.er ? parseER(data.er) : []), [erUnificado, data])
 
-  // ── Chat context (summary of current view data) ───────────────────────────
+  // ── Chat context ───────────────────────────────────────────────────────────
   const chatContext = useMemo(() => {
     if (!data) return {}
     const currentER = er.find(r => r.monthKey === selectedERMonth) || er[er.length - 1]
@@ -94,14 +145,11 @@ export default function App() {
         prevCohort: prevCohort ? { revenue: prevCohort.revenue, cac: prevCohort.cac, mer: prevCohort.mer } : null,
       }
     }
-    if (activeModule === 'overview') {
-      return { er: currentER, kpis }
-    }
-    if (activeModule === 'fulfillment') {
-      return { kpis }
-    }
+    if (activeModule === 'overview') return { er: currentER, kpis }
+    if (activeModule === 'fulfillment') return { kpis }
     if (activeModule === 'finanzas') {
-      return { er: currentER, totalEgresos: egresos.reduce((s, e) => s + (e.montoPorMes || e.monto), 0) }
+      const finRow = erUnificado.find(r => r.monthKey === (selectedERMonth || er[er.length - 1]?.monthKey) && r.isTotal)
+      return { er: currentER, erUnificado: finRow, totalEgresos: egresos.reduce((s, e) => s + (e.montoPorMes || e.monto), 0) }
     }
     return {}
   }, [activeModule, data, selectedCohort, prevCohort, er, servicios, egresos, modelFilter, selectedERMonth])
@@ -111,6 +159,18 @@ export default function App() {
     : error
     ? { text: '⚠ Error de conexión', color: '#E03E3E' }
     : { text: `● ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`, color: 'rgba(26,31,54,0.2)' }
+
+  // Guardar módulo activo solo si el rol tiene acceso
+  const handleModuleChange = (mod) => {
+    if (allowedModules.includes(mod)) setActiveModule(mod)
+  }
+
+  // Si el modelo está bloqueado, ignorar cambios manuales
+  const handleModelChange = (model) => {
+    if (!lockedModel) setModelFilter(model)
+  }
+
+  if (!isLoaded) return null
 
   return (
     <div style={{
@@ -122,9 +182,11 @@ export default function App() {
       {/* Sidebar */}
       <Sidebar
         activeModule={activeModule}
-        onModuleChange={setActiveModule}
+        onModuleChange={handleModuleChange}
         modelFilter={modelFilter}
-        onModelChange={setModelFilter}
+        onModelChange={handleModelChange}
+        allowedModules={allowedModules}
+        role={role}
       />
 
       {/* Main content */}
@@ -154,13 +216,14 @@ export default function App() {
 
           {/* Center/Right: filters */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {/* Model filter — pills con colores por modelo */}
-            {[
+            {/* Model filter — pills con colores por modelo (oculto si el modelo está bloqueado) */}
+            {!lockedModel && [
               { value: 'todos',      label: 'Todos',      bg: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', border: 'rgba(255,255,255,0.12)', activeBg: 'rgba(255,255,255,0.16)' },
               { value: 'Boutique',   label: 'Boutique',   bg: 'rgba(245,158,11,0.12)', color: '#F59E0B',               border: 'rgba(245,158,11,0.3)',   activeBg: 'rgba(245,158,11,0.25)' },
               { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.12)', color: '#60A5FA',               border: 'rgba(59,130,246,0.3)',   activeBg: 'rgba(59,130,246,0.25)' },
               { value: 'Soft',       label: 'Soft',       bg: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: 'rgba(255,255,255,0.1)',  activeBg: 'rgba(255,255,255,0.12)' },
               { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.12)', color: '#34D399',               border: 'rgba(16,185,129,0.3)',   activeBg: 'rgba(16,185,129,0.25)' },
+              { value: 'Consultoria', label: 'Consultoría', bg: 'rgba(168,85,247,0.12)', color: '#A855F7',             border: 'rgba(168,85,247,0.3)',   activeBg: 'rgba(168,85,247,0.25)' },
             ].map(m => {
               const isActive = modelFilter === m.value
               return (
@@ -175,7 +238,7 @@ export default function App() {
               )
             })}
 
-            {/* ER month selector — ocultar en Finanzas > Egresos (sin filtro de fecha) */}
+            {/* ER month selector — ocultar en Marketing y Finanzas */}
             {activeModule !== 'marketing' && activeModule !== 'finanzas' && er.length > 0 && (
               <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.08)' }}>
                 {er.slice(-6).map(r => {
@@ -194,46 +257,12 @@ export default function App() {
               </div>
             )}
 
-
             {/* Date range picker — always visible */}
             <DateRangePicker value={dateRange} onChange={setDateRange} />
 
             <span style={{ fontSize: 10, fontWeight: 600, color: statusMsg.color === 'rgba(255,255,255,0.12)' ? 'rgba(255,255,255,0.2)' : statusMsg.color }}>{statusMsg.text}</span>
           </div>
         </div>
-
-        {/* Hero strip — solo Overview */}
-        {heroData && activeModule === 'overview' && (
-          <div style={{
-            flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0,
-            background: 'linear-gradient(90deg, #1e3fa3 0%, #2D7AFF 60%, #4f8fff 100%)',
-            padding: '0 32px', height: 96,
-          }}>
-            {[
-              { label: 'MRR', value: heroData.kpis.mrr > 0 ? `$${Math.round(heroData.kpis.mrr).toLocaleString('en-US')}` : '—', icon: '◈' },
-              { label: 'Clientes', value: heroData.kpis.clientesActivos || '—', icon: '◉' },
-              { label: 'Revenue mes', value: heroData.currentER?.revenue > 0 ? `$${Math.round(heroData.currentER.revenue).toLocaleString('en-US')}` : '—', icon: '◎' },
-              { label: 'Margen neto', value: heroData.currentER?.margenNeto > 0 ? `${(heroData.currentER.margenNeto * 100).toFixed(1)}%` : '—', icon: '◇' },
-              { label: 'AOV', value: heroData.kpis.aov > 0 ? `$${Math.round(heroData.kpis.aov).toLocaleString('en-US')}` : '—', icon: '◆' },
-            ].map(({ label, value, icon }, i) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
-                {i > 0 && <div style={{ width: 1, height: 32, background: 'rgba(255,255,255,0.15)', margin: '0 24px' }} />}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                    background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 16, color: 'rgba(255,255,255,0.9)',
-                  }}>{icon}</div>
-                  <div>
-                    <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.55)', letterSpacing: 1.8, textTransform: 'uppercase' }}>{label}</div>
-                    <div style={{ fontSize: 18, fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>{value}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Content */}
         <div style={{ flex: 1, padding: '24px 28px', overflowY: 'auto' }}>
@@ -250,23 +279,24 @@ export default function App() {
           )}
           {!isLoading && !error && data && (
             <>
-              {activeModule === 'overview' && (
+              {activeModule === 'overview' && allowedModules.includes('overview') && (
                 <OverviewModule
                   servicios={servicios} er={er}
                   modelFilter={modelFilter} selectedERMonth={selectedERMonth}
+                  cac={selectedCohort?.cac} allCohorts={allCohorts}
                 />
               )}
-              {activeModule === 'marketing' && (
+              {activeModule === 'marketing' && allowedModules.includes('marketing') && (
                 <MarketingModule
                   cohort={selectedCohort} prevCohort={prevCohort} allCohorts={allCohorts}
                   ads={ads} instagram={instagram} seo={seo} ux={ux}
                 />
               )}
-              {activeModule === 'fulfillment' && (
-                <FulfillmentModule servicios={servicios} modelFilter={modelFilter} />
+              {activeModule === 'fulfillment' && allowedModules.includes('fulfillment') && (
+                <FulfillmentModule servicios={servicios} modelFilter={modelFilter} historico={historico} selectedERMonth={selectedERMonth} />
               )}
-              {activeModule === 'finanzas' && (
-                <FinanzasModule er={er} egresos={egresos} servicios={servicios} historico={historico} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
+              {activeModule === 'finanzas' && allowedModules.includes('finanzas') && (
+                <FinanzasModule erUnificado={erUnificado} er={er} egresos={egresos} servicios={servicios} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
               )}
             </>
           )}
