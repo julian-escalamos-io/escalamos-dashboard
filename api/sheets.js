@@ -55,36 +55,36 @@ export default async function handler(req, res) {
       readSheet(token, marketingId, 'ga4_trafico', 'A2:L'),
     ]
 
-    const maestroReads = maestroId ? [
-      readSheet(token, maestroId, '1- Servicios \u{1F504}', 'A2:P'),
-      readSheet(token, maestroId, '2- Egresos \u{1FAF0}', 'A2:H'),
-      readSheet(token, maestroId, '4- Hist\u00F3rico', 'A1:AZ'),
-    ] : []
-
     const xeroReads = xeroId ? [
       readSheet(token, xeroId, 'E.R. Unificado', 'A5:R'),
       readSheet(token, xeroId, 'Xero - Raw Data', 'A2:O'),
+      readSheet(token, xeroId, '1- Servicios', 'A2:P'),
+      readSheet(token, xeroId, '2- Egresos', 'A2:H'),
     ] : []
 
-    const [marketingResults, maestroResults, xeroResults] = await Promise.all([
+    const maestroReads = maestroId ? [
+      readSheet(token, maestroId, '4- Hist\u00F3rico', 'A1:AZ'),
+    ] : []
+
+    const [marketingResults, xeroResults, maestroResults] = await Promise.all([
       Promise.all(marketingReads),
-      Promise.all(maestroReads),
       Promise.all(xeroReads),
+      Promise.all(maestroReads),
     ])
 
     const [metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico] = marketingResults
 
     const response = { metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico }
 
-    if (maestroId && maestroResults.length === 3) {
-      response.servicios = maestroResults[0]
-      response.egresos = maestroResults[1]
-      response.historico = maestroResults[2]
+    if (xeroId && xeroResults.length >= 4) {
+      response.erUnificado = xeroResults[0]
+      response.xeroRaw = xeroResults[1]
+      response.servicios = xeroResults[2]
+      response.egresos = xeroResults[3]
     }
 
-    if (xeroId && xeroResults.length >= 1) {
-      response.erUnificado = xeroResults[0]
-      if (xeroResults[1]) response.xeroRaw = xeroResults[1]
+    if (maestroId && maestroResults.length === 1) {
+      response.historico = maestroResults[0]
     }
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30')
