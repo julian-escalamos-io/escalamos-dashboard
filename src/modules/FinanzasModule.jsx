@@ -13,7 +13,7 @@ const ACCENT_BORDER = 'rgba(45,122,255,0.28)'
 const SUB_TABS = [
   ['proyeccion', 'ER Proyectado'],
   ['pl', 'P&L'],
-  ['deudas', 'Deudas'],
+  ['deudas', 'Cobros Pendientes'],
 ]
 
 function fmt(v) { return (v !== undefined && v !== null && v !== 0) ? `$${Math.round(v).toLocaleString('en-US')}` : '—' }
