@@ -11,7 +11,7 @@ const ACCENT_DIM = 'rgba(45,122,255,0.12)'
 const ACCENT_BORDER = 'rgba(45,122,255,0.28)'
 
 const SUB_TABS = [
-  ['proyeccion', 'Proyección'],
+  ['proyeccion', 'ER Proyectado'],
   ['pl', 'P&L'],
   ['deudas', 'Deudas'],
 ]
@@ -771,7 +771,178 @@ function InsightsBlock({ currentRow, prevRow }) {
   )
 }
 
-// ─── Main Module ──────────���──────────────────────────────────��────────────────
+// ─── ER Proyectado Tab ───────────────────────────────────────────────────────
+function ERProyectadoTab({ egresos, servicios, modelFilter }) {
+  const [openDirectos, setOpenDirectos] = useState(false)
+  const [openIndirectos, setOpenIndirectos] = useState(false)
+
+  // MRR por modelo
+  const mrrByUnit = useMemo(() => {
+    const active = (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo')
+    const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, 'Consultoría': 0, total: 0 }
+    for (const s of active) {
+      if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
+      result.total += s.monto
+    }
+    return result
+  }, [servicios])
+
+  const isUnit = modelFilter && modelFilter !== 'todos'
+  const mrr = isUnit ? (mrrByUnit[modelFilter] || 0) : mrrByUnit.total
+  const shareOf = (unit) => mrrByUnit.total > 0 ? mrrByUnit[unit] / mrrByUnit.total : 0
+  const share = isUnit ? shareOf(modelFilter) : null
+  const factor = share !== null ? share : 1
+
+  // Costos directos = gastos de la unidad (modelo específico)
+  const unitSpecific = isUnit
+    ? egresos.filter(e => e.modelo?.toLowerCase() === modelFilter.toLowerCase())
+    : egresos.filter(e => e.modelo?.toLowerCase() !== 'todos')
+  const directosFijos = unitSpecific.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
+  const directosVars = unitSpecific.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
+  const totalDirectos = directosFijos.reduce((s, e) => s + egresoMes(e), 0) + directosVars.reduce((s, e) => s + egresoMes(e), 0)
+
+  // Costos indirectos = gastos generales (ponderados)
+  const todosItems = egresos.filter(e => e.modelo?.toLowerCase() === 'todos')
+  const indirectosFijos = todosItems.filter(e => e.tipoGasto?.toLowerCase().includes('fijo'))
+  const indirectosVars = todosItems.filter(e => !e.tipoGasto?.toLowerCase().includes('fijo'))
+  const totalIndirectos = indirectosFijos.reduce((s, e) => s + egresoMes(e) * factor, 0) + indirectosVars.reduce((s, e) => s + egresoMes(e) * factor, 0)
+
+  // Márgenes
+  const gananciaBruta = mrr - Math.abs(totalDirectos)
+  const margenBruto = mrr > 0 ? gananciaBruta / mrr : 0
+  const gananciaNeta = gananciaBruta - Math.abs(totalIndirectos)
+  const margenNeto = mrr > 0 ? gananciaNeta / mrr : 0
+
+  // Modelo cards para MRR
+  const active = useMemo(() =>
+    (servicios || []).filter(s =>
+      s.estado?.toLowerCase() === 'activo' &&
+      (modelFilter === 'todos' || s.tipo?.toLowerCase() === modelFilter.toLowerCase())
+    ), [servicios, modelFilter])
+
+  const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría']
+  const byModelo = useMemo(() => {
+    const groups = {}
+    for (const s of active) {
+      const m = s.tipo || 'Sin modelo'
+      if (!groups[m]) groups[m] = []
+      groups[m].push(s)
+    }
+    return groups
+  }, [active])
+
+  return (
+    <>
+      {/* ── 1. MRR ──────────────────────────────────────────────────────────── */}
+      <Divider title="MRR" color={GREEN} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 16, maxWidth: 300 }}>
+        <div style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)', border: '1px solid rgba(5,150,105,0.3)', boxShadow: '0 4px 16px rgba(5,150,105,0.2)', borderRadius: 14, padding: '20px 24px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', fontWeight: 700, display: 'block', marginBottom: 8 }}>MRR Total</span>
+          <span style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>{fmt(mrr)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', display: 'block', marginTop: 4 }}>/mes</span>
+        </div>
+      </div>
+      {modelos.map(modelo => {
+        const rows = byModelo[modelo]
+        if (!rows?.length) return null
+        return <ModeloIngresosCard key={modelo} modelo={modelo} rows={rows} />
+      })}
+
+      {/* ── 2. Costos Directos + Margen Bruto ────────────────────────────── */}
+      <Divider title="Costos Directos" color={DANGER} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(224,62,62,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '20px 24px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Total Costos Directos</span>
+          <span style={{ fontSize: 32, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(totalDirectos)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', display: 'block', marginTop: 4 }}>/mes</span>
+        </div>
+        <div style={{ background: gananciaBruta > 0 ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'linear-gradient(135deg, #b91c1c 0%, #E03E3E 100%)', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', borderRadius: 14, padding: '20px 24px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Margen Bruto</span>
+          <span style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>{fmt(gananciaBruta)}</span>
+          <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: 700, display: 'block', marginTop: 4 }}>{(margenBruto * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+
+      {/* Detalle costos directos (expandible) */}
+      {(directosFijos.length > 0 || directosVars.length > 0) && (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 20px', marginBottom: 28 }}>
+          <div onClick={() => setOpenDirectos(o => !o)} style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: openDirectos ? 16 : 0, cursor: 'pointer', userSelect: 'none' }}>
+            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)' }}>{openDirectos ? '▾' : '▸'}</span>
+            <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>Detalle costos directos</span>
+          </div>
+          {openDirectos && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, alignItems: 'start' }}>
+              {directosFijos.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.72)', fontWeight: 700, marginBottom: 8 }}>
+                    Fijos — <span style={{ color: DANGER }}>{fmt(directosFijos.reduce((s, e) => s + egresoMes(e), 0))}/mes</span>
+                  </div>
+                  <EgresosTable rows={directosFijos} totalLabel="Total fijos" totalColor={DANGER} showModelo={!isUnit} />
+                </div>
+              )}
+              {directosVars.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.72)', fontWeight: 700, marginBottom: 8 }}>
+                    Variables — <span style={{ color: DANGER }}>{fmt(directosVars.reduce((s, e) => s + egresoMes(e), 0))}/mes</span>
+                  </div>
+                  <EgresosTable rows={directosVars} totalLabel="Total variables" totalColor={DANGER} showModelo={!isUnit} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── 3. Costos Indirectos + Margen Neto ───────────────────────────── */}
+      <Divider title="Costos Indirectos (ponderados)" color={DANGER} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(224,62,62,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '20px 24px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Total Costos Indirectos</span>
+          <span style={{ fontSize: 32, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(totalIndirectos)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', display: 'block', marginTop: 4 }}>{share !== null ? `${Math.round(share * 100)}% del total` : '/mes'}</span>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #1e3fa3 0%, #2D7AFF 100%)',
+          border: '1px solid rgba(45,122,255,0.3)',
+          borderRadius: 14, padding: '20px 24px',
+          boxShadow: '0 4px 16px rgba(45,122,255,0.25)',
+        }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.65)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Margen Neto</span>
+          <span style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: -1 }}>{fmt(gananciaNeta)}</span>
+          <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: 700, display: 'block', marginTop: 4 }}>{(margenNeto * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+
+      {/* Detalle costos indirectos (expandible) */}
+      {todosItems.length > 0 && (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 20px', marginBottom: 28 }}>
+          <div onClick={() => setOpenIndirectos(o => !o)} style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: openIndirectos ? 16 : 0, cursor: 'pointer', userSelect: 'none' }}>
+            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)' }}>{openIndirectos ? '▾' : '▸'}</span>
+            <span style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>Detalle costos indirectos</span>
+          </div>
+          {openIndirectos && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {indirectosFijos.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.72)', fontWeight: 700, marginBottom: 8 }}>Fijos — {fmt(indirectosFijos.reduce((s, e) => s + egresoMes(e) * factor, 0))}/mes</div>
+                  <EgresosTable rows={indirectosFijos} totalLabel="Subtotal fijos" totalColor={DANGER} factor={factor} />
+                </div>
+              )}
+              {indirectosVars.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.72)', fontWeight: 700, marginBottom: 8 }}>Variables — {fmt(indirectosVars.reduce((s, e) => s + egresoMes(e) * factor, 0))}/mes</div>
+                  <EgresosTable rows={indirectosVars} totalLabel="Subtotal variables" totalColor={DANGER} factor={factor} />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
+// ─── Main Module ──────────────────────────────────────────────────────────────
 export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendingInvoices = [], incobrables = [], selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
   const setSubTab = onSubTabChange || (() => {})
   const erData = erUnificado || []
@@ -799,12 +970,7 @@ export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendi
       {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} />}
       {subTab === 'deudas'  && <DeudasTab pendingInvoices={pendingInvoices} incobrables={incobrables} modelFilter={modelFilter} />}
       {subTab === 'proyeccion' && (
-        <>
-          <Divider title="Ingresos" />
-          <IngresosTab servicios={servicios} modelFilter={modelFilter} />
-          <Divider title="Egresos" color={DANGER} />
-          <EgresosTab egresos={egresosData} modelFilter={modelFilter} servicios={servicios} />
-        </>
+        <ERProyectadoTab egresos={egresosData} servicios={servicios} modelFilter={modelFilter} />
       )}
     </>
   )
