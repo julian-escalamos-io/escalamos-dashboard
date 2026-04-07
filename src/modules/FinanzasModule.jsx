@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { KPI, Delta } from '../components/KPI.jsx'
 import { MiniChart } from '../components/MiniChart.jsx'
+import { RevenueCollectedChart } from '../components/RevenueCollectedChart.jsx'
 import { DataTable } from '../components/DataTable.jsx'
 import { computeEgresosBreakdown } from '../lib/maestro.js'
 
@@ -266,7 +267,7 @@ function PLTab({ erUnificado, modelFilter }) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 10 }}>
             <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>Revenue vs Cash Collected</span>
-              <MiniChart data={chart12.map(r => ({ label: r.monthLabel, revenue: r.revenue }))} dataKey="revenue" color={ACCENT} prefix="$" />
+              <RevenueCollectedChart data={chart12.map(r => ({ label: r.monthLabel, revenue: r.revenue, cashCollected: r.cashCollected }))} />
             </div>
             <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>Ganancia Neta</span>
