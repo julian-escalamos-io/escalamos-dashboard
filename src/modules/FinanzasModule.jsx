@@ -856,7 +856,7 @@ function ERProyectadoTab({ egresos, servicios, modelFilter }) {
           <span style={{ fontSize: 32, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(totalDirectos)}</span>
           <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', display: 'block', marginTop: 4 }}>/mes</span>
         </div>
-        <div style={{ background: gananciaBruta > 0 ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'linear-gradient(135deg, #b91c1c 0%, #E03E3E 100%)', border: '1px solid rgba(0,0,0,0.1)', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', borderRadius: 14, padding: '20px 24px' }}>
+        <div style={{ background: gananciaBruta > 0 ? 'linear-gradient(135deg, #d97706 0%, #b45309 100%)' : 'linear-gradient(135deg, #b91c1c 0%, #E03E3E 100%)', border: '1px solid rgba(217,119,6,0.3)', boxShadow: '0 4px 16px rgba(217,119,6,0.2)', borderRadius: 14, padding: '20px 24px' }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Margen Bruto</span>
           <span style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>{fmt(gananciaBruta)}</span>
           <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', fontWeight: 700, display: 'block', marginTop: 4 }}>{(margenBruto * 100).toFixed(1)}%</span>
