@@ -211,6 +211,7 @@ export function parseERUnificado(raw = []) {
         pctMargenBruto: +r[16] || 0,
         gananciaNeta: +r[17] || 0,
         pctMargenNeto: +r[18] || 0,
+        margenMes: +r[19] || 0,
       }
     })
     .sort((a, b) => {

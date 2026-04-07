@@ -222,6 +222,11 @@ function PLTab({ erUnificado, modelFilter }) {
           pct={fmtPct(currentRow.pctMargenNeto)}
           color={currentRow.gananciaNeta > 0 ? GREEN : DANGER} bold
           delta={<Delta current={currentRow.gananciaNeta} previous={prevRow?.gananciaNeta} />} />
+        {currentRow.margenMes !== 0 && (
+          <PLRow label="Margen del mes" value={fmtPct(currentRow.margenMes)}
+            color={currentRow.margenMes > 0.3 ? ACCENT : currentRow.margenMes > 0.15 ? 'rgba(26,31,54,0.7)' : DANGER}
+            indent={1} sub="solo operación del período" />
+        )}
       </div>
 
       {/* Desglose por modelo (solo cuando filtro = todos) */}
