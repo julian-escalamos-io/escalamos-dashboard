@@ -192,19 +192,17 @@ function PLTab({ erUnificado, modelFilter }) {
           delta={<Delta current={currentRow.revenue} previous={prevRow?.revenue} />} />
         <PLRow label="Cash Collected (caja)" value={fmt(currentRow.cashCollected)} bold
           delta={<Delta current={currentRow.cashCollected} previous={prevRow?.cashCollected} />} />
-        <PLRow label="Cobros a tiempo" value={fmt(currentRow.cobrosATiempo)} indent={1}
+        <PLRow label="Cobros del mes" value={fmt(currentRow.cobrosATiempo)} indent={1}
           sub={currentRow.revenue > 0 ? `${Math.round(currentRow.cobrosATiempo / currentRow.revenue * 100)}% del revenue` : null} />
         <PLRow label="Cobros de deuda" value={fmt(currentRow.cobrosDeuda)} indent={1} />
         <PLRow separator />
 
-        {/* GASTOS */}
-        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Gastos</div>
+        {/* GASTOS DIRECTOS */}
+        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Gastos Directos</div>
         <PLRow label="Gastos Operativos" value={fmt(currentRow.gastosOp)} color={DANGER} indent={1}
           delta={<Delta current={currentRow.gastosOp} previous={prevRow?.gastosOp} inverse />} />
         <PLRow label="Comisiones Stripe" value={fmt(currentRow.comisionesStripe)} color={DANGER} indent={1} />
-        <PLRow label="Gastos Admin (prorr.)" value={fmt(currentRow.gastosAdmin)} color={DANGER} indent={1} />
-        <PLRow label="Total Gastos" value={fmt(currentRow.totalGastos)} color={DANGER} bold
-          delta={<Delta current={currentRow.totalGastos} previous={prevRow?.totalGastos} inverse />} />
+        <PLRow label="Total Gastos Directos" value={fmt((currentRow.gastosOp || 0) + (currentRow.comisionesStripe || 0))} color={DANGER} bold />
         <PLRow separator />
 
         {/* GANANCIA BRUTA */}
@@ -212,6 +210,11 @@ function PLTab({ erUnificado, modelFilter }) {
           pct={fmtPct(currentRow.pctMargenBruto)}
           color={currentRow.gananciaBruta > 0 ? GREEN : DANGER} bold
           delta={<Delta current={currentRow.gananciaBruta} previous={prevRow?.gananciaBruta} />} />
+        <PLRow separator />
+
+        {/* GASTOS INDIRECTOS */}
+        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Gastos Indirectos</div>
+        <PLRow label="Gastos Admin (prorr.)" value={fmt(currentRow.gastosAdmin)} color={DANGER} indent={1} />
         <PLRow separator />
 
         {/* GANANCIA NETA */}
