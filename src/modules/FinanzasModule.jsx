@@ -556,18 +556,21 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
   const total = totalGralesFijos + totalGralesVars + totalFijos + totalVars
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24, maxWidth: 660 }}>
-        <div style={{ background: 'linear-gradient(135deg, #b91c1c 0%, #E03E3E 100%)', border: '1px solid rgba(224,62,62,0.3)', boxShadow: '0 4px 16px rgba(224,62,62,0.25)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Total Egresos</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>{fmt(total)}</span>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+        <div style={{ background: 'linear-gradient(135deg, #b91c1c 0%, #E03E3E 100%)', border: '1px solid rgba(224,62,62,0.3)', boxShadow: '0 4px 16px rgba(224,62,62,0.25)', borderRadius: 14, padding: '20px 24px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(255,255,255,0.7)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Total Egresos</span>
+          <span style={{ fontSize: 32, fontWeight: 800, color: '#fff', letterSpacing: -0.5 }}>{fmt(total)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', display: 'block', marginTop: 4 }}>/mes</span>
         </div>
-        <div style={{ background: 'rgba(26,31,54,0.04)', border: '1px solid rgba(26,31,54,0.08)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Fijos</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: 'rgba(26,31,54,0.55)', letterSpacing: -0.5 }}>{fmt(totalGralesFijos + totalFijos)}</span>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(26,31,54,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '20px 24px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Fijos</span>
+          <span style={{ fontSize: 32, fontWeight: 800, color: 'rgba(26,31,54,0.7)', letterSpacing: -0.5 }}>{fmt(totalGralesFijos + totalFijos)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', display: 'block', marginTop: 4 }}>/mes</span>
         </div>
-        <div style={{ background: 'rgba(26,31,54,0.04)', border: '1px solid rgba(26,31,54,0.08)', borderRadius: 12, padding: '16px 20px' }}>
-          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Variables</span>
-          <span style={{ fontSize: 28, fontWeight: 800, color: 'rgba(26,31,54,0.55)', letterSpacing: -0.5 }}>{fmt(totalVars)}</span>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(26,31,54,0.1)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '20px 24px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Variables</span>
+          <span style={{ fontSize: 32, fontWeight: 800, color: 'rgba(26,31,54,0.7)', letterSpacing: -0.5 }}>{fmt(totalVars)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', display: 'block', marginTop: 4 }}>/mes</span>
         </div>
       </div>
       {todosItems.length > 0 && <GastosGeneralesCard items={todosItems} share={share} />}
