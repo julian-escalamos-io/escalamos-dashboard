@@ -268,32 +268,6 @@ function PLTab({ erUnificado, modelFilter }) {
         </>
       )}
 
-      {/* Detalle mensual */}
-      <Divider title="Detalle mensual" />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
-        <DataTable
-          rows={[...modelRows].reverse().slice(0, 12).reverse()}
-          columns={[
-            { key: 'monthLabel', label: 'Período', sortable: false },
-            { key: 'revenue', label: 'Revenue', align: 'right', render: v => fmt(v) },
-            { key: 'cashCollected', label: 'Cash', align: 'right', render: v => fmt(v) },
-            { key: 'pctEficCobro', label: '% Cobro', align: 'right', render: v => (
-              <span style={{ color: v > 0.8 ? GREEN : v > 0.5 ? '#F59E0B' : DANGER, fontWeight: 600 }}>{fmtPct(v)}</span>
-            )},
-            { key: 'totalGastos', label: 'Gastos', align: 'right', render: v => fmt(v) },
-            { key: 'gananciaNeta', label: 'Gan. Neta', align: 'right', render: v => (
-              <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700 }}>{fmt(v)}</span>
-            )},
-            { key: 'pctMargenNeto', label: '% Neto', align: 'right', render: v => (
-              <span style={{ color: v > 0.3 ? ACCENT : v > 0.15 ? 'rgba(26,31,54,0.7)' : DANGER, fontWeight: 600 }}>{fmtPct(v)}</span>
-            )},
-          ]}
-        />
-      </div>
-
-      {/* Análisis IA */}
-      <Divider title="Análisis financiero" />
-      <InsightsBlock currentRow={currentRow} prevRow={prevRow} />
     </>
   )
 }

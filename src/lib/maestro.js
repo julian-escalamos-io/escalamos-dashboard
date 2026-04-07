@@ -170,10 +170,10 @@ function normalizeModelo(m) {
 
 // ─── E.R. Unificado (Xero) ───────────────────────────────────────────────────
 // Columns: A(0):Año B(1):Mes C(2):Modelo D(3):Revenue E(4):Cash Collected
-//   F(5):Cobros a tiempo G(6):Cobros de deuda H(7):Deuda nueva I(8):Incobrable
-//   J(9):%Efic.Cobro K(10):Gastos Op L(11):Comisiones Stripe M(12):Gastos Admin
-//   N(13):Total Gastos O(14):Ganancia Bruta P(15):%Margen Bruto
-//   Q(16):Ganancia Neta R(17):%Margen Neto
+//   F(5):Cobros del mes G(6):Cobros de deuda H(7):Deuda nueva I(8):Deuda histórica
+//   J(9):Incobrable K(10):%Efic.Cobro L(11):Gastos Op M(12):Comisiones Stripe
+//   N(13):Gastos Admin O(14):Total Gastos P(15):Ganancia Bruta Q(16):%Margen Bruto
+//   R(17):Ganancia Neta S(18):%Margen Neto
 
 export function parseERUnificado(raw = []) {
   return raw
@@ -200,16 +200,17 @@ export function parseERUnificado(raw = []) {
         cobrosATiempo: +r[5] || 0,
         cobrosDeuda: +r[6] || 0,
         deudaNueva: +r[7] || 0,
-        incobrable: +r[8] || 0,
-        pctEficCobro: +r[9] || 0,
-        gastosOp: +r[10] || 0,
-        comisionesStripe: +r[11] || 0,
-        gastosAdmin: +r[12] || 0,
-        totalGastos: +r[13] || 0,
-        gananciaBruta: +r[14] || 0,
-        pctMargenBruto: +r[15] || 0,
-        gananciaNeta: +r[16] || 0,
-        pctMargenNeto: +r[17] || 0,
+        deudaHistorica: +r[8] || 0,
+        incobrable: +r[9] || 0,
+        pctEficCobro: +r[10] || 0,
+        gastosOp: +r[11] || 0,
+        comisionesStripe: +r[12] || 0,
+        gastosAdmin: +r[13] || 0,
+        totalGastos: +r[14] || 0,
+        gananciaBruta: +r[15] || 0,
+        pctMargenBruto: +r[16] || 0,
+        gananciaNeta: +r[17] || 0,
+        pctMargenNeto: +r[18] || 0,
       }
     })
     .sort((a, b) => {
