@@ -48,16 +48,16 @@ export function parseServicios(raw = []) {
     .map(r => ({
       idCliente: r[0],
       nombre: r[1] || '',
-      estado: r[2] || '',
-      inicio: excelToISO(r[3]),
-      fechaBaja: excelToISO(r[4]),
-      meses: +r[5] || 0,
-      tipo: r[7] || '',        // Boutique | Agencia | Soft | Financiera
-      area: r[9] || '',
-      servicio: r[10] || '',
-      monto: +r[12] || 0,
-      ltr: +r[14] || 0,
-      metodoPago: r[15] || '',
+      tipo: r[2] || '',        // C: Boutique | Agencia | Soft | Financiera | Consultoria
+      estado: r[3] || '',      // D: Activo | Inactivo
+      inicio: excelToISO(r[4]),
+      fechaBaja: excelToISO(r[5]),
+      meses: +r[6] || 0,
+      area: r[7] || '',        // H: Área
+      servicio: r[8] || '',    // I: Servicio
+      monto: +r[10] || 0,     // K: Monto $
+      ltr: +r[13] || 0,       // N: LTR
+      metodoPago: r[16] || '', // Q: Pago
     }))
 }
 
