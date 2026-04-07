@@ -226,7 +226,7 @@ function Dashboard() {
               { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.12)', color: '#60A5FA',               border: 'rgba(59,130,246,0.3)',   activeBg: 'rgba(59,130,246,0.25)' },
               { value: 'Soft',       label: 'Soft',       bg: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: 'rgba(255,255,255,0.1)',  activeBg: 'rgba(255,255,255,0.12)' },
               { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.12)', color: '#34D399',               border: 'rgba(16,185,129,0.3)',   activeBg: 'rgba(16,185,129,0.25)' },
-              { value: 'Consultoria', label: 'Consultoría', bg: 'rgba(168,85,247,0.12)', color: '#A855F7',             border: 'rgba(168,85,247,0.3)',   activeBg: 'rgba(168,85,247,0.25)' },
+              { value: 'Consultoría', label: 'Consultoría', bg: 'rgba(168,85,247,0.12)', color: '#A855F7',             border: 'rgba(168,85,247,0.3)',   activeBg: 'rgba(168,85,247,0.25)' },
             ].map(m => {
               const isActive = modelFilter === m.value
               return (

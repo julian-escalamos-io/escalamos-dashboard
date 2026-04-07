@@ -134,7 +134,7 @@ export function parsePendingInvoices(raw = []) {
       }
       return {
         fecha: typeof fecha === 'number' ? new Date((fecha - 25569) * 86400 * 1000).toISOString().slice(0, 10) : String(fecha).slice(0, 10),
-        modelo: String(r[2] || ''),
+        modelo: normalizeModelo(String(r[2] || '')),
         tipo: String(r[3] || ''),
         contactName: String(r[6] || ''),
         monto: +r[10] || 0,
@@ -156,11 +156,16 @@ export function parseIncobrables(raw = []) {
       const fecha = r[0]
       return {
         fecha: typeof fecha === 'number' ? new Date((fecha - 25569) * 86400 * 1000).toISOString().slice(0, 10) : String(fecha).slice(0, 10),
-        modelo: String(r[2] || ''),
+        modelo: normalizeModelo(String(r[2] || '')),
         contactName: String(r[6] || ''),
         monto: +r[10] || 0,
       }
     })
+}
+
+function normalizeModelo(m) {
+  if (m === 'Consultoria') return 'Consultoría'
+  return m
 }
 
 // ─── E.R. Unificado (Xero) ───────────────────────────────────────────────────
@@ -177,7 +182,7 @@ export function parseERUnificado(raw = []) {
       const year = +r[0]
       const mesRaw = r[1]
       const month = toMonthNum(mesRaw)
-      const modelo = String(r[2] || '')
+      const modelo = normalizeModelo(String(r[2] || ''))
       const isAcumulado = String(mesRaw).toLowerCase() === 'acumulado'
       const mk = isAcumulado ? `${year}-acum` : monthKey(year, mesRaw)
       const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']

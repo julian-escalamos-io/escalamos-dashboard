@@ -102,7 +102,7 @@ function PLTab({ erUnificado, modelFilter }) {
   // Desglose por modelo del mes actual (solo si filtro = todos)
   const modelBreakdown = useMemo(() => {
     if (modelFilter !== 'todos' || !currentRow) return []
-    const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoria', 'Todos']
+    const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría', 'Todos']
     return modelos
       .map(m => erUnificado.find(r => r.monthKey === currentRow.monthKey && r.modelo === m && !r.isTotal && !r.isAcumulado))
       .filter(Boolean)
@@ -439,14 +439,14 @@ function DeudasTab({ pendingInvoices, incobrables, modelFilter }) {
 }
 
 // ─── Egresos Tab ──────────────────────────────────────────────────────────────
-const MODELO_ORDER = { todos: 0, Todos: 0, boutique: 1, Boutique: 1, agencia: 2, Agencia: 2, soft: 3, Soft: 3, financiera: 4, Financiera: 4, consultoria: 5, Consultoria: 5 }
+const MODELO_ORDER = { todos: 0, Todos: 0, boutique: 1, Boutique: 1, agencia: 2, Agencia: 2, soft: 3, Soft: 3, financiera: 4, Financiera: 4, consultoria: 5, Consultoría: 5 }
 const MODELO_COLORS = {
   Todos:       { bg: 'rgba(0,0,0,0.05)',        color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
   Boutique:    { bg: 'rgba(245,158,11,0.1)',   color: '#D97706',               border: 'rgba(245,158,11,0.25)' },
   Agencia:     { bg: 'rgba(59,130,246,0.1)',   color: '#2D7AFF',               border: 'rgba(59,130,246,0.25)' },
   Soft:        { bg: 'rgba(0,0,0,0.04)',       color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
   Financiera:  { bg: 'rgba(16,185,129,0.1)',   color: '#059669',               border: 'rgba(16,185,129,0.25)' },
-  Consultoria: { bg: 'rgba(168,85,247,0.1)',   color: '#A855F7',               border: 'rgba(168,85,247,0.25)' },
+  Consultoría: { bg: 'rgba(168,85,247,0.1)',   color: '#A855F7',               border: 'rgba(168,85,247,0.25)' },
 }
 function ModeloBadge({ value, size = 11 }) {
   const c = MODELO_COLORS[value] || MODELO_COLORS.Todos
@@ -530,7 +530,7 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
   const [openUnidad, setOpenUnidad] = useState(false)
   const mrrByUnit = useMemo(() => {
     const active = (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo')
-    const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, Consultoria: 0, total: 0 }
+    const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, Consultoría: 0, total: 0 }
     for (const s of active) {
       if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
       result.total += s.monto
@@ -689,7 +689,7 @@ function IngresosTab({ servicios, modelFilter }) {
   const mrr = active.reduce((s, r) => s + r.monto, 0)
   const clientes = [...new Set(active.map(s => s.idCliente))].length
 
-  const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoria']
+  const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría']
   const byModelo = useMemo(() => {
     const groups = {}
     for (const s of active) {
