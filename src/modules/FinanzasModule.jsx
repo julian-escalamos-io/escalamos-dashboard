@@ -282,19 +282,20 @@ function PLTab({ erUnificado, modelFilter }) {
 }
 
 // ─── Deudas Tab ──────────────────────────────────────────────────────────────
-function DeudasTab({ pendingInvoices, incobrables, modelFilter }) {
+function DeudasTab({ pendingInvoices, erUnificado, modelFilter }) {
   const filtered = useMemo(() => {
     if (modelFilter === 'todos') return pendingInvoices
     return pendingInvoices.filter(i => i.modelo.toLowerCase() === modelFilter.toLowerCase())
   }, [pendingInvoices, modelFilter])
 
-  const filteredInc = useMemo(() => {
-    if (modelFilter === 'todos') return incobrables
-    return incobrables.filter(i => i.modelo.toLowerCase() === modelFilter.toLowerCase())
-  }, [incobrables, modelFilter])
+  // Incobrable del último mes del E.R. Unificado
+  const lastERRow = useMemo(() => {
+    const rows = getModelRows(erUnificado || [], modelFilter)
+    return rows.length ? rows[rows.length - 1] : null
+  }, [erUnificado, modelFilter])
+  const totalIncobrable = lastERRow?.incobrable || 0
 
   const totalPending = filtered.reduce((s, i) => s + i.monto, 0)
-  const totalIncobrable = filteredInc.reduce((s, i) => s + i.monto, 0)
 
   // Agrupar por modelo para resumen
   const byModelo = useMemo(() => {
@@ -332,7 +333,7 @@ function DeudasTab({ pendingInvoices, incobrables, modelFilter }) {
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Incobrable</span>
           <span style={{ fontSize: 28, fontWeight: 800, color: totalIncobrable !== 0 ? DANGER : 'rgba(26,31,54,0.35)', letterSpacing: -0.5 }}>{fmt(totalIncobrable)}</span>
-          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>{filteredInc.length} registros</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.38)', display: 'block', marginTop: 2 }}>{lastERRow?.monthLabel || 'último mes'}</span>
         </div>
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '16px 20px' }}>
           <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Antigüedad promedio</span>
@@ -398,25 +399,6 @@ function DeudasTab({ pendingInvoices, incobrables, modelFilter }) {
         <div style={{ padding: 30, textAlign: 'center', color: 'rgba(26,31,54,0.35)', fontSize: 13 }}>No hay facturas pendientes de cobro.</div>
       )}
 
-      {/* Incobrables */}
-      {filteredInc.length > 0 && (
-        <>
-          <Divider title="Incobrables" color={DANGER} />
-          <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
-            <DataTable
-              rows={filteredInc}
-              columns={[
-                { key: 'contactName', label: 'Cliente', render: v => <span style={{ fontWeight: 700 }}>{v || '—'}</span> },
-                { key: 'modelo', label: 'Modelo', width: 90, render: v => v ? <ModeloBadge value={v} /> : '—' },
-                { key: 'fecha', label: 'Fecha', width: 100 },
-                { key: 'monto', label: 'Monto', width: 100, align: 'right', render: v => (
-                  <span style={{ fontWeight: 700, color: DANGER }}>{fmt(v)}</span>
-                )},
-              ]}
-            />
-          </div>
-        </>
-      )}
     </>
   )
 }
@@ -951,7 +933,7 @@ export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendi
       </div>
 
       {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} />}
-      {subTab === 'deudas'  && <DeudasTab pendingInvoices={pendingInvoices} incobrables={incobrables} modelFilter={modelFilter} />}
+      {subTab === 'deudas'  && <DeudasTab pendingInvoices={pendingInvoices} erUnificado={erData} modelFilter={modelFilter} />}
       {subTab === 'proyeccion' && (
         <ERProyectadoTab egresos={egresosData} servicios={servicios} modelFilter={modelFilter} />
       )}
