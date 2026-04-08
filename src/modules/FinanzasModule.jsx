@@ -990,13 +990,13 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
       const fechaPago = parseDate(r[14])
       if (!fechaCreacion) continue
 
-      const mk = `${fechaCreacion.getFullYear()}-${String(fechaCreacion.getMonth() + 1).padStart(2, '0')}`
-      if (!byMonth[mk]) byMonth[mk] = { monthKey: mk, year: fechaCreacion.getFullYear(), month: fechaCreacion.getMonth() + 1, revenue: 0, cash: 0 }
+      const mk = `${fechaCreacion.getUTCFullYear()}-${String(fechaCreacion.getUTCMonth() + 1).padStart(2, '0')}`
+      if (!byMonth[mk]) byMonth[mk] = { monthKey: mk, year: fechaCreacion.getUTCFullYear(), month: fechaCreacion.getUTCMonth() + 1, revenue: 0, cash: 0 }
       byMonth[mk].revenue += monto
 
       if (fechaPago) {
-        const pmk = `${fechaPago.getFullYear()}-${String(fechaPago.getMonth() + 1).padStart(2, '0')}`
-        if (!byMonth[pmk]) byMonth[pmk] = { monthKey: pmk, year: fechaPago.getFullYear(), month: fechaPago.getMonth() + 1, revenue: 0, cash: 0 }
+        const pmk = `${fechaPago.getUTCFullYear()}-${String(fechaPago.getUTCMonth() + 1).padStart(2, '0')}`
+        if (!byMonth[pmk]) byMonth[pmk] = { monthKey: pmk, year: fechaPago.getUTCFullYear(), month: fechaPago.getUTCMonth() + 1, revenue: 0, cash: 0 }
         byMonth[pmk].cash += monto
       }
     }

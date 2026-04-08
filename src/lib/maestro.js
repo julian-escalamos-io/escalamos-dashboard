@@ -190,11 +190,11 @@ export function computeCollectionPace(libroDiario, currentRow, prevRow) {
     return new Date(val)
   }
 
-  // Filter: revenue items (code = 200, monto > 0)
+  // Filter: revenue items (code starts with 2, monto > 0)
   const revenueItems = libroDiario.filter(r => {
     const code = String(r[3] || '').trim()
     const monto = +r[7] || 0
-    return code === '200' && monto > 0
+    return code.charAt(0) === '2' && monto > 0
   })
 
   function sumUpToDay(year, month, maxDay) {
@@ -202,7 +202,7 @@ export function computeCollectionPace(libroDiario, currentRow, prevRow) {
     for (const r of revenueItems) {
       const payDate = parseDate(r[0]) // A: Fecha Pago
       if (!payDate) continue
-      if (payDate.getFullYear() === year && (payDate.getMonth() + 1) === month && payDate.getDate() <= maxDay) {
+      if (payDate.getUTCFullYear() === year && (payDate.getUTCMonth() + 1) === month && payDate.getUTCDate() <= maxDay) {
         total += +r[7] || 0 // H: Monto USD
       }
     }
