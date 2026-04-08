@@ -1076,15 +1076,29 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
         <KPI label="MRR BMR" value={fmt(mrrBMR)} accent={GREEN} />
         <KPI label="Revenue del mes" value={fmt(currentMonthData?.revenue)} />
         <KPI label="Cash del mes" value={fmt(currentMonthData?.cash)} />
+      </div>
+
+      {/* Cards de costos + 33% Juan */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(224,62,62,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '18px 22px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Costos Directos</span>
+          <span style={{ fontSize: 26, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(-Math.abs(costosDirectosBMR))}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', display: 'block', marginTop: 4 }}>/mes</span>
+        </div>
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(224,62,62,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '18px 22px' }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Costos Indirectos</span>
+          <span style={{ fontSize: 26, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(-Math.abs(costosIndirectosBMR))}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', display: 'block', marginTop: 4 }}>{(bmrShare * 100).toFixed(1)}% del total</span>
+        </div>
         <div style={{
           background: 'linear-gradient(135deg, #1e3fa3 0%, #2D7AFF 100%)',
           border: '1px solid rgba(45,122,255,0.3)',
-          borderRadius: 14, padding: '16px 18px',
+          borderRadius: 14, padding: '18px 22px',
           boxShadow: '0 4px 16px rgba(45,122,255,0.25)',
-          display: 'flex', flexDirection: 'column', gap: 4,
         }}>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>33% Juan</span>
-          <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{fmt(juan33)}</span>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.65)', fontWeight: 700, display: 'block', marginBottom: 6 }}>33% Juan</span>
+          <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{fmt(juan33)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'block', marginTop: 4 }}>de {fmt(gananciaNeta)} gan. neta</span>
         </div>
       </div>
 
