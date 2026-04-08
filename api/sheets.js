@@ -77,12 +77,12 @@ export default async function handler(req, res) {
 
     const response = { metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico }
 
-    if (xeroId && xeroResults.length >= 4) {
+    if (xeroId && xeroResults.length >= 5) {
       response.erUnificado = xeroResults[0]
       response.xeroRaw = xeroResults[1]
-      response.servicios = xeroResults[2]
-      response.egresos = xeroResults[3]
-      if (xeroResults[4]) response.libroDiario = xeroResults[4]
+      response.libroDiario = xeroResults[2]
+      response.servicios = xeroResults[3]
+      response.egresos = xeroResults[4]
     }
 
     if (maestroId && maestroResults.length === 1) {
