@@ -70,7 +70,7 @@ function getRowForMonth(rows, monthKey) {
 }
 
 // ─── P&L Tab ──────��─────────────────────────────��─────────────────────────────
-function PLTab({ erUnificado, modelFilter, pendingInvoices, libroDiario }) {
+function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
   const [localMonth, setLocalMonth] = useState(null)
 
   const modelRows = useMemo(() => getModelRows(erUnificado, modelFilter), [erUnificado, modelFilter])
@@ -115,9 +115,9 @@ function PLTab({ erUnificado, modelFilter, pendingInvoices, libroDiario }) {
 
   // Mejora 1: benchmark de ritmo de cobro
   const collectionPace = useMemo(() => {
-    if (!currentRow || !libroDiario?.length) return null
-    return computeCollectionPace(libroDiario, currentRow, prevRow)
-  }, [libroDiario, currentRow, prevRow])
+    if (!currentRow || !xeroRaw?.length) return null
+    return computeCollectionPace(xeroRaw, currentRow, prevRow)
+  }, [xeroRaw, currentRow, prevRow])
 
   if (!currentRow) return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos del período.</div>
 
@@ -1218,7 +1218,7 @@ export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendi
         ))}
       </div>
 
-      {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} pendingInvoices={pendingInvoices} libroDiario={libroDiario} />}
+      {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} pendingInvoices={pendingInvoices} xeroRaw={xeroRaw} />}
       {subTab === 'deudas'  && <DeudasTab pendingInvoices={pendingInvoices} erUnificado={erData} modelFilter={modelFilter} />}
       {subTab === 'proyeccion' && (
         <ERProyectadoTab egresos={egresosData} servicios={servicios} modelFilter={modelFilter} />
