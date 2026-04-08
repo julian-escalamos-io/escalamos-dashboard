@@ -3,7 +3,7 @@ import { KPI, Delta } from '../components/KPI.jsx'
 import { MiniChart } from '../components/MiniChart.jsx'
 import { RevenueCollectedChart } from '../components/RevenueCollectedChart.jsx'
 import { DataTable } from '../components/DataTable.jsx'
-import { computeEgresosBreakdown } from '../lib/maestro.js'
+import { computeEgresosBreakdown, computeCollectionPace } from '../lib/maestro.js'
 
 const ACCENT = '#2D7AFF'
 const DANGER = '#E03E3E'
@@ -70,7 +70,7 @@ function getRowForMonth(rows, monthKey) {
 }
 
 // ─── P&L Tab ──────��─────────────────────────────��─────────────────────────────
-function PLTab({ erUnificado, modelFilter }) {
+function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
   const [localMonth, setLocalMonth] = useState(null)
 
   const modelRows = useMemo(() => getModelRows(erUnificado, modelFilter), [erUnificado, modelFilter])
@@ -95,6 +95,29 @@ function PLTab({ erUnificado, modelFilter }) {
     const idx = modelRows.findIndex(r => r.monthKey === currentRow.monthKey)
     return idx > 0 ? modelRows[idx - 1] : null
   }, [modelRows, currentRow])
+
+  // Mejora 3: detectar si es mes en curso para ocultar deltas
+  const isCurrentMonth = useMemo(() => {
+    if (!currentRow) return false
+    const now = new Date()
+    return currentRow.year === now.getFullYear() && currentRow.month === (now.getMonth() + 1)
+  }, [currentRow])
+  const delta = (cur, prev) => isCurrentMonth ? null : <Delta current={cur} previous={prev} />
+  const deltaInv = (cur, prev) => isCurrentMonth ? null : <Delta current={cur} previous={prev} inverse />
+
+  // Mejora 2: CxC acumulada (facturas pendientes de meses anteriores)
+  const cxcData = useMemo(() => {
+    if (!currentRow || !pendingInvoices?.length) return { total: 0, count: 0 }
+    const monthStart = `${currentRow.year}-${String(currentRow.month).padStart(2, '0')}-01`
+    const prior = pendingInvoices.filter(inv => inv.fecha < monthStart)
+    return { total: prior.reduce((s, inv) => s + inv.monto, 0), count: prior.length }
+  }, [pendingInvoices, currentRow])
+
+  // Mejora 1: benchmark de ritmo de cobro
+  const collectionPace = useMemo(() => {
+    if (!currentRow || !xeroRaw?.length) return null
+    return computeCollectionPace(xeroRaw, currentRow, prevRow)
+  }, [xeroRaw, currentRow, prevRow])
 
   if (!currentRow) return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos del período.</div>
 
@@ -133,12 +156,12 @@ function PLTab({ erUnificado, modelFilter }) {
       {/* KPI strip */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 24 }}>
         <KPI label="Revenue" value={fmt(currentRow.revenue)} highlight
-          delta={<Delta current={currentRow.revenue} previous={prevRow?.revenue} />} />
-        {/* Cash Collected con barra de % cobrado */}
+          delta={delta(currentRow.revenue, prevRow?.revenue)} />
+        {/* Cash Collected con barra de % cobrado + benchmark */}
         <div style={{ background: 'rgba(45,122,255,0.04)', border: '1px solid rgba(45,122,255,0.15)', borderRadius: 14, padding: '16px 18px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', gap: 3 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(26,31,54,0.6)', fontWeight: 600 }}>Cash Collected</span>
-            <Delta current={currentRow.cashCollected} previous={prevRow?.cashCollected} />
+            {delta(currentRow.cashCollected, prevRow?.cashCollected)}
           </div>
           <span style={{ fontSize: 26, fontWeight: 800, color: '#1a1f36', letterSpacing: -0.5 }}>{fmt(currentRow.cashCollected)}</span>
           {currentRow.pctEficCobro > 0 && (
@@ -159,13 +182,26 @@ function PLTab({ erUnificado, modelFilter }) {
               </div>
             </div>
           )}
+          {/* Mejora 1: Benchmark de ritmo */}
+          {collectionPace && isCurrentMonth && (
+            <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(26,31,54,0.45)', textTransform: 'uppercase', letterSpacing: 1 }}>Día {collectionPace.dayOfMonth}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: collectionPace.deltaPP >= 0 ? GREEN : DANGER }}>
+                  {collectionPace.currentPct.toFixed(0)}% cobrado
+                  <span style={{ color: 'rgba(26,31,54,0.38)', fontWeight: 500 }}> vs {collectionPace.prevPct.toFixed(0)}% mes ant.</span>
+                  {' '}{collectionPace.deltaPP >= 0 ? '▲' : '▼'}{Math.abs(collectionPace.deltaPP).toFixed(0)}pp
+                </span>
+              </div>
+            </div>
+          )}
         </div>
         <KPI label="Ganancia Bruta" value={fmt(currentRow.gananciaBruta)}
           accent={currentRow.gananciaBruta > 0 ? GREEN : DANGER}
-          delta={<Delta current={currentRow.gananciaBruta} previous={prevRow?.gananciaBruta} />} />
+          delta={delta(currentRow.gananciaBruta, prevRow?.gananciaBruta)} />
         <KPI label="Ganancia Neta" value={fmt(currentRow.gananciaNeta)}
           accent={currentRow.gananciaNeta > 0 ? GREEN : DANGER}
-          delta={<Delta current={currentRow.gananciaNeta} previous={prevRow?.gananciaNeta} />} />
+          delta={delta(currentRow.gananciaNeta, prevRow?.gananciaNeta)} />
         {/* % Margen Neto — métrica norte */}
         <div style={{
           background: 'linear-gradient(135deg, #1e3fa3 0%, #2D7AFF 100%)',
@@ -180,7 +216,7 @@ function PLTab({ erUnificado, modelFilter }) {
           <span style={{ fontSize: 32, fontWeight: 900, color: '#fff', letterSpacing: -1, lineHeight: 1.1 }}>
             {currentRow.pctMargenNeto ? `${(currentRow.pctMargenNeto * 100).toFixed(1)}%` : '—'}
           </span>
-          <Delta current={currentRow.pctMargenNeto} previous={prevRow?.pctMargenNeto} />
+          {delta(currentRow.pctMargenNeto, prevRow?.pctMargenNeto)}
         </div>
       </div>
 
@@ -190,18 +226,22 @@ function PLTab({ erUnificado, modelFilter }) {
         {/* INGRESOS */}
         <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8 }}>Ingresos</div>
         <PLRow label="Revenue (devengado)" value={fmt(currentRow.revenue)} bold
-          delta={<Delta current={currentRow.revenue} previous={prevRow?.revenue} />} />
+          delta={delta(currentRow.revenue, prevRow?.revenue)} />
         <PLRow label="Cash Collected (caja)" value={fmt(currentRow.cashCollected)} bold
-          delta={<Delta current={currentRow.cashCollected} previous={prevRow?.cashCollected} />} />
+          delta={delta(currentRow.cashCollected, prevRow?.cashCollected)} />
         <PLRow label="Cobros del mes" value={fmt(currentRow.cobrosATiempo)} indent={1}
           sub={currentRow.revenue > 0 ? `${Math.round(currentRow.cobrosATiempo / currentRow.revenue * 100)}% del revenue` : null} />
         <PLRow label="Cobros de deuda" value={fmt(currentRow.cobrosDeuda)} indent={1} />
+        {cxcData.total > 0 && (
+          <PLRow label="CxC acumulada (meses ant.)" value={fmt(cxcData.total)} indent={1}
+            color={DANGER} sub={`${cxcData.count} facturas`} />
+        )}
         <PLRow separator />
 
         {/* GASTOS DIRECTOS */}
         <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Gastos Directos</div>
         <PLRow label="Gastos Operativos" value={fmt(currentRow.gastosOp)} color={DANGER} indent={1}
-          delta={<Delta current={currentRow.gastosOp} previous={prevRow?.gastosOp} inverse />} />
+          delta={deltaInv(currentRow.gastosOp, prevRow?.gastosOp)} />
         <PLRow label="Comisiones Stripe" value={fmt(currentRow.comisionesStripe)} color={DANGER} indent={1} />
         <PLRow label="Total Gastos Directos" value={fmt((currentRow.gastosOp || 0) + (currentRow.comisionesStripe || 0))} color={DANGER} bold />
         <PLRow separator />
@@ -210,7 +250,7 @@ function PLTab({ erUnificado, modelFilter }) {
         <PLRow label="Ganancia Bruta" value={fmt(currentRow.gananciaBruta)}
           pct={fmtPct(currentRow.pctMargenBruto)}
           color={currentRow.gananciaBruta > 0 ? GREEN : DANGER} bold
-          delta={<Delta current={currentRow.gananciaBruta} previous={prevRow?.gananciaBruta} />} />
+          delta={delta(currentRow.gananciaBruta, prevRow?.gananciaBruta)} />
         <PLRow separator />
 
         {/* GASTOS INDIRECTOS */}
@@ -222,7 +262,7 @@ function PLTab({ erUnificado, modelFilter }) {
         <PLRow label="Ganancia Neta" value={fmt(currentRow.gananciaNeta)}
           pct={fmtPct(currentRow.pctMargenNeto)}
           color={currentRow.gananciaNeta > 0 ? GREEN : DANGER} bold
-          delta={<Delta current={currentRow.gananciaNeta} previous={prevRow?.gananciaNeta} />} />
+          delta={delta(currentRow.gananciaNeta, prevRow?.gananciaNeta)} />
         {currentRow.margenMes !== 0 && (
           <PLRow label="Margen del mes" value={fmtPct(currentRow.margenMes)}
             color={currentRow.margenMes > 0.3 ? ACCENT : currentRow.margenMes > 0.15 ? 'rgba(26,31,54,0.7)' : DANGER}
@@ -907,8 +947,217 @@ function ERProyectadoTab({ egresos, servicios, modelFilter }) {
   )
 }
 
+// ─── BMR Tab ─────────────────────────────────────────────────────────────────
+function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
+  const [localMonth, setLocalMonth] = useState(null)
+
+  // 1. Clientes BMR
+  const bmrClients = useMemo(() => (servicios || []).filter(s => s.pm === 'BMR'), [servicios])
+  const bmrNames = useMemo(() => new Set(bmrClients.map(s => s.nombre)), [bmrClients])
+  const bmrActive = useMemo(() => bmrClients.filter(s => s.estado?.toLowerCase() === 'activo'), [bmrClients])
+  const mrrBMR = bmrActive.reduce((s, c) => s + c.monto, 0)
+
+  // 2. MRR total (para ponderar indirectos)
+  const mrrTotal = useMemo(() =>
+    (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo').reduce((s, c) => s + c.monto, 0),
+    [servicios])
+  const bmrShare = mrrTotal > 0 ? mrrBMR / mrrTotal : 0
+
+  // 3. Revenue y Cash BMR por mes (desde xeroRaw)
+  function parseDate(val) {
+    if (!val) return null
+    if (typeof val === 'number') return new Date((val - 25569) * 86400 * 1000)
+    return new Date(val)
+  }
+
+  const monthlyBMR = useMemo(() => {
+    if (!xeroRaw?.length) return []
+    const byMonth = {}
+    for (const r of xeroRaw) {
+      const acCode = String(r[4] || '')
+      const tipo = String(r[3] || '')
+      const monto = +r[10] || 0
+      const contactName = String(r[6] || '')
+      if (acCode.charAt(0) !== '2' || monto <= 0 || tipo === 'TRANSFER') continue
+      if (!bmrNames.has(contactName)) continue
+
+      const fechaCreacion = parseDate(r[0])
+      const fechaPago = parseDate(r[14])
+      if (!fechaCreacion) continue
+
+      const mk = `${fechaCreacion.getFullYear()}-${String(fechaCreacion.getMonth() + 1).padStart(2, '0')}`
+      if (!byMonth[mk]) byMonth[mk] = { monthKey: mk, year: fechaCreacion.getFullYear(), month: fechaCreacion.getMonth() + 1, revenue: 0, cash: 0 }
+      byMonth[mk].revenue += monto
+
+      if (fechaPago) {
+        const pmk = `${fechaPago.getFullYear()}-${String(fechaPago.getMonth() + 1).padStart(2, '0')}`
+        if (!byMonth[pmk]) byMonth[pmk] = { monthKey: pmk, year: fechaPago.getFullYear(), month: fechaPago.getMonth() + 1, revenue: 0, cash: 0 }
+        byMonth[pmk].cash += monto
+      }
+    }
+    return Object.values(byMonth).sort((a, b) => a.monthKey.localeCompare(b.monthKey))
+  }, [xeroRaw, bmrNames])
+
+  // 4. Costos directos BMR (egresos con pm = BMR)
+  const costosDirectosBMR = useMemo(() =>
+    (egresos || []).filter(e => e.pm === 'BMR').reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0),
+    [egresos])
+
+  // 5. Costos indirectos ponderados
+  const totalIndirectos = useMemo(() =>
+    (egresos || []).filter(e => e.modelo?.toLowerCase() === 'todos').reduce((s, e) => s + (e.montoPorMes || e.monto || 0), 0),
+    [egresos])
+  const costosIndirectosBMR = totalIndirectos * bmrShare
+
+  // 6. Mes seleccionado
+  const currentMonthData = useMemo(() => {
+    if (!monthlyBMR.length) return null
+    const key = localMonth || monthlyBMR[monthlyBMR.length - 1]?.monthKey
+    return monthlyBMR.find(m => m.monthKey === key) || monthlyBMR[monthlyBMR.length - 1]
+  }, [monthlyBMR, localMonth])
+
+  // 7. Ganancia y liquidación del mes seleccionado
+  const gananciaBruta = (currentMonthData?.revenue || 0) - Math.abs(costosDirectosBMR)
+  const gananciaNeta = gananciaBruta - Math.abs(costosIndirectosBMR)
+  const juan33 = gananciaNeta * 0.33
+
+  // 8. Tabla histórica
+  const historicoRows = useMemo(() => {
+    return monthlyBMR.map(m => {
+      const gb = m.revenue - Math.abs(costosDirectosBMR)
+      const gn = gb - Math.abs(costosIndirectosBMR)
+      return {
+        ...m,
+        monthLabel: `${MESES_LABEL[m.month - 1]} ${m.year}`,
+        costosDirectos: costosDirectosBMR,
+        costosIndirectos: costosIndirectosBMR,
+        gananciaBruta: gb,
+        gananciaNeta: gn,
+        juan33: gn * 0.33,
+      }
+    })
+  }, [monthlyBMR, costosDirectosBMR, costosIndirectosBMR])
+
+  if (!bmrClients.length) {
+    return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>No hay clientes con PM = BMR en el Registro de Servicios.</div>
+  }
+
+  return (
+    <>
+      {/* Selector de mes */}
+      {monthlyBMR.length > 0 && (
+        <div style={{ display: 'flex', gap: 2, background: 'rgba(26,31,54,0.04)', borderRadius: 10, padding: 3, border: '1px solid rgba(26,31,54,0.08)', marginBottom: 20, width: 'fit-content' }}>
+          {monthlyBMR.slice(-6).map(r => {
+            const isActive = r.monthKey === (currentMonthData?.monthKey)
+            return (
+              <button key={r.monthKey} onClick={() => setLocalMonth(r.monthKey)} style={{
+                padding: '5px 11px', borderRadius: 7, border: 'none',
+                background: isActive ? ACCENT : 'transparent',
+                color: isActive ? '#fff' : 'rgba(26,31,54,0.45)',
+                fontSize: 11, fontWeight: 700, fontFamily: "'Montserrat'", cursor: 'pointer',
+              }}>
+                {MESES_LABEL[r.month - 1]} {String(r.year).slice(-2)}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Info banner */}
+      <div style={{ background: 'rgba(45,122,255,0.05)', border: '1px solid rgba(45,122,255,0.15)', borderRadius: 12, padding: '12px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.55)', fontWeight: 500 }}>
+          Juan Bangher — {bmrActive.length} clientes activos — {(bmrShare * 100).toFixed(1)}% del MRR total — Liquidación: 33% de ganancia neta
+        </span>
+      </div>
+
+      {/* KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+        <KPI label="MRR BMR" value={fmt(mrrBMR)} accent={GREEN} />
+        <KPI label="Revenue del mes" value={fmt(currentMonthData?.revenue)} />
+        <KPI label="Cash del mes" value={fmt(currentMonthData?.cash)} />
+        <div style={{
+          background: 'linear-gradient(135deg, #1e3fa3 0%, #2D7AFF 100%)',
+          border: '1px solid rgba(45,122,255,0.3)',
+          borderRadius: 14, padding: '16px 18px',
+          boxShadow: '0 4px 16px rgba(45,122,255,0.25)',
+          display: 'flex', flexDirection: 'column', gap: 4,
+        }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}>33% Juan</span>
+          <span style={{ fontSize: 28, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{fmt(juan33)}</span>
+        </div>
+      </div>
+
+      {/* P&L BMR */}
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '20px 24px', marginBottom: 20 }}>
+        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8 }}>P&L BMR — {currentMonthData ? `${MESES_LABEL[(currentMonthData.month || 1) - 1]} ${currentMonthData.year}` : '—'}</div>
+        <PLRow label="Revenue BMR" value={fmt(currentMonthData?.revenue)} bold />
+        <PLRow label="Cash Collected BMR" value={fmt(currentMonthData?.cash)} indent={1}
+          sub={currentMonthData?.revenue > 0 ? `${Math.round((currentMonthData.cash / currentMonthData.revenue) * 100)}% efic.` : null} />
+        <PLRow separator />
+
+        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Costos Directos</div>
+        <PLRow label="Costos directos BMR" value={fmt(-Math.abs(costosDirectosBMR))} color={DANGER} indent={1} />
+        <PLRow separator />
+        <PLRow label="Ganancia Bruta" value={fmt(gananciaBruta)}
+          color={gananciaBruta > 0 ? GREEN : DANGER} bold
+          pct={currentMonthData?.revenue > 0 ? fmtPct(gananciaBruta / currentMonthData.revenue) : null} />
+        <PLRow separator />
+
+        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Costos Indirectos (ponderados)</div>
+        <PLRow label={`Gastos generales × ${(bmrShare * 100).toFixed(1)}%`} value={fmt(-Math.abs(costosIndirectosBMR))} color={DANGER} indent={1} />
+        <PLRow separator />
+        <PLRow label="Ganancia Neta BMR" value={fmt(gananciaNeta)}
+          color={gananciaNeta > 0 ? GREEN : DANGER} bold
+          pct={currentMonthData?.revenue > 0 ? fmtPct(gananciaNeta / currentMonthData.revenue) : null} />
+        <PLRow separator />
+        <PLRow label="33% Juan Bangher" value={fmt(juan33)}
+          color={ACCENT} bold />
+      </div>
+
+      {/* Clientes BMR */}
+      <Divider title="Clientes BMR" />
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+        <DataTable
+          rows={bmrActive}
+          columns={[
+            { key: 'nombre', label: 'Cliente', render: v => <span style={{ fontWeight: 700 }}>{v}</span> },
+            { key: 'tipo', label: 'Modelo', width: 90, render: v => <ModeloBadge value={v} /> },
+            { key: 'servicio', label: 'Servicio' },
+            { key: 'monto', label: 'MRR', width: 90, align: 'right', render: v => <span style={{ fontWeight: 700, color: GREEN }}>{fmt(v)}</span> },
+          ]}
+        />
+      </div>
+
+      {/* Histórico */}
+      {historicoRows.length > 0 && (
+        <>
+          <Divider title="Histórico mensual" />
+          <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20 }}>
+            <DataTable
+              rows={[...historicoRows].reverse()}
+              columns={[
+                { key: 'monthLabel', label: 'Período', sortable: false },
+                { key: 'revenue', label: 'Revenue', align: 'right', render: v => fmt(v) },
+                { key: 'cash', label: 'Cash', align: 'right', render: v => fmt(v) },
+                { key: 'costosDirectos', label: 'C. Directos', align: 'right', render: v => fmt(-Math.abs(v)) },
+                { key: 'costosIndirectos', label: 'C. Indirectos', align: 'right', render: v => fmt(-Math.abs(v)) },
+                { key: 'gananciaNeta', label: 'Gan. Neta', align: 'right', render: v => (
+                  <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700 }}>{fmt(v)}</span>
+                )},
+                { key: 'juan33', label: '33% Juan', align: 'right', render: v => (
+                  <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span>
+                )},
+              ]}
+            />
+          </div>
+        </>
+      )}
+    </>
+  )
+}
+
 // ─── Main Module ──────────────────────────────────────────────────────────────
-export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendingInvoices = [], incobrables = [], selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
+export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendingInvoices = [], incobrables = [], xeroRaw, role, selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
   const setSubTab = onSubTabChange || (() => {})
   const erData = erUnificado || []
   const egresosData = egresos || []
@@ -919,9 +1168,9 @@ export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendi
 
   return (
     <>
-      {/* Sub-tabs */}
+      {/* Sub-tabs (BMR solo para admin) */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, flexWrap: 'wrap' }}>
-        {SUB_TABS.map(([k, l]) => (
+        {[...SUB_TABS, ...(role === 'admin' ? [['bmr', 'Anexo BMR']] : [])].map(([k, l]) => (
           <button key={k} onClick={() => setSubTab(k)} style={{
             background: subTab === k ? ACCENT_DIM : 'transparent',
             border: subTab === k ? `1px solid ${ACCENT_BORDER}` : '1px solid rgba(0,0,0,0.07)',
@@ -932,10 +1181,13 @@ export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendi
         ))}
       </div>
 
-      {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} />}
+      {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} pendingInvoices={pendingInvoices} xeroRaw={xeroRaw} />}
       {subTab === 'deudas'  && <DeudasTab pendingInvoices={pendingInvoices} erUnificado={erData} modelFilter={modelFilter} />}
       {subTab === 'proyeccion' && (
         <ERProyectadoTab egresos={egresosData} servicios={servicios} modelFilter={modelFilter} />
+      )}
+      {subTab === 'bmr' && role === 'admin' && (
+        <BMRTab servicios={servicios} xeroRaw={xeroRaw} egresos={egresosData} erUnificado={erData} />
       )}
     </>
   )

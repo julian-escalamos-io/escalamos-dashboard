@@ -57,6 +57,7 @@ export function parseServicios(raw = []) {
       servicio: r[8] || '',    // I: Servicio
       monto: +r[10] || 0,     // K: Monto $
       ltr: +r[13] || 0,       // N: LTR
+      pm: String(r[15] || ''),  // P: PM (BMR, JB, etc.)
       metodoPago: r[16] || '', // Q: Pago
     }))
 }
@@ -73,6 +74,7 @@ export function parseEgresos(raw = []) {
       area: r[5] || '',
       monto: +r[6] || 0,
       montoPorMes: +r[7] || 0,
+      pm: String(r[10] || ''),  // K: PM (BMR, etc.)
     }))
 }
 
@@ -166,6 +168,56 @@ export function parseIncobrables(raw = []) {
 function normalizeModelo(m) {
   if (m === 'Consultoria') return 'Consultoría'
   return m
+}
+
+// ─── Benchmark de ritmo de cobro ─────────────────────────────────────────────
+
+export function computeCollectionPace(xeroRaw, currentRow, prevRow) {
+  if (!xeroRaw?.length || !currentRow) return null
+  const now = new Date()
+  const dayOfMonth = now.getDate()
+  const curYear = currentRow.year
+  const curMonth = currentRow.month
+  const prevYear = prevRow?.year
+  const prevMonth = prevRow?.month
+
+  function parseDate(val) {
+    if (!val) return null
+    if (typeof val === 'number') return new Date((val - 25569) * 86400 * 1000)
+    return new Date(val)
+  }
+
+  // Filter revenue items with payment dates
+  const revenueItems = xeroRaw.filter(r => {
+    const acCode = String(r[4] || '')
+    const tipo = String(r[3] || '')
+    const monto = +r[10] || 0
+    return acCode.charAt(0) === '2' && monto > 0 && tipo !== 'TRANSFER' && r[14]
+  })
+
+  // Sum for a given month, up to a specific day
+  function sumUpToDay(year, month, maxDay) {
+    let total = 0
+    for (const r of revenueItems) {
+      const payDate = parseDate(r[14])
+      if (!payDate) continue
+      if (payDate.getFullYear() === year && (payDate.getMonth() + 1) === month && payDate.getDate() <= maxDay) {
+        total += +r[10] || 0
+      }
+    }
+    return total
+  }
+
+  const curCollected = sumUpToDay(curYear, curMonth, dayOfMonth)
+  const curPct = currentRow.revenue > 0 ? (curCollected / currentRow.revenue) * 100 : 0
+
+  let prevPct = 0
+  if (prevRow && prevYear && prevMonth) {
+    const prevCollected = sumUpToDay(prevYear, prevMonth, dayOfMonth)
+    prevPct = prevRow.revenue > 0 ? (prevCollected / prevRow.revenue) * 100 : 0
+  }
+
+  return { currentPct: curPct, prevPct, dayOfMonth, deltaPP: curPct - prevPct }
 }
 
 // ─── E.R. Unificado (Xero) ───────────────────────────────────────────────────
