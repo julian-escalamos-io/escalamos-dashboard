@@ -1021,24 +1021,29 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
     return monthlyBMR.find(m => m.monthKey === key) || monthlyBMR[monthlyBMR.length - 1]
   }, [monthlyBMR, localMonth])
 
-  // 7. Ganancia y liquidación del mes seleccionado
-  const gananciaBruta = (currentMonthData?.revenue || 0) - Math.abs(costosDirectosBMR)
-  const gananciaNeta = gananciaBruta - Math.abs(costosIndirectosBMR)
-  const juan33 = gananciaNeta * 0.33
+  // 7. Ganancia y liquidación — REAL (basado en cash) y PROYECTADO (basado en MRR)
+  // Real: cash del mes - costos
+  const gananciaRealBruta = (currentMonthData?.cash || 0) - Math.abs(costosDirectosBMR)
+  const gananciaRealNeta = gananciaRealBruta - Math.abs(costosIndirectosBMR)
+  const juan33Real = gananciaRealNeta * 0.33
+  // Proyectado: MRR - costos
+  const gananciaProyBruta = mrrBMR - Math.abs(costosDirectosBMR)
+  const gananciaProyNeta = gananciaProyBruta - Math.abs(costosIndirectosBMR)
+  const juan33Proy = gananciaProyNeta * 0.33
 
   // 8. Tabla histórica
   const historicoRows = useMemo(() => {
     return monthlyBMR.map(m => {
-      const gb = m.revenue - Math.abs(costosDirectosBMR)
-      const gn = gb - Math.abs(costosIndirectosBMR)
+      const totalCostos = Math.abs(costosDirectosBMR) + Math.abs(costosIndirectosBMR)
+      const gnReal = m.cash - totalCostos
+      const gnProy = m.revenue - totalCostos
       return {
         ...m,
         monthLabel: `${MESES_LABEL[m.month - 1]} ${m.year}`,
-        costosDirectos: costosDirectosBMR,
-        costosIndirectos: costosIndirectosBMR,
-        gananciaBruta: gb,
-        gananciaNeta: gn,
-        juan33: gn * 0.33,
+        gnReal,
+        juan33Real: gnReal * 0.33,
+        gnProy,
+        juan33Proy: gnProy * 0.33,
       }
     })
   }, [monthlyBMR, costosDirectosBMR, costosIndirectosBMR])
@@ -1082,8 +1087,8 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
         <KPI label="Cash del mes" value={fmt(currentMonthData?.cash)} />
       </div>
 
-      {/* Cards de costos + 33% Juan */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 24 }}>
+      {/* Cards de costos + 33% Juan (Real + Proyectado) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(224,62,62,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '18px 22px' }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.45)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Costos Directos</span>
           <span style={{ fontSize: 26, fontWeight: 800, color: DANGER, letterSpacing: -0.5 }}>{fmt(-Math.abs(costosDirectosBMR))}</span>
@@ -1100,37 +1105,51 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
           borderRadius: 14, padding: '18px 22px',
           boxShadow: '0 4px 16px rgba(45,122,255,0.25)',
         }}>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.65)', fontWeight: 700, display: 'block', marginBottom: 6 }}>33% Juan</span>
-          <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{fmt(juan33)}</span>
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'block', marginTop: 4 }}>de {fmt(gananciaNeta)} gan. neta</span>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.65)', fontWeight: 700, display: 'block', marginBottom: 6 }}>33% Juan — Real</span>
+          <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{fmt(juan33Real)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'block', marginTop: 4 }}>de {fmt(gananciaRealNeta)} gan. neta</span>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+          border: '1px solid rgba(5,150,105,0.3)',
+          borderRadius: 14, padding: '18px 22px',
+          boxShadow: '0 4px 16px rgba(5,150,105,0.2)',
+        }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.8, color: 'rgba(255,255,255,0.65)', fontWeight: 700, display: 'block', marginBottom: 6 }}>33% Juan — Proyectado</span>
+          <span style={{ fontSize: 26, fontWeight: 900, color: '#fff', letterSpacing: -0.5 }}>{fmt(juan33Proy)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', display: 'block', marginTop: 4 }}>de {fmt(gananciaProyNeta)} (MRR - gastos)</span>
         </div>
       </div>
 
-      {/* P&L BMR */}
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '20px 24px', marginBottom: 20 }}>
-        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8 }}>P&L BMR — {currentMonthData ? `${MESES_LABEL[(currentMonthData.month || 1) - 1]} ${currentMonthData.year}` : '—'}</div>
-        <PLRow label="Revenue BMR" value={fmt(currentMonthData?.revenue)} bold />
-        <PLRow label="Cash Collected BMR" value={fmt(currentMonthData?.cash)} indent={1}
-          sub={currentMonthData?.revenue > 0 ? `${Math.round((currentMonthData.cash / currentMonthData.revenue) * 100)}% efic.` : null} />
-        <PLRow separator />
+      {/* P&L BMR — Real vs Proyectado */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+        {/* REAL (basado en cash collected) */}
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(45,122,255,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '20px 24px' }}>
+          <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: ACCENT, fontWeight: 700, marginBottom: 12 }}>Real (cash collected)</div>
+          <PLRow label="Cash Collected BMR" value={fmt(currentMonthData?.cash)} bold />
+          <PLRow separator />
+          <PLRow label="Costos directos" value={fmt(-Math.abs(costosDirectosBMR))} color={DANGER} indent={1} />
+          <PLRow label={`Indirectos × ${(bmrShare * 100).toFixed(1)}%`} value={fmt(-Math.abs(costosIndirectosBMR))} color={DANGER} indent={1} />
+          <PLRow separator />
+          <PLRow label="Ganancia Neta" value={fmt(gananciaRealNeta)}
+            color={gananciaRealNeta > 0 ? GREEN : DANGER} bold />
+          <PLRow separator />
+          <PLRow label="33% Juan" value={fmt(juan33Real)} color={ACCENT} bold />
+        </div>
 
-        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Costos Directos</div>
-        <PLRow label="Costos directos BMR" value={fmt(-Math.abs(costosDirectosBMR))} color={DANGER} indent={1} />
-        <PLRow separator />
-        <PLRow label="Ganancia Bruta" value={fmt(gananciaBruta)}
-          color={gananciaBruta > 0 ? GREEN : DANGER} bold
-          pct={currentMonthData?.revenue > 0 ? fmtPct(gananciaBruta / currentMonthData.revenue) : null} />
-        <PLRow separator />
-
-        <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.35)', fontWeight: 700, marginBottom: 8, marginTop: 12 }}>Costos Indirectos (ponderados)</div>
-        <PLRow label={`Gastos generales × ${(bmrShare * 100).toFixed(1)}%`} value={fmt(-Math.abs(costosIndirectosBMR))} color={DANGER} indent={1} />
-        <PLRow separator />
-        <PLRow label="Ganancia Neta BMR" value={fmt(gananciaNeta)}
-          color={gananciaNeta > 0 ? GREEN : DANGER} bold
-          pct={currentMonthData?.revenue > 0 ? fmtPct(gananciaNeta / currentMonthData.revenue) : null} />
-        <PLRow separator />
-        <PLRow label="33% Juan Bangher" value={fmt(juan33)}
-          color={ACCENT} bold />
+        {/* PROYECTADO (basado en MRR) */}
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(5,150,105,0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '20px 24px' }}>
+          <div style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2.5, color: GREEN, fontWeight: 700, marginBottom: 12 }}>Proyectado (MRR)</div>
+          <PLRow label="MRR BMR" value={fmt(mrrBMR)} bold />
+          <PLRow separator />
+          <PLRow label="Costos directos" value={fmt(-Math.abs(costosDirectosBMR))} color={DANGER} indent={1} />
+          <PLRow label={`Indirectos × ${(bmrShare * 100).toFixed(1)}%`} value={fmt(-Math.abs(costosIndirectosBMR))} color={DANGER} indent={1} />
+          <PLRow separator />
+          <PLRow label="Ganancia Neta" value={fmt(gananciaProyNeta)}
+            color={gananciaProyNeta > 0 ? GREEN : DANGER} bold />
+          <PLRow separator />
+          <PLRow label="33% Juan" value={fmt(juan33Proy)} color={ACCENT} bold />
+        </div>
       </div>
 
       {/* Clientes BMR */}
@@ -1158,13 +1177,14 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
                 { key: 'monthLabel', label: 'Período', sortable: false },
                 { key: 'revenue', label: 'Revenue', align: 'right', render: v => fmt(v) },
                 { key: 'cash', label: 'Cash', align: 'right', render: v => fmt(v) },
-                { key: 'costosDirectos', label: 'C. Directos', align: 'right', render: v => fmt(-Math.abs(v)) },
-                { key: 'costosIndirectos', label: 'C. Indirectos', align: 'right', render: v => fmt(-Math.abs(v)) },
-                { key: 'gananciaNeta', label: 'Gan. Neta', align: 'right', render: v => (
+                { key: 'gnReal', label: 'Gan. Real', align: 'right', render: v => (
                   <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700 }}>{fmt(v)}</span>
                 )},
-                { key: 'juan33', label: '33% Juan', align: 'right', render: v => (
+                { key: 'juan33Real', label: '33% Real', align: 'right', render: v => (
                   <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span>
+                )},
+                { key: 'juan33Proy', label: '33% Proy.', align: 'right', render: v => (
+                  <span style={{ color: GREEN, fontWeight: 700 }}>{fmt(v)}</span>
                 )},
               ]}
             />
