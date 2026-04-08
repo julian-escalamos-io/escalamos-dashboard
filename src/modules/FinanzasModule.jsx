@@ -1180,11 +1180,8 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
                 { key: 'gnReal', label: 'Gan. Real', align: 'right', render: v => (
                   <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700 }}>{fmt(v)}</span>
                 )},
-                { key: 'juan33Real', label: '33% Real', align: 'right', render: v => (
+                { key: 'juan33Real', label: '33% Juan', align: 'right', render: v => (
                   <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span>
-                )},
-                { key: 'juan33Proy', label: '33% Proy.', align: 'right', render: v => (
-                  <span style={{ color: GREEN, fontWeight: 700 }}>{fmt(v)}</span>
                 )},
               ]}
             />
