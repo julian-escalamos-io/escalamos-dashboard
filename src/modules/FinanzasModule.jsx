@@ -182,15 +182,16 @@ function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
               </div>
             </div>
           )}
-          {/* Mejora 1: Benchmark de ritmo */}
+          {/* Mejora 1: Benchmark de ritmo (solo mes en curso) */}
           {collectionPace && isCurrentMonth && (
             <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 9, fontWeight: 700, color: 'rgba(26,31,54,0.45)', textTransform: 'uppercase', letterSpacing: 1 }}>Día {collectionPace.dayOfMonth}</span>
-                <span style={{ fontSize: 10, fontWeight: 700, color: collectionPace.deltaPP >= 0 ? GREEN : DANGER }}>
-                  {collectionPace.currentPct.toFixed(0)}% cobrado
-                  <span style={{ color: 'rgba(26,31,54,0.38)', fontWeight: 500 }}> vs {collectionPace.prevPct.toFixed(0)}% mes ant.</span>
-                  {' '}{collectionPace.deltaPP >= 0 ? '▲' : '▼'}{Math.abs(collectionPace.deltaPP).toFixed(0)}pp
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(26,31,54,0.45)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>Ritmo al día {collectionPace.dayOfMonth}</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(26,31,54,0.5)' }}>vs</span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: 'rgba(26,31,54,0.7)' }}>{fmt(collectionPace.prev)}</span>
+                <span style={{ fontSize: 11, fontWeight: 500, color: 'rgba(26,31,54,0.4)' }}>mes ant.</span>
+                <span style={{ fontSize: 11, fontWeight: 800, color: collectionPace.delta >= 0 ? GREEN : DANGER }}>
+                  {collectionPace.delta >= 0 ? '▲' : '▼'} {fmt(Math.abs(collectionPace.delta))}
                 </span>
               </div>
             </div>

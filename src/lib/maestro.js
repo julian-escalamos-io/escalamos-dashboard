@@ -209,15 +209,13 @@ export function computeCollectionPace(xeroRaw, currentRow, prevRow) {
   }
 
   const curCollected = sumUpToDay(curYear, curMonth, dayOfMonth)
-  const curPct = currentRow.revenue > 0 ? (curCollected / currentRow.revenue) * 100 : 0
 
-  let prevPct = 0
+  let prevCollected = 0
   if (prevRow && prevYear && prevMonth) {
-    const prevCollected = sumUpToDay(prevYear, prevMonth, dayOfMonth)
-    prevPct = prevRow.revenue > 0 ? (prevCollected / prevRow.revenue) * 100 : 0
+    prevCollected = sumUpToDay(prevYear, prevMonth, dayOfMonth)
   }
 
-  return { currentPct: curPct, prevPct, dayOfMonth, deltaPP: curPct - prevPct }
+  return { current: curCollected, prev: prevCollected, dayOfMonth, delta: curCollected - prevCollected }
 }
 
 // ─── E.R. Unificado (Xero) ───────────────────────────────────────────────────
