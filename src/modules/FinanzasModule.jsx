@@ -70,7 +70,7 @@ function getRowForMonth(rows, monthKey) {
 }
 
 // ─── P&L Tab ──────��─────────────────────────────��─────────────────────────────
-function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
+function PLTab({ erUnificado, modelFilter, pendingInvoices, libroDiario }) {
   const [localMonth, setLocalMonth] = useState(null)
 
   const modelRows = useMemo(() => getModelRows(erUnificado, modelFilter), [erUnificado, modelFilter])
@@ -115,9 +115,9 @@ function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
 
   // Mejora 1: benchmark de ritmo de cobro
   const collectionPace = useMemo(() => {
-    if (!currentRow || !xeroRaw?.length) return null
-    return computeCollectionPace(xeroRaw, currentRow, prevRow)
-  }, [xeroRaw, currentRow, prevRow])
+    if (!currentRow || !libroDiario?.length) return null
+    return computeCollectionPace(libroDiario, currentRow, prevRow)
+  }, [libroDiario, currentRow, prevRow])
 
   if (!currentRow) return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos del período.</div>
 
@@ -234,8 +234,8 @@ function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
           sub={currentRow.revenue > 0 ? `${Math.round(currentRow.cobrosATiempo / currentRow.revenue * 100)}% del revenue` : null} />
         <PLRow label="Cobros de deuda" value={fmt(currentRow.cobrosDeuda)} indent={1} />
         {cxcData.total > 0 && (
-          <PLRow label="CxC acumulada (meses ant.)" value={fmt(cxcData.total)} indent={1}
-            color={DANGER} sub={`${cxcData.count} facturas`} />
+          <PLRow label="Deuda activa (meses anteriores)" value={fmt(cxcData.total)} indent={1}
+            dimValue sub={`${cxcData.count} facturas pendientes`} />
         )}
         <PLRow separator />
 
@@ -1193,7 +1193,7 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
 }
 
 // ─── Main Module ──────────────────────────────────────────────────────────────
-export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendingInvoices = [], incobrables = [], xeroRaw, role, selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
+export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendingInvoices = [], incobrables = [], xeroRaw, libroDiario, role, selectedERMonth, modelFilter = 'todos', subTab = 'pl', onSubTabChange }) {
   const setSubTab = onSubTabChange || (() => {})
   const erData = erUnificado || []
   const egresosData = egresos || []
@@ -1217,7 +1217,7 @@ export function FinanzasModule({ erUnificado = [], er, egresos, servicios, pendi
         ))}
       </div>
 
-      {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} pendingInvoices={pendingInvoices} xeroRaw={xeroRaw} />}
+      {subTab === 'pl'      && <PLTab erUnificado={erData} modelFilter={modelFilter} pendingInvoices={pendingInvoices} libroDiario={libroDiario} />}
       {subTab === 'deudas'  && <DeudasTab pendingInvoices={pendingInvoices} erUnificado={erData} modelFilter={modelFilter} />}
       {subTab === 'proyeccion' && (
         <ERProyectadoTab egresos={egresosData} servicios={servicios} modelFilter={modelFilter} />

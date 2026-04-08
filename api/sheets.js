@@ -58,6 +58,7 @@ export default async function handler(req, res) {
     const xeroReads = xeroId ? [
       readSheet(token, xeroId, 'Estado de Resultados', 'A5:U'),
       readSheet(token, xeroId, 'Xero - Raw Data', 'A2:O'),
+      readSheet(token, xeroId, 'Libro Diario', 'A2:J'),
       readSheet(token, xeroId, '1- Servicios', 'A2:S'),
       readSheet(token, xeroId, '2- Egresos', 'A2:K'),
     ] : []
@@ -81,6 +82,7 @@ export default async function handler(req, res) {
       response.xeroRaw = xeroResults[1]
       response.servicios = xeroResults[2]
       response.egresos = xeroResults[3]
+      if (xeroResults[4]) response.libroDiario = xeroResults[4]
     }
 
     if (maestroId && maestroResults.length === 1) {

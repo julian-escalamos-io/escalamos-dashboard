@@ -172,8 +172,11 @@ function normalizeModelo(m) {
 
 // ─── Benchmark de ritmo de cobro ─────────────────────────────────────────────
 
-export function computeCollectionPace(xeroRaw, currentRow, prevRow) {
-  if (!xeroRaw?.length || !currentRow) return null
+// Libro Diario columns: A(0):FechaPago B(1):Modelo C(2):Tipo D(3):Code
+//   E(4):AccountName F(5):ContactName G(6):Descripción H(7):MontoUSD I(8):MedioPago J(9):Area
+
+export function computeCollectionPace(libroDiario, currentRow, prevRow) {
+  if (!libroDiario?.length || !currentRow) return null
   const now = new Date()
   const dayOfMonth = now.getDate()
   const curYear = currentRow.year
@@ -187,22 +190,20 @@ export function computeCollectionPace(xeroRaw, currentRow, prevRow) {
     return new Date(val)
   }
 
-  // Filter revenue items with payment dates
-  const revenueItems = xeroRaw.filter(r => {
-    const acCode = String(r[4] || '')
-    const tipo = String(r[3] || '')
-    const monto = +r[10] || 0
-    return acCode.charAt(0) === '2' && monto > 0 && tipo !== 'TRANSFER' && r[14]
+  // Filter: revenue items (code starts with 2, monto > 0)
+  const revenueItems = libroDiario.filter(r => {
+    const code = String(r[3] || '')
+    const monto = +r[7] || 0
+    return code.charAt(0) === '2' && monto > 0
   })
 
-  // Sum for a given month, up to a specific day
   function sumUpToDay(year, month, maxDay) {
     let total = 0
     for (const r of revenueItems) {
-      const payDate = parseDate(r[14])
+      const payDate = parseDate(r[0]) // A: Fecha Pago
       if (!payDate) continue
       if (payDate.getFullYear() === year && (payDate.getMonth() + 1) === month && payDate.getDate() <= maxDay) {
-        total += +r[10] || 0
+        total += +r[7] || 0 // H: Monto USD
       }
     }
     return total
