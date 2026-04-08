@@ -1,5 +1,5 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-01_
+_Última actualización: 2026-04-08_
 
 ---
 
@@ -33,14 +33,14 @@ src/
     OverviewModule.jsx     — 5 métricas norte + evolución + desglose modelo + análisis
     MarketingModule.jsx    — Vista única sin sub-tabs (cohortes, pipeline, canales)
     FulfillmentModule.jsx  — Métricas de retención del Histórico + tabla clientes + churn
-    FinanzasModule.jsx     — 3 sub-tabs: Proyección | P&L | Deudas
+    FinanzasModule.jsx     — 4 sub-tabs: ER Proyectado | P&L | Cobros Pendientes | Anexo BMR (admin)
   lib/
     cohorts.js             — buildCohorts, buildMetaAds, buildInstagram, buildSeo, buildUx
-    maestro.js             — parseServicios, parseEgresos, parseER, parseHistorico, aggregateHistorico
+    maestro.js             — parseServicios, parseEgresos, parseER, parseERUnificado, parseHistorico, computeCollectionPace, parsePendingInvoices
     dates.js               — PRESETS (Este mes, Último mes, 12 meses, Seleccionar)
 
 api/
-  sheets.js                — Lee Marketing Sheets + Registro Maestro en paralelo (4 tabs), cache 60s
+  sheets.js                — Lee Marketing Sheets + Xero Sheet (5 tabs) + Registro Maestro (1 tab), cache 60s
   insights.js              — Análisis con Claude (botón "Generar análisis")
   chat.js                  — Chat multi-turn con Claude Sonnet
   debug.js                 — (temporal — eliminar en producción)
@@ -55,7 +55,7 @@ api/
 - Contenido: blanco + gradiente sutil azul/violeta, borderRadius 20
 - Top bar: `#1a1f36`, height 60, zIndex 10
 - Selector de mes E.R: visible en Overview y Fulfillment, oculto en Marketing y Finanzas
-- Filtro de modelo (Todos/Boutique/Agencia/Soft/Financiera): siempre visible
+- Filtro de modelo (Todos/Boutique/Agencia/Soft/Financiera/Consultoría): siempre visible
 - Cache API: `s-maxage=60, stale-while-revalidate=30` (reducido de 300 para evitar datos stale)
 
 ---
@@ -74,13 +74,19 @@ api/
 | `search_console` | A2:H | Search Console |
 | `ga4_trafico` | A2:L | Tráfico GA4 |
 
+### Xero Sheet (`XERO_SPREADSHEET_ID`)
+| Tab | Rango | Uso |
+|-----|-------|-----|
+| `Estado de Resultados` | A5:U | E.R. Unificado por modelo×mes (desde Xero Raw Data) |
+| `Xero - Raw Data` | A2:O | Transacciones individuales de Xero |
+| `Libro Diario` | A6:J | Vista filtrada del Raw Data (QUERY, filtrado por mes en sheet) |
+| `1- Servicios` | A2:S | Todos los servicios (col P=PM para BMR) |
+| `2- Egresos` | A2:K | Gastos fijos y variables (col K=PM para BMR) |
+
 ### Registro Maestro (`REGISTRO_MAESTRO_SPREADSHEET_ID`)
 | Tab | Rango | Uso |
 |-----|-------|-----|
-| `1- Servicios 🔄` | A2:P | Todos los servicios |
-| `2- Egresos 🫰` | A2:H | Gastos fijos y variables |
-| `3- E.R 📒` | A2:AA | Estado de resultados mensual |
-| `4- Histórico` | A1:AZ | Métricas de retención/unidad por modelo×mes |
+| `4- Histórico` | A1:AZ | Métricas de retención/unidad por modelo×mes (Fulfillment) |
 
 ---
 
@@ -121,25 +127,37 @@ Recibe: `servicios`, `modelFilter`, `historico`, `selectedERMonth`
 
 **Churn reciente** (últimos 3 meses, solo si hay bajas)
 
-### Finanzas — 3 sub-tabs (default: Proyección)
+### Finanzas — 4 sub-tabs (default: ER Proyectado)
 
-**Proyección:**
-- INGRESOS: MRR Total + ModeloIngresosCards colapsables (cerrados por default), clientes agrupados por MRR
-- EGRESOS (separador rojo): Total Egresos (card roja) + Fijos + Variables
-  - Gastos Generales (ponderado): colapsable
-  - Gastos de la Unidad: colapsable
-  - Ganancia Proyectada: card azul = MRR − |egresos| con % margen
+**ER Proyectado:**
+- MRR con cards desplegables por modelo (Boutique, Agencia, Soft, Financiera, Consultoría)
+- Costos Directos (gastos de la unidad) + card Margen Bruto (naranja)
+- Costos Indirectos (generales ponderados por % MRR) + card Margen Neto (azul)
+- Ambos expandibles con detalle fijos/variables
 
-**P&L:**
-- Selector de mes inline (últimos 6 meses), no usa el selector global
-- 5 KPI cards: Revenue · Cash Collected (% cobrado) · Ganancia Bruta · Ganancia Neta · % Margen Neto (azul — métrica norte)
-- Estado de Resultados waterfall completo
-- Gastos Adm: línea "todos" en gris + ponderado bold si hay filtro de modelo
-- Evolución 12m + tabla detalle + análisis Claude
+**P&L:** (fuente: E.R. Unificado de Xero)
+- Selector de mes inline (últimos 6 meses)
+- 5 KPI cards: Revenue · Cash Collected (% efic cobro + benchmark ritmo día X) · Ganancia Bruta · Ganancia Neta · % Margen Neto
+- Benchmark de cobro: "vs $X mes ant. ▲/▼ $Y" (solo mes en curso, lee de Xero Raw Data)
+- Deltas % solo en meses cerrados (ocultos en mes en curso)
+- CxC acumulada: "Deuda activa (meses anteriores)" como sub-item gris
+- P&L waterfall: Ingresos → Gastos Directos (Op + Stripe) → Ganancia Bruta → Gastos Indirectos (Admin prorr.) → Ganancia Neta + Margen del mes
+- Desglose por modelo (solo filtro Todos)
+- Evolución 12m: Revenue vs Cash (barras+línea) + Ganancia Neta
 
-**Deudas:**
-- 4 KPI cards: Deudas a Favor · Corriente · Morosos · Incobrables
-- Tabla evolución
+**Cobros Pendientes:** (fuente: Xero Raw Data)
+- Total pendiente + Incobrable + Antigüedad promedio
+- Aging: 0-30d / 31-60d / 61-90d / 90+d
+- Desglose por modelo
+- Tabla de facturas pendientes: cliente, modelo, fecha, días, monto
+
+**Anexo BMR:** (admin-only, fuente: Xero Raw Data + Servicios PM=BMR)
+- Liquidación Juan Bangher (33% ganancia neta de clientes BMR)
+- KPIs: MRR BMR · Revenue · Cash
+- Cards: Costos Directos · Costos Indirectos (ponderados) · 33% Real (azul) · 33% Proyectado (verde)
+- P&L lado a lado: Real (cash) vs Proyectado (MRR)
+- Tabla clientes BMR activos
+- Tabla histórica mensual
 
 ---
 
@@ -213,7 +231,8 @@ Revenue (E.R col D) no está en Histórico — viene del E.R siempre.
 ```
 GOOGLE_CREDENTIALS_JSON             — Service account JSON
 SPREADSHEET_ID                      — Google Sheet Marketing
-REGISTRO_MAESTRO_SPREADSHEET_ID     — Google Sheet Registro Maestro
+REGISTRO_MAESTRO_SPREADSHEET_ID     — Google Sheet Registro Maestro (solo Histórico)
+XERO_SPREADSHEET_ID                 — Google Sheet Xero (E.R., Raw Data, Servicios, Egresos)
 ANTHROPIC_API_KEY                   — Para insights y chat
 ```
 
@@ -249,6 +268,23 @@ Sin rol asignado → cae como `ops` por default.
 **Estado actual:** Modo test (keys `pk_test_` / `sk_test_`). Para pasar a live: Clerk dashboard → Upgrade to production → reemplazar keys en Vercel.
 
 **Modelo bloqueado por usuario:** campo `model` en `publicMetadata` de Clerk (ej: `{ "role": "admin", "model": "Agencia" }`). Si está presente, el filtro de modelo queda fijo y las pills desaparecen del top bar.
+
+---
+
+## Cambios sesión 2026-04-08
+
+### Finanzas — Migración a Xero + 4 mejoras
+- **Fuente de datos migrada**: todo Finanzas lee del sheet Xero (XERO_SPREADSHEET_ID) en vez del Registro Maestro
+- **E.R. Unificado**: parser `parseERUnificado` con 20 columnas (A-U) incluyendo Deuda histórica
+- **Consultoría**: agregado como modelo en pills, parsers y tablas (con normalización Consultoria→Consultoría)
+- **Servicios**: parser actualizado al nuevo orden de columnas (Tipo en C, Estado en D, Monto en K, PM en P)
+- **Fix timezone UTC**: fechas Excel se parsean con getUTC* (Argentina UTC-3 corría fechas 1 día)
+- **ER Proyectado**: reestructurado MRR → Costos Directos → Margen Bruto → Indirectos → Margen Neto
+- **Benchmark de cobro**: ritmo al día X vs mes anterior desde Xero Raw Data
+- **CxC acumulada**: deuda activa de meses anteriores como sub-item gris
+- **Deltas condicionales**: ocultos en mes en curso (datos parciales distorsionan)
+- **Cobros Pendientes**: facturas reales de Xero Raw Data con aging y desglose por modelo
+- **Anexo BMR**: tab admin-only para liquidación Juan Bangher (33% gan. neta, real vs proyectado)
 
 ---
 
@@ -296,11 +332,12 @@ Sin rol asignado → cae como `ops` por default.
 
 - NRR estaba mapeado a r[17] — corregido a r[18] (col S del Histórico)
 - Ganancia Proyectada usa `Math.abs(total)` — el sheet puede guardar egresos como negativos
-- Revenue solo en E.R (sin desglose por modelo). Histórico tiene todo lo demás filtrable
 - Histórico pre-ene-26 usa modelos legacy — filtro por modelo solo funciona bien desde ene-26
 - Fuente de ventas se cruza por nombre de contacto (si no hay match → `sin fuente`)
-- `api/debug.js` todavía existe — eliminar antes de release público
-- Sheet names del Registro Maestro incluyen emojis: usar unicode escapes en api/sheets.js
+- Fechas Excel: siempre usar getUTC* para parsear (fix timezone Argentina UTC-3)
+- BMR matching por inclusión parcial case-insensitive (nombres Servicios vs Xero Raw Data)
+- Libro Diario usa QUERY filtrado por mes → no sirve como fuente de datos multi-mes (usar Xero Raw Data)
+- Vercel deploy via CLI no toma env vars del dashboard → usar `npx vercel --prod --force`
 
 ---
 
