@@ -954,7 +954,11 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
 
   // 1. Clientes BMR
   const bmrClients = useMemo(() => (servicios || []).filter(s => s.pm === 'BMR'), [servicios])
-  const bmrNames = useMemo(() => new Set(bmrClients.map(s => s.nombre)), [bmrClients])
+  const bmrNames = useMemo(() => bmrClients.map(s => s.nombre.toLowerCase().trim()), [bmrClients])
+  const isBMRContact = (contactName) => {
+    const cn = contactName.toLowerCase().trim()
+    return bmrNames.some(bn => cn.includes(bn) || bn.includes(cn))
+  }
   const bmrActive = useMemo(() => bmrClients.filter(s => s.estado?.toLowerCase() === 'activo'), [bmrClients])
   const mrrBMR = bmrActive.reduce((s, c) => s + c.monto, 0)
 
@@ -980,7 +984,7 @@ function BMRTab({ servicios, xeroRaw, egresos, erUnificado }) {
       const monto = +r[10] || 0
       const contactName = String(r[6] || '')
       if (acCode.charAt(0) !== '2' || monto <= 0 || tipo === 'TRANSFER') continue
-      if (!bmrNames.has(contactName)) continue
+      if (!isBMRContact(contactName)) continue
 
       const fechaCreacion = parseDate(r[0])
       const fechaPago = parseDate(r[14])
