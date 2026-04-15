@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "vite",
+    "dev:api": "vercel dev",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -11,6 +12,7 @@
     "@anthropic-ai/sdk": "^0.39.0",
     "@clerk/backend": "^3.2.2",
     "@clerk/clerk-react": "^5.61.4",
+    "@clerk/localizations": "^4.5.1",
     "date-fns": "^3.6.0",
     "google-auth-library": "^9.15.0",
     "react": "^18.3.1",

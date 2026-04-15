@@ -6,7 +6,9 @@ export function LoginScreen() {
       {/* Background */}
       <div style={styles.orb1} />
       <div style={styles.orb2} />
+      <div style={styles.orb3} />
       <div style={styles.grid} />
+      <div style={styles.vignette} />
       <div style={styles.noise} />
 
       {/* Single centered card */}
@@ -22,7 +24,7 @@ export function LoginScreen() {
           />
 
           <p style={styles.tagline}>
-            Transformando business en centros de inteligencia
+            Transformando negocios en centros de inteligencia
           </p>
 
           <div style={styles.divider} />
@@ -60,8 +62,11 @@ export function LoginScreen() {
                   color: 'rgba(255,255,255,0.6)',
                   fontWeight: 500,
                   fontSize: 13,
+                  lineHeight: 1.6,
                   paddingLeft: 4,
-                  marginBottom: 6,
+                  paddingBottom: 2,
+                  marginBottom: 8,
+                  overflow: 'visible',
                 },
                 formFieldInput: {
                   background: 'rgba(255,255,255,0.06)',
@@ -94,15 +99,15 @@ export function LoginScreen() {
                 },
                 form: {
                   width: '100%',
-                  overflow: 'hidden',
+                  overflow: 'visible',
                 },
                 main: {
                   width: '100%',
-                  overflow: 'hidden',
+                  overflow: 'visible',
                 },
                 cardBox: {
                   width: '100%',
-                  overflow: 'hidden',
+                  overflow: 'visible',
                 },
                 // Hide footer
                 footerAction: { display: 'none' },
@@ -150,40 +155,56 @@ const styles = {
     position: 'fixed',
     inset: 0,
     overflow: 'hidden',
-    background: '#060609',
+    background: 'radial-gradient(ellipse at top, #0a1226 0%, #060912 45%, #040509 100%)',
   },
   orb1: {
     position: 'absolute',
-    width: 700,
-    height: 700,
+    width: 800,
+    height: 800,
     borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 65%)',
-    top: '-15%',
+    background: 'radial-gradient(circle, rgba(59,130,246,0.32) 0%, transparent 65%)',
+    top: '-18%',
     right: '-15%',
-    filter: 'blur(80px)',
+    filter: 'blur(90px)',
     animation: 'float1 15s ease-in-out infinite',
   },
   orb2: {
     position: 'absolute',
-    width: 550,
-    height: 550,
+    width: 650,
+    height: 650,
     borderRadius: '50%',
-    background: 'radial-gradient(circle, rgba(37,99,235,0.10) 0%, transparent 65%)',
-    bottom: '-10%',
+    background: 'radial-gradient(circle, rgba(37,99,235,0.28) 0%, transparent 65%)',
+    bottom: '-12%',
     left: '-12%',
-    filter: 'blur(80px)',
+    filter: 'blur(90px)',
     animation: 'float2 18s ease-in-out infinite',
+  },
+  orb3: {
+    position: 'absolute',
+    width: 500,
+    height: 500,
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 65%)',
+    top: '35%',
+    left: '40%',
+    filter: 'blur(100px)',
   },
   grid: {
     position: 'absolute',
     inset: 0,
     backgroundImage: `
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)
+      linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)
     `,
     backgroundSize: '64px 64px',
-    maskImage: 'radial-gradient(ellipse 60% 50% at 50% 50%, black 10%, transparent 65%)',
-    WebkitMaskImage: 'radial-gradient(ellipse 60% 50% at 50% 50%, black 10%, transparent 65%)',
+    maskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 15%, transparent 75%)',
+    WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 50% 50%, black 15%, transparent 75%)',
+  },
+  vignette: {
+    position: 'absolute',
+    inset: 0,
+    background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.55) 100%)',
+    pointerEvents: 'none',
   },
   noise: {
     position: 'absolute',

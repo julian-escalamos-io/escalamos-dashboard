@@ -1,5 +1,6 @@
 {
   "public": false,
+  "devCommand": "vite",
   "functions": {
     "api/sheets.js": { "maxDuration": 30 },
     "api/insights.js": { "maxDuration": 30 },
