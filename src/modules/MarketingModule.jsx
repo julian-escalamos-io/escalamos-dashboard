@@ -87,43 +87,60 @@ function SourcesDonut({ sourceCounts, centerLabel = 'leads' }) {
 function Funnel({ cohort, prevCohort }) {
   const prev = prevCohort
   const STAGES = [
-    { label: 'Lead nuevo',      key: 'Lead nuevo',        color: 'rgba(45,122,255,0.3)' },
-    { label: 'En conversación', key: 'En conversación',   color: 'rgba(45,122,255,0.45)' },
-    { label: 'Potencial',       key: 'Cliente potencial', color: 'rgba(45,122,255,0.6)' },
-    { label: 'Negociando',      key: 'Negociando',        color: 'rgba(45,122,255,0.78)' },
+    { label: 'Lead nuevo',      key: 'Lead nuevo',        color: 'rgba(45,122,255,0.35)' },
+    { label: 'En conversación', key: 'En conversación',   color: 'rgba(45,122,255,0.5)' },
+    { label: 'Potencial',       key: 'Cliente potencial', color: 'rgba(45,122,255,0.65)' },
+    { label: 'Negociando',      key: 'Negociando',        color: 'rgba(45,122,255,0.82)' },
     { label: 'Ganado',          key: 'Ganado',            color: ACCENT },
   ]
 
+  const top = cohort.leadsCount || 1
+  const STAGE_HEIGHT = 36
+  const CONV_HEIGHT = 18
+  const MIN_WIDTH = 6 // pct mínimo para que siempre se vea algo
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {STAGES.map(({ label, key, color }, i, arr) => {
         const val = cohort.funnelCount[key] || 0
-        const top = cohort.leadsCount || 1
-        const pct = Math.max((val / top) * 100, 4)
+        const pct = Math.max((val / top) * 100, val > 0 ? MIN_WIDTH : 0)
+        const prevStageVal = i === 0 ? top : (cohort.funnelCount[arr[i - 1].key] || 0)
+        const prevStagePct = i === 0 ? 100 : Math.max((prevStageVal / top) * 100, prevStageVal > 0 ? MIN_WIDTH : 0)
+
         const prevVal = prev ? (prev.funnelCount[key] || 0) : null
         const prevTop = prev ? (prev.leadsCount || 1) : null
         const prevPct = prevTop ? (prevVal / prevTop) * 100 : null
+
         const nextVal = i < arr.length - 1 ? (cohort.funnelCount[arr[i + 1].key] || 0) : null
         const convToNext = val > 0 && nextVal !== null ? Math.round((nextVal / val) * 100) : null
 
+        // Trapezoide: arriba = ancho de la etapa anterior, abajo = ancho de esta etapa
+        const topLeft = (100 - prevStagePct) / 2
+        const topRight = (100 + prevStagePct) / 2
+        const botLeft = (100 - pct) / 2
+        const botRight = (100 + pct) / 2
+
         return (
           <div key={key}>
-            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 110px', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.65)', textAlign: 'right', fontWeight: 500 }}>{label}</span>
-              <div style={{ display: 'flex', justifyContent: 'center' }}>
-                <div style={{ width: `${pct}%`, height: 32, background: color, minWidth: 24, borderRadius: i === 0 ? '5px 5px 2px 2px' : i === arr.length - 1 ? '2px 2px 5px 5px' : 2 }} />
-              </div>
+              <svg viewBox={`0 0 100 ${STAGE_HEIGHT}`} preserveAspectRatio="none" style={{ width: '100%', height: STAGE_HEIGHT, display: 'block' }}>
+                <polygon
+                  points={`${topLeft},0 ${topRight},0 ${botRight},${STAGE_HEIGHT} ${botLeft},${STAGE_HEIGHT}`}
+                  fill={color}
+                />
+              </svg>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(26,31,54,0.8)' }}>{val}</span>
-                <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)' }}>{pct.toFixed(0)}%</span>
-                {prevPct !== null && prevPct > 0 && <Delta current={pct} previous={prevPct} />}
+                <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)' }}>{((val / top) * 100).toFixed(0)}%</span>
+                {prevPct !== null && prevPct > 0 && <Delta current={(val / top) * 100} previous={prevPct} />}
               </div>
             </div>
             {convToNext !== null && (
-              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 100px', alignItems: 'center', gap: 10, margin: '1px 0' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 110px', alignItems: 'center', gap: 10, height: CONV_HEIGHT }}>
                 <span />
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.3)', fontWeight: 600 }}>↓ {convToNext}% pasan</span>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.4)', fontWeight: 600 }}>↓ {convToNext}% pasan</span>
                 </div>
                 <span />
               </div>
