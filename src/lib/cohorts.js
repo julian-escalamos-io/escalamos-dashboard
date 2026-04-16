@@ -270,7 +270,7 @@ export function buildMetaAds(metaRows, dateRange) {
       impressions: Math.round(imp),
       reach: Math.round(a.reach),
       frequency: a.freqN > 0 ? Math.round((a.freqSum / a.freqN) * 10) / 10 : 0,
-      cpm: a.cpmN > 0 ? Math.round((a.cpmSum / a.cpmN) * 100) / 100 : 0,
+      cpm: imp > 0 ? Math.round((a.spend / imp) * 1000 * 100) / 100 : 0,
       hookRate: imp > 0 ? Math.round((a.hookW / imp) * 10) / 10 : 0,
       holdRate: imp > 0 ? Math.round((a.holdW / imp) * 10) / 10 : 0,
       uniqueCtr: imp > 0 ? Math.round((a.uctrW / imp) * 100) / 100 : 0,

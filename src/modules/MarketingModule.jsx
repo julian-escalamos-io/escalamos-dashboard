@@ -152,12 +152,14 @@ function Funnel({ cohort, prevCohort }) {
   )
 }
 
-function ChannelSummaryTable({ ads, instagram, seo, ux }) {
+function ChannelSummaryTable({ ads, instagram, seo, ux, cohort }) {
   const rows = []
+  const src = cohort?.sourceCounts || {}
 
   if (ads && ads.length > 0) {
     const spent = ads.reduce((s, a) => s + (a.spend || 0), 0)
-    const leads = ads.reduce((s, a) => s + (a.leads || 0), 0)
+    // Leads atribuidos: suma de registrations + msjs (convos) del Ads Manager
+    const leads = ads.reduce((s, a) => s + (a.registrations || 0) + (a.convos || 0), 0)
     const cpl = leads > 0 ? spent / leads : 0
     const impressions = ads.reduce((s, a) => s + (a.impressions || 0), 0)
     rows.push({ canal: 'Meta Ads', inversion: spent, leads, cpl, extra: impressions > 0 ? `${(impressions / 1000).toFixed(0)}k impresiones` : null })
@@ -166,12 +168,15 @@ function ChannelSummaryTable({ ads, instagram, seo, ux }) {
   rows.push({ canal: 'Google Ads', inversion: 0, leads: 0, cpl: 0, extra: 'Pendiente activación' })
 
   if (instagram) {
-    const leads = instagram.leadsCount || 0
-    rows.push({ canal: 'Instagram Org.', inversion: 0, leads, cpl: 0, extra: instagram.followers > 0 ? `${instagram.followers.toLocaleString()} seguidores` : null })
+    // Leads orgánicos de IG/Social desde GHL (atribuidos por fuente)
+    const leads = src['Instagram / Social Media'] || 0
+    rows.push({ canal: 'Instagram Org.', inversion: 0, leads, cpl: 0, extra: instagram.lastFollowers > 0 ? `${instagram.lastFollowers.toLocaleString()} seguidores` : null })
   }
 
   if (seo) {
-    rows.push({ canal: 'SEO', inversion: 0, leads: seo.leadsCount || 0, cpl: 0, extra: seo.clicks > 0 ? `${seo.clicks.toLocaleString()} clicks` : null })
+    // Leads de Google orgánico desde GHL
+    const leads = src['Google'] || 0
+    rows.push({ canal: 'SEO', inversion: 0, leads, cpl: 0, extra: seo.clicks > 0 ? `${seo.clicks.toLocaleString()} clicks` : null })
   }
 
   if (ux) {
@@ -397,7 +402,7 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
         ))}
       </div>
 
-      {channel === 'todos' && <ChannelSummaryTable ads={ads} instagram={instagram} seo={seo} ux={ux} />}
+      {channel === 'todos' && <ChannelSummaryTable ads={ads} instagram={instagram} seo={seo} ux={ux} cohort={cohort} />}
       {channel === 'meta' && <AdsTab ads={ads} />}
       {channel === 'gads' && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14 }}>

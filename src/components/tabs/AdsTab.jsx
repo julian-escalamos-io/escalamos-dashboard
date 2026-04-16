@@ -74,7 +74,7 @@ export function AdsTab({ ads }) {
               <span style={{ fontSize: 15, fontWeight: 800, color: ad.registrations > 0 ? ACCENT : 'rgba(26,31,54,0.15)' }}>{ad.registrations}</span>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(26,31,54,0.28)', fontWeight: 600, display: 'block' }}>Convos</span>
+              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1, color: 'rgba(26,31,54,0.28)', fontWeight: 600, display: 'block' }}>Msjs</span>
               <span style={{ fontSize: 15, fontWeight: 800, color: ad.convos > 0 ? GREEN : 'rgba(26,31,54,0.15)' }}>{ad.convos}</span>
             </div>
             <div style={{ textAlign: 'center', minWidth: 55 }}>
