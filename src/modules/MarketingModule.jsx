@@ -202,72 +202,6 @@ function ChannelSummaryTable({ ads, instagram, seo, ux }) {
   )
 }
 
-function InsightsBlock({ cohort, channel }) {
-  const [loading, setLoading] = useState(false)
-  const [insights, setInsights] = useState(null)
-  const [error, setError] = useState(null)
-
-  const channelLabel = CHANNELS.find(c => c.key === channel)?.label || 'Marketing'
-
-  async function generate() {
-    setLoading(true); setError(null)
-    try {
-      const resp = await fetch('/api/insights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cohorts: [cohort], period: cohort.isAggregate ? cohort.periodLabel : monthLabel(cohort.month), focus: channelLabel }),
-      })
-      if (!resp.ok) throw new Error(`Error ${resp.status}`)
-      const data = await resp.json()
-      setInsights(data)
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: insights ? 16 : 0 }}>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>
-          Análisis — {channelLabel}
-        </span>
-        {!insights && (
-          <button onClick={generate} disabled={loading} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${ACCENT}`, background: loading ? 'rgba(45,122,255,0.08)' : 'rgba(45,122,255,0.1)', color: ACCENT, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
-            {loading ? '✦ Analizando...' : '✦ Generar análisis'}
-          </button>
-        )}
-        {insights && (
-          <button onClick={() => setInsights(null)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.07)', background: 'transparent', color: 'rgba(26,31,54,0.5)', fontSize: 10, cursor: 'pointer', fontFamily: 'Montserrat' }}>↺ regenerar</button>
-        )}
-      </div>
-      {error && <p style={{ color: DANGER, fontSize: 12, marginTop: 12 }}>Error: {error}</p>}
-      {!insights && !loading && (
-        <p style={{ fontSize: 13, color: 'rgba(26,31,54,0.55)', marginTop: 12, fontWeight: 500 }}>
-          Genera un análisis enfocado en {channelLabel.toLowerCase()} para el período seleccionado.
-        </p>
-      )}
-      {insights && (
-        <>
-          <p style={{ fontSize: 14, color: 'rgba(26,31,54,0.75)', lineHeight: 1.7, margin: '0 0 16px', fontWeight: 500 }}>{insights.conclusion}</p>
-          <div style={{ background: 'rgba(45,122,255,0.05)', border: '1px solid rgba(45,122,255,0.12)', borderRadius: 10, padding: '14px 18px', marginBottom: 16 }}>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: ACCENT, fontWeight: 700, display: 'block', marginBottom: 6 }}>Cuello de botella</span>
-            <p style={{ fontSize: 13, color: 'rgba(26,31,54,0.65)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{insights.bottleneck}</p>
-          </div>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, display: 'block', marginBottom: 10 }}>Acciones priorizadas (80/20)</span>
-          {(insights.actions || []).map((a, i) => (
-            <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 10, alignItems: 'flex-start' }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, minWidth: 20 }}>{i + 1}.</span>
-              <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.7)', lineHeight: 1.6, fontWeight: 500 }}>{a}</span>
-            </div>
-          ))}
-        </>
-      )}
-    </div>
-  )
-}
-
 export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram, seo, ux }) {
   const [channel, setChannel] = useState('todos')
   const [openMetric, setOpenMetric] = useState(null)
@@ -476,10 +410,6 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
       {channel === 'instagram' && <InstagramTab data={instagram} />}
       {channel === 'seo' && <SeoTab data={seo} />}
       {channel === 'ux' && <UxTab data={ux} />}
-
-      {/* ── SECCIÓN 5: Análisis ── */}
-      <Divider title={`Análisis — ${CHANNELS.find(c => c.key === channel)?.label}`} />
-      <InsightsBlock cohort={cohort} channel={channel} />
 
       {openMetric && (
         <MetricModal metricKey={openMetric} cohort={cohort} prevCohort={prevCohort} allCohorts={allCohorts} onClose={() => setOpenMetric(null)} />
