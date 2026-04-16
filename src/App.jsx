@@ -70,8 +70,11 @@ function Dashboard() {
   const [dateRange, setDateRange] = useState(() => PRESETS[0].getRange())
 
   const selectedCohortMonth = useMemo(() => {
-    const s = dateRange.start
-    return `${s.getFullYear()}-${String(s.getMonth() + 1).padStart(2, '0')}`
+    // Para rangos de un solo mes (Este mes / Mes anterior) start y end coinciden.
+    // Para rangos multi-mes (12 meses / custom) usamos el mes final (último cerrado dentro del rango).
+    const startKey = `${dateRange.start.getFullYear()}-${String(dateRange.start.getMonth() + 1).padStart(2, '0')}`
+    const endKey = `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
+    return startKey === endKey ? startKey : endKey
   }, [dateRange])
 
   // Fetcher autenticado con token de Clerk
