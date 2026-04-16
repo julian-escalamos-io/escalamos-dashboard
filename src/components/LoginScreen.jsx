@@ -57,17 +57,8 @@ export function LoginScreen() {
                 logoBox: { display: 'none' },
                 header: { display: 'none' },
                 // Inputs
-                formFieldLabel: {
-                  fontFamily: "'Manrope', sans-serif",
-                  color: 'rgba(255,255,255,0.6)',
-                  fontWeight: 500,
-                  fontSize: 13,
-                  lineHeight: 1.6,
-                  paddingLeft: 4,
-                  paddingBottom: 2,
-                  marginBottom: 8,
-                  overflow: 'visible',
-                },
+                formFieldLabel: { display: 'none' },
+                formFieldLabelRow: { display: 'none' },
                 formFieldInput: {
                   background: 'rgba(255,255,255,0.06)',
                   border: '1px solid rgba(255,255,255,0.1)',
