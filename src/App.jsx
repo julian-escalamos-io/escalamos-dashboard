@@ -10,7 +10,8 @@ import { MarketingModule } from './modules/MarketingModule.jsx'
 import { FulfillmentModule } from './modules/FulfillmentModule.jsx'
 import { FinanzasModule } from './modules/FinanzasModule.jsx'
 import { PRESETS } from './lib/dates.js'
-import { buildCohorts, buildMetaAds, buildInstagram, buildSeo, buildUx } from './lib/cohorts.js'
+import { buildCohorts, aggregateCohorts, buildMetaAds, buildInstagram, buildSeo, buildUx } from './lib/cohorts.js'
+import { monthLabel } from './lib/formatters.js'
 import { parseServicios, parseEgresos, parseER, parseHistorico, parseERUnificado, erUnificadoToOverview, parsePendingInvoices, parseIncobrables, computeOverviewKPIs } from './lib/maestro.js'
 
 // ── Configuración de roles ─────────────────────────────────────────────────
@@ -69,13 +70,13 @@ function Dashboard() {
   const [finanzasSubTab, setFinanzasSubTab] = useState('proyeccion')
   const [dateRange, setDateRange] = useState(() => PRESETS[0].getRange())
 
-  const selectedCohortMonth = useMemo(() => {
-    // Para rangos de un solo mes (Este mes / Mes anterior) start y end coinciden.
-    // Para rangos multi-mes (12 meses / custom) usamos el mes final (último cerrado dentro del rango).
+  const rangeMonthKeys = useMemo(() => {
     const startKey = `${dateRange.start.getFullYear()}-${String(dateRange.start.getMonth() + 1).padStart(2, '0')}`
     const endKey = `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
-    return startKey === endKey ? startKey : endKey
+    return { startKey, endKey, isMultiMonth: startKey !== endKey }
   }, [dateRange])
+
+  const selectedCohortMonth = rangeMonthKeys.endKey
 
   // Fetcher autenticado con token de Clerk
   const authedFetcher = useCallback(
@@ -98,15 +99,30 @@ function Dashboard() {
 
   const selectedCohort = useMemo(() => {
     if (!allCohorts.length) return null
-    if (selectedCohortMonth) return allCohorts.find(c => c.month === selectedCohortMonth) || allCohorts[allCohorts.length - 1]
-    return allCohorts[allCohorts.length - 1]
-  }, [allCohorts, selectedCohortMonth])
+    if (rangeMonthKeys.isMultiMonth) {
+      const inRange = allCohorts.filter(c => c.month >= rangeMonthKeys.startKey && c.month <= rangeMonthKeys.endKey)
+      if (!inRange.length) return null
+      const periodLabel = `${monthLabel(rangeMonthKeys.startKey)} → ${monthLabel(rangeMonthKeys.endKey)}`
+      return aggregateCohorts(inRange, periodLabel)
+    }
+    return allCohorts.find(c => c.month === selectedCohortMonth) || allCohorts[allCohorts.length - 1]
+  }, [allCohorts, selectedCohortMonth, rangeMonthKeys])
 
   const prevCohort = useMemo(() => {
     if (!selectedCohort || !allCohorts.length) return null
+    if (rangeMonthKeys.isMultiMonth) {
+      // Período anterior equivalente — mismo número de meses justo antes del rango
+      const inRange = allCohorts.filter(c => c.month >= rangeMonthKeys.startKey && c.month <= rangeMonthKeys.endKey)
+      const n = inRange.length
+      const startIdx = allCohorts.findIndex(c => c.month === inRange[0].month)
+      if (startIdx <= 0) return null
+      const prevSlice = allCohorts.slice(Math.max(0, startIdx - n), startIdx)
+      if (!prevSlice.length) return null
+      return aggregateCohorts(prevSlice, `${monthLabel(prevSlice[0].month)} → ${monthLabel(prevSlice[prevSlice.length - 1].month)}`)
+    }
     const idx = allCohorts.findIndex(c => c.month === selectedCohort.month)
     return idx > 0 ? allCohorts[idx - 1] : null
-  }, [allCohorts, selectedCohort])
+  }, [allCohorts, selectedCohort, rangeMonthKeys])
 
   const ads = useMemo(() => data ? buildMetaAds(data.metaAds, dateRange) : [], [data, dateRange])
   const instagram = useMemo(() => data ? buildInstagram(data.instagram, dateRange) : null, [data, dateRange])

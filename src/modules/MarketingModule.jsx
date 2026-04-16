@@ -198,7 +198,7 @@ function InsightsBlock({ cohort, channel }) {
       const resp = await fetch('/api/insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cohorts: [cohort], period: monthLabel(cohort.month), focus: channelLabel }),
+        body: JSON.stringify({ cohorts: [cohort], period: cohort.isAggregate ? cohort.periodLabel : monthLabel(cohort.month), focus: channelLabel }),
       })
       if (!resp.ok) throw new Error(`Error ${resp.status}`)
       const data = await resp.json()
@@ -278,7 +278,8 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
   const pCpl = prev?.cpl
   const pConv = prev && prev.leadsCount > 0 ? (prev.closuresCount / prev.leadsCount) * 100 : null
 
-  const monthName = monthLabel(cohort.month).split(' ')[0]
+  const cohortDisplayLabel = cohort.isAggregate ? cohort.periodLabel : monthLabel(cohort.month)
+  const monthName = cohort.isAggregate ? 'Período' : monthLabel(cohort.month).split(' ')[0]
 
   // Últimos 12 meses cerrados (excluye el mes actual incompleto)
   const evolution12 = (() => {
@@ -292,7 +293,7 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
       {/* ── SECCIÓN 1: Cohortes y KPIs ── */}
       <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.55)', fontWeight: 700 }}>
-          Cohorte {monthLabel(cohort.month)}
+          {cohort.isAggregate ? 'Período' : 'Cohorte'} {cohortDisplayLabel}
         </span>
         <span style={{ fontSize: 10, padding: '3px 12px', borderRadius: 20, background: cohort.isOpen ? 'rgba(0,0,0,0.04)' : 'rgba(45,122,255,0.1)', color: cohort.isOpen ? 'rgba(26,31,54,0.75)' : ACCENT, fontWeight: 700 }}>
           {cohort.isOpen ? `abierta · ${cohort.activeCount} activos` : 'completa'}

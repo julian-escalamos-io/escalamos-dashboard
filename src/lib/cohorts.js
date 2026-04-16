@@ -153,7 +153,7 @@ export function buildCohorts(leadsRows, ventasRows, costosRows, dateRange) {
   return cohorts.sort((a, b) => a.month.localeCompare(b.month))
 }
 
-export function aggregateCohorts(cohorts) {
+export function aggregateCohorts(cohorts, periodLabel) {
   if (!cohorts.length) return null
   const gasto = cohorts.reduce((s, c) => s + c.gasto, 0)
   const gastoAds = cohorts.reduce((s, c) => s + c.gastoAds, 0)
@@ -162,12 +162,72 @@ export function aggregateCohorts(cohorts) {
   const closuresCount = cohorts.reduce((s, c) => s + c.closuresCount, 0)
   const revenue = cohorts.reduce((s, c) => s + c.revenue, 0)
   const activeCount = cohorts.reduce((s, c) => s + c.activeCount, 0)
+
+  const cohortAov = closuresCount > 0 ? revenue / closuresCount : 0
+  const cpl = leadsCount > 0 && gastoAds > 0 ? gastoAds / leadsCount : 0
+  const mer = gasto > 0 && revenue > 0 ? revenue / gasto : 0
+  const cac = closuresCount > 0 && gasto > 0 ? gasto / closuresCount : 0
+  const margenBrutoAvg = cohorts.length > 0
+    ? cohorts.reduce((s, c) => s + (c.margenBruto || 0), 0) / cohorts.length
+    : 0
+  const grossProfit = margenBrutoAvg > 0 && cohortAov > 0 ? cohortAov * margenBrutoAvg : 0
+  const payback = grossProfit > 0 && cac > 0 ? (cac / grossProfit) * 30 : 0
+
+  // Ciclo ventas — promedio ponderado por closures
+  const totalDays = cohorts.reduce((s, c) => s + ((c.cicloVentas || 0) * c.closuresCount), 0)
+  const cicloVentas = closuresCount > 0 ? Math.round(totalDays / closuresCount) : 0
+
+  // Funnel — sumar cada stage
+  const funnelCount = {}
+  for (const c of cohorts) {
+    if (!c.funnelCount) continue
+    for (const [k, v] of Object.entries(c.funnelCount)) {
+      funnelCount[k] = (funnelCount[k] || 0) + v
+    }
+  }
+
+  // Sources — sumar
+  const sourceCounts = {}
+  const salesSourceCounts = {}
+  for (const c of cohorts) {
+    for (const [k, v] of Object.entries(c.sourceCounts || {})) {
+      sourceCounts[k] = (sourceCounts[k] || 0) + v
+    }
+    for (const [k, v] of Object.entries(c.salesSourceCounts || {})) {
+      salesSourceCounts[k] = (salesSourceCounts[k] || 0) + v
+    }
+  }
+
+  // Clients — concatenar
+  const clients = cohorts.flatMap(c => c.clients || [])
+
+  const first = cohorts[0].month
+  const last = cohorts[cohorts.length - 1].month
+
   return {
-    gasto, gastoAds, gastoEquipo, leadsCount, closuresCount, revenue, activeCount,
-    mer: gasto > 0 && revenue > 0 ? Math.round((revenue / gasto) * 100) / 100 : 0,
-    cac: closuresCount > 0 && gasto > 0 ? Math.round((gasto / closuresCount) * 100) / 100 : 0,
-    cpl: leadsCount > 0 && gastoAds > 0 ? Math.round((gastoAds / leadsCount) * 100) / 100 : 0,
-    aov: closuresCount > 0 ? Math.round((revenue / closuresCount) * 100) / 100 : 0,
+    month: `${first}__${last}`,
+    periodLabel: periodLabel || `${first} → ${last}`,
+    isAggregate: true,
+    gastoAds: Math.round(gastoAds * 100) / 100,
+    gastoEquipo: Math.round(gastoEquipo * 100) / 100,
+    gasto: Math.round(gasto * 100) / 100,
+    margenBruto: margenBrutoAvg,
+    leadsCount,
+    activeCount,
+    closuresCount,
+    revenue: Math.round(revenue * 100) / 100,
+    cohortAov: Math.round(cohortAov * 100) / 100,
+    cpl: Math.round(cpl * 100) / 100,
+    mer: Math.round(mer * 100) / 100,
+    cac: Math.round(cac * 100) / 100,
+    grossProfit: Math.round(grossProfit * 100) / 100,
+    payback: Math.round(payback * 10) / 10,
+    cicloVentas,
+    isOpen: cohorts.some(c => c.isOpen),
+    funnelCount,
+    sourceCounts,
+    salesSourceCounts,
+    clients,
   }
 }
 
