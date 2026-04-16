@@ -31,6 +31,9 @@ export const PRESETS = [
   {
     key: '12m',
     label: '12 meses',
-    getRange: () => { const now = new Date(); return { start: subMonths(now, 12), end: now } },
+    getRange: () => {
+      const prev = subMonths(new Date(), 1)
+      return { start: startOfMonth(subMonths(prev, 11)), end: endOfMonth(prev) }
+    },
   },
 ]
