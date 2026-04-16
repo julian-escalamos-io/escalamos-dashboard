@@ -25,7 +25,7 @@ export const PRESETS = [
   },
   {
     key: '1m',
-    label: 'Último mes',
+    label: 'Mes anterior',
     getRange: () => { const prev = subMonths(new Date(), 1); return { start: startOfMonth(prev), end: endOfMonth(prev) } },
   },
   {

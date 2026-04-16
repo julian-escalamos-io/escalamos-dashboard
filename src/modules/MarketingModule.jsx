@@ -280,6 +280,13 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
 
   const monthName = monthLabel(cohort.month).split(' ')[0]
 
+  // Últimos 12 meses cerrados (excluye el mes actual incompleto)
+  const evolution12 = (() => {
+    const now = new Date()
+    const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    return (allCohorts || []).filter(c => c.month !== currentKey).slice(-12)
+  })()
+
   return (
     <>
       {/* ── SECCIÓN 1: Cohortes y KPIs ── */}
@@ -400,21 +407,21 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
       </div>
 
       {/* ── SECCIÓN 3: Evolución ── */}
-      {allCohorts && allCohorts.length > 1 && (
+      {evolution12.length > 1 && (
         <>
           <Divider title="Evolución 12 meses" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 10, maxWidth: 860 }}>
             <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 6, display: 'block' }}>Ingresos nuevos clientes</span>
               <MiniChart
-                data={allCohorts.filter(c => c.revenue > 0).map(c => ({ label: monthLabel(c.month).slice(0, 3), revenue: c.revenue }))}
+                data={evolution12.map(c => ({ label: monthLabel(c.month).slice(0, 3), revenue: c.revenue }))}
                 dataKey="revenue" color={ACCENT} prefix="$" height={110}
               />
             </div>
             <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
               <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 6, display: 'block' }}>CAC</span>
               <MiniChart
-                data={allCohorts.filter(c => c.cac > 0).map(c => ({ label: monthLabel(c.month).slice(0, 3), cac: c.cac }))}
+                data={evolution12.map(c => ({ label: monthLabel(c.month).slice(0, 3), cac: c.cac }))}
                 dataKey="cac" color={DANGER} prefix="$" height={110}
               />
             </div>

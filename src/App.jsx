@@ -219,27 +219,48 @@ function Dashboard() {
 
           {/* Center/Right: filters */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {/* Model filter — pills con colores por modelo (oculto si el modelo está bloqueado) */}
-            {!lockedModel && [
-              { value: 'todos',      label: 'Todos',      bg: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', border: 'rgba(255,255,255,0.12)', activeBg: 'rgba(255,255,255,0.16)' },
-              { value: 'Boutique',   label: 'Boutique',   bg: 'rgba(245,158,11,0.12)', color: '#F59E0B',               border: 'rgba(245,158,11,0.3)',   activeBg: 'rgba(245,158,11,0.25)' },
-              { value: 'Agencia',    label: 'Agencia',    bg: 'rgba(59,130,246,0.12)', color: '#60A5FA',               border: 'rgba(59,130,246,0.3)',   activeBg: 'rgba(59,130,246,0.25)' },
-              { value: 'Soft',       label: 'Soft',       bg: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', border: 'rgba(255,255,255,0.1)',  activeBg: 'rgba(255,255,255,0.12)' },
-              { value: 'Financiera', label: 'Financiera', bg: 'rgba(16,185,129,0.12)', color: '#34D399',               border: 'rgba(16,185,129,0.3)',   activeBg: 'rgba(16,185,129,0.25)' },
-              { value: 'Consultoría', label: 'Consultoría', bg: 'rgba(168,85,247,0.12)', color: '#A855F7',             border: 'rgba(168,85,247,0.3)',   activeBg: 'rgba(168,85,247,0.25)' },
-            ].map(m => {
-              const isActive = modelFilter === m.value
+            {/* Model filter — dropdown (oculto si el modelo está bloqueado) */}
+            {!lockedModel && (() => {
+              const MODELS = [
+                { value: 'todos',      label: 'Todos',      color: 'rgba(255,255,255,0.6)' },
+                { value: 'Boutique',   label: 'Boutique',   color: '#F59E0B' },
+                { value: 'Agencia',    label: 'Agencia',    color: '#60A5FA' },
+                { value: 'Soft',       label: 'Soft',       color: 'rgba(255,255,255,0.5)' },
+                { value: 'Financiera', label: 'Financiera', color: '#34D399' },
+                { value: 'Consultoría', label: 'Consultoría', color: '#A855F7' },
+              ]
+              const current = MODELS.find(m => m.value === modelFilter) || MODELS[0]
               return (
-                <button key={m.value} onClick={() => setModelFilter(m.value)} style={{
-                  padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: "'Montserrat'",
-                  background: isActive ? m.activeBg : m.bg,
-                  color: isActive ? m.color : 'rgba(255,255,255,0.4)',
-                  border: `1px solid ${isActive ? m.border : 'rgba(255,255,255,0.08)'}`,
-                  opacity: isActive ? 1 : 0.7,
-                  transition: 'all 0.15s',
-                }}>{m.label}</button>
+                <select
+                  value={modelFilter}
+                  onChange={e => setModelFilter(e.target.value)}
+                  style={{
+                    padding: '6px 28px 6px 12px',
+                    borderRadius: 20,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    fontFamily: "'Montserrat'",
+                    cursor: 'pointer',
+                    background: 'rgba(255,255,255,0.07)',
+                    color: current.color,
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
+                    MozAppearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round' opacity='0.5'><polyline points='6 9 12 15 18 9'/></svg>")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 10px center',
+                    outline: 'none',
+                  }}
+                >
+                  {MODELS.map(m => (
+                    <option key={m.value} value={m.value} style={{ background: '#1a1f36', color: '#fff' }}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
               )
-            })}
+            })()}
 
             {/* ER month selector — ocultar en Marketing y Finanzas */}
             {activeModule !== 'marketing' && activeModule !== 'finanzas' && er.length > 0 && (
