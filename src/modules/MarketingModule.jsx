@@ -150,55 +150,55 @@ function Funnel({ cohort, prevCohort }) {
 function ChannelSummaryTable({ ads, gads, instagram, seo, ux, cohort }) {
   const rows = []
   const src = cohort?.sourceCounts || {}
+  const salesSrc = cohort?.salesSourceCounts || {}
 
   if (ads && ads.length > 0) {
     const spent = ads.reduce((s, a) => s + (a.spend || 0), 0)
-    // Leads atribuidos: suma de registrations + msjs (convos) del Ads Manager
     const leads = ads.reduce((s, a) => s + (a.registrations || 0) + (a.convos || 0), 0)
     const cpl = leads > 0 ? spent / leads : 0
-    const impressions = ads.reduce((s, a) => s + (a.impressions || 0), 0)
-    rows.push({ canal: 'Meta Ads', inversion: spent, leads, cpl, extra: impressions > 0 ? `${(impressions / 1000).toFixed(0)}k impresiones` : null })
+    const ventas = salesSrc['Meta Ads'] || 0
+    rows.push({ canal: 'Meta Ads', inversion: spent, leads, cpl, ventas })
   }
 
   if (gads && gads.spend > 0) {
     const leads = gads.conversions || 0
     const cpl = leads > 0 ? gads.spend / leads : 0
-    rows.push({ canal: 'Google Ads', inversion: gads.spend, leads, cpl, extra: gads.clicks > 0 ? `${gads.clicks.toLocaleString()} clicks` : null })
+    const ventas = salesSrc['Google Ads'] || 0
+    rows.push({ canal: 'Google Ads', inversion: gads.spend, leads, cpl, ventas })
   }
 
   if (instagram) {
-    // Leads orgánicos de IG/Social desde GHL (atribuidos por fuente)
     const leads = src['Instagram / Social Media'] || 0
-    rows.push({ canal: 'Social Media', inversion: 0, leads, cpl: 0, extra: instagram.lastFollowers > 0 ? `${instagram.lastFollowers.toLocaleString()} seguidores` : null })
+    const ventas = salesSrc['Instagram / Social Media'] || 0
+    rows.push({ canal: 'Social Media', inversion: 0, leads, cpl: 0, ventas })
   }
 
-  // SEO / Referido unificado (search console + analytics/clarity + leads atribuidos a Google + Referido)
   if (seo || ux) {
     const leads = (src['Google'] || 0) + (src['Referido'] || 0)
-    const parts = []
-    if (ux?.sessions > 0) parts.push(`${ux.sessions.toLocaleString()} sesiones`)
-    if (seo?.clicks > 0) parts.push(`${seo.clicks.toLocaleString()} clicks SEO`)
-    rows.push({ canal: 'SEO / Referido', inversion: 0, leads, cpl: 0, extra: parts.length ? parts.join(' · ') : null })
+    const ventas = (salesSrc['Google'] || 0) + (salesSrc['Referido'] || 0)
+    rows.push({ canal: 'SEO / Referido', inversion: 0, leads, cpl: 0, ventas })
   }
 
   if (!rows.length) return <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.38)' }}>Sin datos por canal</span>
 
+  const cols = '1.5fr 1fr 0.8fr 1fr 0.8fr'
+
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, overflow: 'hidden', maxWidth: 720 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 0.8fr 1fr 1.5fr', padding: '10px 18px', borderBottom: '1px solid rgba(0,0,0,0.07)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: cols, padding: '10px 18px', borderBottom: '1px solid rgba(0,0,0,0.07)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700 }}>
         <span>Canal</span>
         <span style={{ textAlign: 'right' }}>Inversión</span>
         <span style={{ textAlign: 'right' }}>Leads</span>
         <span style={{ textAlign: 'right' }}>CPL</span>
-        <span style={{ textAlign: 'right' }}>Detalle</span>
+        <span style={{ textAlign: 'right' }}>Ventas</span>
       </div>
       {rows.map((r, i) => (
-        <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 0.8fr 1fr 1.5fr', padding: '13px 18px', borderBottom: i < rows.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none', alignItems: 'center' }}>
+        <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, padding: '13px 18px', borderBottom: i < rows.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none', alignItems: 'center' }}>
           <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.8)', fontWeight: 600 }}>{r.canal}</span>
           <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.inversion > 0 ? fmt(r.inversion) : '—'}</span>
           <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.leads > 0 ? r.leads : '—'}</span>
           <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.cpl > 0 ? fmt(r.cpl) : '—'}</span>
-          <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.38)', textAlign: 'right', fontWeight: 500 }}>{r.extra || '—'}</span>
+          <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right', fontWeight: 600 }}>{r.ventas > 0 ? r.ventas : '—'}</span>
         </div>
       ))}
     </div>
