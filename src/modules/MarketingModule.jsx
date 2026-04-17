@@ -3,6 +3,7 @@ import { KPI, Delta } from '../components/KPI.jsx'
 import { MiniChart } from '../components/MiniChart.jsx'
 import { MetricModal } from '../components/MetricModal.jsx'
 import { AdsTab } from '../components/tabs/AdsTab.jsx'
+import { GoogleAdsTab } from '../components/tabs/GoogleAdsTab.jsx'
 import { InstagramTab } from '../components/tabs/InstagramTab.jsx'
 import { SeoTab } from '../components/tabs/SeoTab.jsx'
 import { UxTab } from '../components/tabs/UxTab.jsx'
@@ -13,12 +14,11 @@ const DANGER = '#E03E3E'
 const DONUT_COLORS = ['#2D7AFF', '#059669', '#FBBF24', '#A78BFA', '#FB923C', '#22D3EE', '#F472B6', '#E03E3E']
 
 const CHANNELS = [
-  { key: 'todos',     label: 'Todos' },
-  { key: 'meta',      label: 'Meta Ads' },
-  { key: 'gads',      label: 'Google Ads' },
-  { key: 'instagram', label: 'Instagram Org.' },
-  { key: 'seo',       label: 'SEO' },
-  { key: 'ux',        label: 'Web / UX' },
+  { key: 'todos',  label: 'Todos' },
+  { key: 'meta',   label: 'Meta Ads' },
+  { key: 'gads',   label: 'Google Ads' },
+  { key: 'social', label: 'Social Media' },
+  { key: 'seoref', label: 'SEO / Referido' },
 ]
 
 function fmt(val) {
@@ -147,7 +147,7 @@ function Funnel({ cohort, prevCohort }) {
   )
 }
 
-function ChannelSummaryTable({ ads, instagram, seo, ux, cohort }) {
+function ChannelSummaryTable({ ads, gads, instagram, seo, ux, cohort }) {
   const rows = []
   const src = cohort?.sourceCounts || {}
 
@@ -160,19 +160,25 @@ function ChannelSummaryTable({ ads, instagram, seo, ux, cohort }) {
     rows.push({ canal: 'Meta Ads', inversion: spent, leads, cpl, extra: impressions > 0 ? `${(impressions / 1000).toFixed(0)}k impresiones` : null })
   }
 
+  if (gads && gads.spend > 0) {
+    const leads = gads.conversions || 0
+    const cpl = leads > 0 ? gads.spend / leads : 0
+    rows.push({ canal: 'Google Ads', inversion: gads.spend, leads, cpl, extra: gads.clicks > 0 ? `${gads.clicks.toLocaleString()} clicks` : null })
+  }
+
   if (instagram) {
     // Leads orgánicos de IG/Social desde GHL (atribuidos por fuente)
     const leads = src['Instagram / Social Media'] || 0
-    rows.push({ canal: 'Instagram Org.', inversion: 0, leads, cpl: 0, extra: instagram.lastFollowers > 0 ? `${instagram.lastFollowers.toLocaleString()} seguidores` : null })
+    rows.push({ canal: 'Social Media', inversion: 0, leads, cpl: 0, extra: instagram.lastFollowers > 0 ? `${instagram.lastFollowers.toLocaleString()} seguidores` : null })
   }
 
-  // Web / SEO unificado (search console + analytics/clarity)
+  // SEO / Referido unificado (search console + analytics/clarity + leads atribuidos a Google + Referido)
   if (seo || ux) {
-    const leads = src['Google'] || 0
+    const leads = (src['Google'] || 0) + (src['Referido'] || 0)
     const parts = []
     if (ux?.sessions > 0) parts.push(`${ux.sessions.toLocaleString()} sesiones`)
     if (seo?.clicks > 0) parts.push(`${seo.clicks.toLocaleString()} clicks SEO`)
-    rows.push({ canal: 'Web / SEO', inversion: 0, leads, cpl: 0, extra: parts.length ? parts.join(' · ') : null })
+    rows.push({ canal: 'SEO / Referido', inversion: 0, leads, cpl: 0, extra: parts.length ? parts.join(' · ') : null })
   }
 
   if (!rows.length) return <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.38)' }}>Sin datos por canal</span>
@@ -199,7 +205,7 @@ function ChannelSummaryTable({ ads, instagram, seo, ux, cohort }) {
   )
 }
 
-export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram, seo, ux }) {
+export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, instagram, seo, ux }) {
   const [channel, setChannel] = useState('todos')
   const [openMetric, setOpenMetric] = useState(null)
 
@@ -395,19 +401,16 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
         ))}
       </div>
 
-      {channel === 'todos' && <ChannelSummaryTable ads={ads} instagram={instagram} seo={seo} ux={ux} cohort={cohort} />}
+      {channel === 'todos' && <ChannelSummaryTable ads={ads} gads={gads} instagram={instagram} seo={seo} ux={ux} cohort={cohort} />}
       {channel === 'meta' && <AdsTab ads={ads} />}
-      {channel === 'gads' && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14 }}>
-          <div style={{ textAlign: 'center' }}>
-            <span style={{ fontSize: 28, display: 'block', marginBottom: 10, opacity: 0.15 }}>⏳</span>
-            <span style={{ fontSize: 14, color: 'rgba(26,31,54,0.3)', fontWeight: 600 }}>Pendiente activación — token en proceso</span>
-          </div>
+      {channel === 'gads' && <GoogleAdsTab data={gads} />}
+      {channel === 'social' && <InstagramTab data={instagram} />}
+      {channel === 'seoref' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <SeoTab data={seo} />
+          <UxTab data={ux} />
         </div>
       )}
-      {channel === 'instagram' && <InstagramTab data={instagram} />}
-      {channel === 'seo' && <SeoTab data={seo} />}
-      {channel === 'ux' && <UxTab data={ux} />}
 
       {openMetric && (
         <MetricModal metricKey={openMetric} cohort={cohort} prevCohort={prevCohort} allCohorts={allCohorts} onClose={() => setOpenMetric(null)} />

@@ -281,6 +281,55 @@ export function buildMetaAds(metaRows, dateRange) {
   }).sort((a, b) => b.spend - a.spend)
 }
 
+export function buildGoogleAds(rows, dateRange) {
+  if (!rows || !rows.length) return null
+  const { start, end } = dateRange
+  const startStr = start.toISOString().slice(0, 10)
+  const endStr = end.toISOString().slice(0, 10)
+  let spend = 0, impressions = 0, clicks = 0, waConv = 0, formConv = 0
+  let ctrW = 0, cpcW = 0, isW = 0, isN = 0
+  const campaigns = {}
+  for (const row of rows) {
+    if (!row || row.length < 7) continue
+    const fecha = normalizeDate(row[0])
+    if (fecha < startStr || fecha > endStr) continue
+    const sp = sf(row[2])
+    const imp = sf(row[3])
+    const clk = sf(row[4])
+    spend += sp
+    impressions += imp
+    clicks += clk
+    ctrW += sf(row[5]) * imp
+    cpcW += sf(row[6]) * clk
+    isW += sf(row[7]); isN++
+    waConv += sf(row[10])
+    formConv += sf(row[12])
+    const camp = String(row[1] || '(sin campaña)')
+    if (!campaigns[camp]) campaigns[camp] = { spend: 0, clicks: 0, impressions: 0, waConv: 0, formConv: 0 }
+    campaigns[camp].spend += sp
+    campaigns[camp].clicks += clk
+    campaigns[camp].impressions += imp
+    campaigns[camp].waConv += sf(row[10])
+    campaigns[camp].formConv += sf(row[12])
+  }
+  const conversions = waConv + formConv
+  return {
+    spend: Math.round(spend * 100) / 100,
+    impressions: Math.round(impressions),
+    clicks: Math.round(clicks),
+    ctr: impressions > 0 ? Math.round((ctrW / impressions) * 100) / 100 : 0,
+    cpc: clicks > 0 ? Math.round((cpcW / clicks) * 100) / 100 : 0,
+    impressionShare: isN > 0 ? Math.round((isW / isN) * 100) / 100 : 0,
+    conversions: Math.round(conversions),
+    waConv: Math.round(waConv),
+    formConv: Math.round(formConv),
+    cpa: conversions > 0 ? Math.round((spend / conversions) * 100) / 100 : 0,
+    campaigns: Object.entries(campaigns)
+      .map(([name, c]) => ({ name, ...c, conversions: c.waConv + c.formConv }))
+      .sort((a, b) => b.spend - a.spend),
+  }
+}
+
 export function buildInstagram(igRows, dateRange) {
   const { start, end } = dateRange
   const dates = new Set()

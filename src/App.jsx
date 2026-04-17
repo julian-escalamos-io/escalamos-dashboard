@@ -10,7 +10,7 @@ import { MarketingModule } from './modules/MarketingModule.jsx'
 import { FulfillmentModule } from './modules/FulfillmentModule.jsx'
 import { FinanzasModule } from './modules/FinanzasModule.jsx'
 import { PRESETS } from './lib/dates.js'
-import { buildCohorts, aggregateCohorts, buildMetaAds, buildInstagram, buildSeo, buildUx } from './lib/cohorts.js'
+import { buildCohorts, aggregateCohorts, buildMetaAds, buildGoogleAds, buildInstagram, buildSeo, buildUx } from './lib/cohorts.js'
 import { monthLabel } from './lib/formatters.js'
 import { parseServicios, parseEgresos, parseER, parseHistorico, parseERUnificado, erUnificadoToOverview, parsePendingInvoices, parseIncobrables, computeOverviewKPIs } from './lib/maestro.js'
 
@@ -125,6 +125,7 @@ function Dashboard() {
   }, [allCohorts, selectedCohort, rangeMonthKeys])
 
   const ads = useMemo(() => data ? buildMetaAds(data.metaAds, dateRange) : [], [data, dateRange])
+  const gads = useMemo(() => data ? buildGoogleAds(data.googleAds, dateRange) : null, [data, dateRange])
   const instagram = useMemo(() => data ? buildInstagram(data.instagram, dateRange) : null, [data, dateRange])
   const seo = useMemo(() => data ? buildSeo(data.searchConsole, dateRange) : null, [data, dateRange])
   const ux = useMemo(() => data ? buildUx(data.clarity, data.ga4Trafico, dateRange) : null, [data, dateRange])
@@ -332,7 +333,7 @@ function Dashboard() {
               {activeModule === 'marketing' && allowedModules.includes('marketing') && (
                 <MarketingModule
                   cohort={selectedCohort} prevCohort={prevCohort} allCohorts={allCohorts}
-                  ads={ads} instagram={instagram} seo={seo} ux={ux}
+                  ads={ads} gads={gads} instagram={instagram} seo={seo} ux={ux}
                 />
               )}
               {activeModule === 'fulfillment' && allowedModules.includes('fulfillment') && (

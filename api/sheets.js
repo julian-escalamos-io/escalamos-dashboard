@@ -53,6 +53,7 @@ export default async function handler(req, res) {
       readSheet(token, marketingId, 'clarity_ux', 'A2:H'),
       readSheet(token, marketingId, 'search_console', 'A2:H'),
       readSheet(token, marketingId, 'ga4_trafico', 'A2:L'),
+      readSheet(token, marketingId, 'google_ads', 'A2:N'),
     ]
 
     const xeroReads = xeroId ? [
@@ -73,9 +74,9 @@ export default async function handler(req, res) {
       Promise.all(maestroReads),
     ])
 
-    const [metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico] = marketingResults
+    const [metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico, googleAds] = marketingResults
 
-    const response = { metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico }
+    const response = { metaAds, ghlLeads, ghlVentas, costos, instagram, clarity, searchConsole, ga4Trafico, googleAds }
 
     if (xeroId && xeroResults.length >= 5) {
       response.erUnificado = xeroResults[0]
