@@ -127,6 +127,24 @@ function Dashboard() {
   const ads = useMemo(() => data ? buildMetaAds(data.metaAds, dateRange) : [], [data, dateRange])
   const gads = useMemo(() => data ? buildGoogleAds(data.googleAds, dateRange) : null, [data, dateRange])
   const instagram = useMemo(() => data ? buildInstagram(data.instagram, dateRange) : null, [data, dateRange])
+  const prevInstagram = useMemo(() => {
+    if (!data || !rangeMonthKeys.isMultiMonth) {
+      if (!data) return null
+      // Para períodos de un solo mes: calcular mes anterior
+      const prevStart = new Date(dateRange.start)
+      prevStart.setMonth(prevStart.getMonth() - 1)
+      const prevEnd = new Date(dateRange.end)
+      prevEnd.setMonth(prevEnd.getMonth() - 1)
+      return buildInstagram(data.instagram, { start: prevStart, end: prevEnd })
+    }
+    // Para multi-mes: calcular período anterior equivalente
+    const months = Math.round((dateRange.end - dateRange.start) / (30 * 86400000))
+    const prevStart = new Date(dateRange.start)
+    prevStart.setMonth(prevStart.getMonth() - months)
+    const prevEnd = new Date(dateRange.start)
+    prevEnd.setDate(prevEnd.getDate() - 1)
+    return buildInstagram(data.instagram, { start: prevStart, end: prevEnd })
+  }, [data, dateRange, rangeMonthKeys])
   const igContent = useMemo(() => data ? buildInstagramContent(data.instagramContent, dateRange) : [], [data, dateRange])
   const seo = useMemo(() => data ? buildSeo(data.searchConsole, dateRange) : null, [data, dateRange])
   const ux = useMemo(() => data ? buildUx(data.clarity, data.ga4Trafico, dateRange) : null, [data, dateRange])
@@ -334,7 +352,7 @@ function Dashboard() {
               {activeModule === 'marketing' && allowedModules.includes('marketing') && (
                 <MarketingModule
                   cohort={selectedCohort} prevCohort={prevCohort} allCohorts={allCohorts}
-                  ads={ads} gads={gads} instagram={instagram} igContent={igContent} seo={seo} ux={ux}
+                  ads={ads} gads={gads} instagram={instagram} prevInstagram={prevInstagram} igContent={igContent} seo={seo} ux={ux}
                 />
               )}
               {activeModule === 'fulfillment' && allowedModules.includes('fulfillment') && (

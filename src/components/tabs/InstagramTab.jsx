@@ -85,10 +85,12 @@ export function InstagramTab({ data, content = [], prevData }) {
                 </div>
                 <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'rgba(26,31,54,0.45)', fontWeight: 500, flexWrap: 'wrap' }}>
                   {c.engagementRate > 0 && <span>ER <span style={{ color: c.engagementRate > 5 ? ACCENT : 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.engagementRate}%</span></span>}
-                  {c.likes > 0 && <span>♥ <span style={{ color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.likes.toLocaleString()}</span></span>}
-                  {c.comments > 0 && <span>💬 <span style={{ color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.comments}</span></span>}
-                  {c.shares > 0 && <span>↗ <span style={{ color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.shares}</span></span>}
-                  {c.saved > 0 && <span>🔖 <span style={{ color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.saved}</span></span>}
+                  {c.saveRate > 0 && <span>Save <span style={{ color: c.saveRate > 3 ? GREEN : 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.saveRate}%</span></span>}
+                  {c.shareRate > 0 && <span>Share <span style={{ color: c.shareRate > 2 ? GREEN : 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.shareRate}%</span></span>}
+                  {c.likes > 0 && <span style={{ color: 'rgba(26,31,54,0.35)' }}>♥ {c.likes.toLocaleString()}</span>}
+                  {c.comments > 0 && <span style={{ color: 'rgba(26,31,54,0.35)' }}>💬 {c.comments}</span>}
+                  {c.shares > 0 && <span style={{ color: 'rgba(26,31,54,0.35)' }}>↗ {c.shares}</span>}
+                  {c.saved > 0 && <span style={{ color: 'rgba(26,31,54,0.35)' }}>🔖 {c.saved}</span>}
                   {c.avgWatchTime > 0 && <span>Avg <span style={{ color: 'rgba(26,31,54,0.6)', fontWeight: 700 }}>{c.avgWatchTime}s</span></span>}
                 </div>
               </div>

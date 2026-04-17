@@ -112,10 +112,12 @@ export function buildCohorts(leadsRows, ventasRows, costosRows, dateRange) {
 
     // Sources — ventas (lookup by contact name from leads map only)
     const salesSourceCounts = {}
+    const salesRevenueBySource = {}
     for (const r of cohortVentas) {
       const name = String(r[2] || '').trim().toLowerCase()
       const src = leadSourceByName[name] || '(sin fuente)'
       salesSourceCounts[src] = (salesSourceCounts[src] || 0) + 1
+      salesRevenueBySource[src] = (salesRevenueBySource[src] || 0) + sf(r[3])
     }
 
     // Clients
@@ -146,6 +148,7 @@ export function buildCohorts(leadsRows, ventasRows, costosRows, dateRange) {
       funnelCount,
       sourceCounts,
       salesSourceCounts,
+      salesRevenueBySource,
       clients,
     })
   }
@@ -189,12 +192,16 @@ export function aggregateCohorts(cohorts, periodLabel) {
   // Sources — sumar
   const sourceCounts = {}
   const salesSourceCounts = {}
+  const salesRevenueBySource = {}
   for (const c of cohorts) {
     for (const [k, v] of Object.entries(c.sourceCounts || {})) {
       sourceCounts[k] = (sourceCounts[k] || 0) + v
     }
     for (const [k, v] of Object.entries(c.salesSourceCounts || {})) {
       salesSourceCounts[k] = (salesSourceCounts[k] || 0) + v
+    }
+    for (const [k, v] of Object.entries(c.salesRevenueBySource || {})) {
+      salesRevenueBySource[k] = (salesRevenueBySource[k] || 0) + v
     }
   }
 
@@ -227,6 +234,7 @@ export function aggregateCohorts(cohorts, periodLabel) {
     funnelCount,
     sourceCounts,
     salesSourceCounts,
+    salesRevenueBySource,
     clients,
   }
 }

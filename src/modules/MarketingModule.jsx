@@ -151,63 +151,75 @@ function ChannelSummaryTable({ ads, gads, instagram, seo, ux, cohort }) {
   const rows = []
   const src = cohort?.sourceCounts || {}
   const salesSrc = cohort?.salesSourceCounts || {}
+  const revBySrc = cohort?.salesRevenueBySource || {}
 
   if (ads && ads.length > 0) {
     const spent = ads.reduce((s, a) => s + (a.spend || 0), 0)
     const leads = ads.reduce((s, a) => s + (a.registrations || 0) + (a.convos || 0), 0)
     const cpl = leads > 0 ? spent / leads : 0
     const ventas = salesSrc['Meta Ads'] || 0
-    rows.push({ canal: 'Meta Ads', inversion: spent, leads, cpl, ventas })
+    const revenue = revBySrc['Meta Ads'] || 0
+    rows.push({ canal: 'Meta Ads', inversion: spent, leads, cpl, ventas, revenue })
   }
 
   if (gads && gads.spend > 0) {
     const leads = gads.conversions || 0
     const cpl = leads > 0 ? gads.spend / leads : 0
     const ventas = salesSrc['Google Ads'] || 0
-    rows.push({ canal: 'Google Ads', inversion: gads.spend, leads, cpl, ventas })
+    const revenue = revBySrc['Google Ads'] || 0
+    rows.push({ canal: 'Google Ads', inversion: gads.spend, leads, cpl, ventas, revenue })
   }
 
   if (instagram) {
     const leads = src['Instagram / Social Media'] || 0
     const ventas = salesSrc['Instagram / Social Media'] || 0
-    rows.push({ canal: 'Social Media', inversion: 0, leads, cpl: 0, ventas })
+    const revenue = revBySrc['Instagram / Social Media'] || 0
+    rows.push({ canal: 'Social Media', inversion: 0, leads, cpl: 0, ventas, revenue })
   }
 
   if (seo || ux) {
-    // Agrupa todo lo que llega vía búsqueda orgánica + referidos + tráfico directo
     const SEO_REF_KEYS = ['Google', 'Organic Search', 'Referido', 'Direct traffic']
     const leads = SEO_REF_KEYS.reduce((s, k) => s + (src[k] || 0), 0)
     const ventas = SEO_REF_KEYS.reduce((s, k) => s + (salesSrc[k] || 0), 0)
-    rows.push({ canal: 'SEO / Referido', inversion: 0, leads, cpl: 0, ventas })
+    const revenue = SEO_REF_KEYS.reduce((s, k) => s + (revBySrc[k] || 0), 0)
+    rows.push({ canal: 'SEO / Referido', inversion: 0, leads, cpl: 0, ventas, revenue })
   }
 
   if (!rows.length) return <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.38)' }}>Sin datos por canal</span>
 
-  const cols = '1.5fr 1fr 0.8fr 1fr 0.8fr'
+  const cols = '1.3fr 1fr 0.7fr 0.9fr 0.7fr 1fr 0.8fr'
 
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, overflow: 'hidden', maxWidth: 720 }}>
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, overflow: 'hidden', maxWidth: 920 }}>
       <div style={{ display: 'grid', gridTemplateColumns: cols, padding: '10px 18px', borderBottom: '1px solid rgba(0,0,0,0.07)', fontSize: 10, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700 }}>
         <span>Canal</span>
         <span style={{ textAlign: 'right' }}>Inversión</span>
         <span style={{ textAlign: 'right' }}>Leads</span>
         <span style={{ textAlign: 'right' }}>CPL</span>
         <span style={{ textAlign: 'right' }}>Ventas</span>
+        <span style={{ textAlign: 'right' }}>Revenue</span>
+        <span style={{ textAlign: 'right' }}>MER</span>
       </div>
-      {rows.map((r, i) => (
-        <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, padding: '13px 18px', borderBottom: i < rows.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none', alignItems: 'center' }}>
-          <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.8)', fontWeight: 600 }}>{r.canal}</span>
-          <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.inversion > 0 ? fmt(r.inversion) : '—'}</span>
-          <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.leads > 0 ? r.leads : '—'}</span>
-          <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.cpl > 0 ? fmt(r.cpl) : '—'}</span>
-          <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right', fontWeight: 600 }}>{r.ventas > 0 ? r.ventas : '—'}</span>
-        </div>
-      ))}
+      {rows.map((r, i) => {
+        const mer = r.inversion > 0 && r.revenue > 0 ? r.revenue / r.inversion : 0
+        const merColor = mer >= 3 ? '#16A34A' : mer > 0 && mer < 1 ? DANGER : 'rgba(26,31,54,0.6)'
+        return (
+          <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, padding: '13px 18px', borderBottom: i < rows.length - 1 ? '1px solid rgba(0,0,0,0.05)' : 'none', alignItems: 'center' }}>
+            <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.8)', fontWeight: 600 }}>{r.canal}</span>
+            <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.inversion > 0 ? fmt(r.inversion) : '—'}</span>
+            <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.leads > 0 ? r.leads : '—'}</span>
+            <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right' }}>{r.cpl > 0 ? fmt(r.cpl) : '—'}</span>
+            <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.6)', textAlign: 'right', fontWeight: 600 }}>{r.ventas > 0 ? r.ventas : '—'}</span>
+            <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.7)', textAlign: 'right', fontWeight: 600 }}>{r.revenue > 0 ? fmt(r.revenue) : '—'}</span>
+            <span style={{ fontSize: 13, color: merColor, textAlign: 'right', fontWeight: 700 }}>{mer > 0 ? `${mer.toFixed(1)}x` : '—'}</span>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, instagram, igContent, seo, ux }) {
+export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, instagram, prevInstagram, igContent, seo, ux }) {
   const [channel, setChannel] = useState('todos')
   const [openMetric, setOpenMetric] = useState(null)
 
@@ -273,11 +285,17 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, ins
           <span style={{ fontSize: 24, fontWeight: 600 }}>{fmt(gasto)}</span>
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ flex: 1, background: 'rgba(0,0,0,0.03)', borderRadius: 8, padding: '10px 12px' }}>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.55)', fontWeight: 600, display: 'block', marginBottom: 2 }}>Publicidad</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.55)', fontWeight: 600 }}>Publicidad</span>
+                {prev?.gastoAds > 0 && <Delta current={cohort.gastoAds} previous={prev.gastoAds} inverse />}
+              </div>
               <span style={{ fontSize: 16, fontWeight: 600 }}>{fmt(cohort.gastoAds)}</span>
             </div>
             <div style={{ flex: 1, background: 'rgba(0,0,0,0.03)', borderRadius: 8, padding: '10px 12px' }}>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.55)', fontWeight: 600, display: 'block', marginBottom: 2 }}>Equipo</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.55)', fontWeight: 600 }}>Equipo</span>
+                {prev?.gastoEquipo > 0 && <Delta current={cohort.gastoEquipo} previous={prev.gastoEquipo} inverse />}
+              </div>
               <span style={{ fontSize: 16, fontWeight: 600 }}>{fmt(cohort.gastoEquipo)}</span>
             </div>
           </div>
@@ -406,7 +424,7 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, ins
       {channel === 'todos' && <ChannelSummaryTable ads={ads} gads={gads} instagram={instagram} seo={seo} ux={ux} cohort={cohort} />}
       {channel === 'meta' && <AdsTab ads={ads} />}
       {channel === 'gads' && <GoogleAdsTab data={gads} />}
-      {channel === 'social' && <InstagramTab data={instagram} content={igContent} />}
+      {channel === 'social' && <InstagramTab data={instagram} prevData={prevInstagram} content={igContent} />}
       {channel === 'seoref' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <SeoTab data={seo} />
