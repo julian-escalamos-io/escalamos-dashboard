@@ -335,18 +335,33 @@ export function buildInstagram(igRows, dateRange) {
   const dates = new Set()
   const cur = new Date(start)
   while (cur <= end) { dates.add(cur.toISOString().slice(0, 10)); cur.setDate(cur.getDate() + 1) }
-  let segNetos = 0, interacciones = 0, gastoIg = 0, lastFollowers = null
-  let reachMax = 0
+
+  // Sheet 'instagram_org' columns:
+  // A:fecha B:followers_count C:reach_organico D:views_organico
+  // E:interacciones F:nuevos_seguidores G:perdidos H:seguidores_netos
+  let reachTotal = 0, viewsTotal = 0, interacciones = 0
+  let nuevos = 0, perdidos = 0, segNetos = 0
+  let lastFollowers = null
   for (const row of igRows) {
     if (!row) continue
     if (!dates.has(normalizeDate(row[0]))) continue
-    segNetos += sf(row[8])
+    reachTotal += sf(row[2])
+    viewsTotal += sf(row[3])
     interacciones += sf(row[4])
-    reachMax = Math.max(reachMax, sf(row[2]))
-    gastoIg += sf(row[5])
+    nuevos += sf(row[5])
+    perdidos += sf(row[6])
+    segNetos += sf(row[7])
     if (sf(row[1]) > 0) lastFollowers = sf(row[1])
   }
-  return { segNetos, interacciones, alcance: reachMax, gastoIg, lastFollowers }
+  return {
+    alcance: reachTotal,
+    views: viewsTotal,
+    interacciones,
+    nuevos,
+    perdidos,
+    segNetos,
+    lastFollowers,
+  }
 }
 
 export function buildSeo(scRows, dateRange) {
