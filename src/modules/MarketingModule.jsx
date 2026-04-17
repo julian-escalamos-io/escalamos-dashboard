@@ -346,13 +346,14 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, instagram
           delta={prev && prev.cicloVentas > 0 ? <Delta current={cohort.cicloVentas} previous={prev.cicloVentas} inverse /> : null} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 16, marginBottom: 10, maxWidth: 980 }}>
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 20, display: 'block' }}>
-            Funnel — {monthName}
-          </span>
-          <Funnel cohort={cohort} prevCohort={prevCohort} />
-        </div>
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24, marginBottom: 16, maxWidth: 980 }}>
+        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 20, display: 'block' }}>
+          Funnel — {monthName}
+        </span>
+        <Funnel cohort={cohort} prevCohort={prevCohort} />
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 10, maxWidth: 980 }}>
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 20, display: 'block' }}>Leads por fuente</span>
           <SourcesDonut sourceCounts={cohort.sourceCounts} />
