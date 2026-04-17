@@ -342,6 +342,7 @@ export function buildInstagram(igRows, dateRange) {
   let reachTotal = 0, viewsTotal = 0, interacciones = 0
   let nuevos = 0, perdidos = 0, segNetos = 0
   let lastFollowers = null
+  let lastFollowersDate = ''
   for (const row of igRows) {
     if (!row) continue
     if (!dates.has(normalizeDate(row[0]))) continue
@@ -351,7 +352,12 @@ export function buildInstagram(igRows, dateRange) {
     nuevos += sf(row[5])
     perdidos += sf(row[6])
     segNetos += sf(row[7])
-    if (sf(row[1]) > 0) lastFollowers = sf(row[1])
+    const followers = sf(row[1])
+    const fecha = normalizeDate(row[0])
+    if (followers > 0 && fecha >= lastFollowersDate) {
+      lastFollowers = followers
+      lastFollowersDate = fecha
+    }
   }
   return {
     alcance: reachTotal,
