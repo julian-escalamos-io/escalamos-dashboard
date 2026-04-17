@@ -96,16 +96,14 @@ function Funnel({ cohort, prevCohort }) {
 
   const top = cohort.leadsCount || 1
   const STAGE_HEIGHT = 36
-  const CONV_HEIGHT = 18
-  const MIN_WIDTH = 6 // pct mínimo para que siempre se vea algo
+  const MIN_WIDTH = 4
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       {STAGES.map(({ label, key, color }, i, arr) => {
         const val = cohort.funnelCount[key] || 0
-        const pct = Math.max((val / top) * 100, val > 0 ? MIN_WIDTH : 0)
-        const prevStageVal = i === 0 ? top : (cohort.funnelCount[arr[i - 1].key] || 0)
-        const prevStagePct = i === 0 ? 100 : Math.max((prevStageVal / top) * 100, prevStageVal > 0 ? MIN_WIDTH : 0)
+        const pct = (val / top) * 100
+        const barWidth = Math.max(pct, val > 0 ? MIN_WIDTH : 0)
 
         const prevVal = prev ? (prev.funnelCount[key] || 0) : null
         const prevTop = prev ? (prev.leadsCount || 1) : null
@@ -114,30 +112,27 @@ function Funnel({ cohort, prevCohort }) {
         const nextVal = i < arr.length - 1 ? (cohort.funnelCount[arr[i + 1].key] || 0) : null
         const convToNext = val > 0 && nextVal !== null ? Math.round((nextVal / val) * 100) : null
 
-        // Trapezoide: arriba = ancho de la etapa anterior, abajo = ancho de esta etapa
-        const topLeft = (100 - prevStagePct) / 2
-        const topRight = (100 + prevStagePct) / 2
-        const botLeft = (100 - pct) / 2
-        const botRight = (100 + pct) / 2
-
         return (
           <div key={key}>
             <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 110px', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.65)', textAlign: 'right', fontWeight: 500 }}>{label}</span>
-              <svg viewBox={`0 0 100 ${STAGE_HEIGHT}`} preserveAspectRatio="none" style={{ width: '100%', height: STAGE_HEIGHT, display: 'block' }}>
-                <polygon
-                  points={`${topLeft},0 ${topRight},0 ${botRight},${STAGE_HEIGHT} ${botLeft},${STAGE_HEIGHT}`}
-                  fill={color}
-                />
-              </svg>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <div style={{
+                  width: `${barWidth}%`,
+                  height: STAGE_HEIGHT,
+                  background: color,
+                  borderRadius: 4,
+                  transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)',
+                }} />
+              </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: 'rgba(26,31,54,0.8)' }}>{val}</span>
-                <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)' }}>{((val / top) * 100).toFixed(0)}%</span>
-                {prevPct !== null && prevPct > 0 && <Delta current={(val / top) * 100} previous={prevPct} />}
+                <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)' }}>{pct.toFixed(0)}%</span>
+                {prevPct !== null && prevPct > 0 && <Delta current={pct} previous={prevPct} />}
               </div>
             </div>
             {convToNext !== null && (
-              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 110px', alignItems: 'center', gap: 10, height: CONV_HEIGHT }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 110px', alignItems: 'center', gap: 10, height: 16 }}>
                 <span />
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.4)', fontWeight: 600 }}>↓ {convToNext}% pasan</span>
@@ -165,22 +160,19 @@ function ChannelSummaryTable({ ads, instagram, seo, ux, cohort }) {
     rows.push({ canal: 'Meta Ads', inversion: spent, leads, cpl, extra: impressions > 0 ? `${(impressions / 1000).toFixed(0)}k impresiones` : null })
   }
 
-  rows.push({ canal: 'Google Ads', inversion: 0, leads: 0, cpl: 0, extra: 'Pendiente activación' })
-
   if (instagram) {
     // Leads orgánicos de IG/Social desde GHL (atribuidos por fuente)
     const leads = src['Instagram / Social Media'] || 0
     rows.push({ canal: 'Instagram Org.', inversion: 0, leads, cpl: 0, extra: instagram.lastFollowers > 0 ? `${instagram.lastFollowers.toLocaleString()} seguidores` : null })
   }
 
-  if (seo) {
-    // Leads de Google orgánico desde GHL
+  // Web / SEO unificado (search console + analytics/clarity)
+  if (seo || ux) {
     const leads = src['Google'] || 0
-    rows.push({ canal: 'SEO', inversion: 0, leads, cpl: 0, extra: seo.clicks > 0 ? `${seo.clicks.toLocaleString()} clicks` : null })
-  }
-
-  if (ux) {
-    rows.push({ canal: 'Web / UX', inversion: 0, leads: 0, cpl: 0, extra: ux.sessions > 0 ? `${ux.sessions.toLocaleString()} sesiones` : null })
+    const parts = []
+    if (ux?.sessions > 0) parts.push(`${ux.sessions.toLocaleString()} sesiones`)
+    if (seo?.clicks > 0) parts.push(`${seo.clicks.toLocaleString()} clicks SEO`)
+    rows.push({ canal: 'Web / SEO', inversion: 0, leads, cpl: 0, extra: parts.length ? parts.join(' · ') : null })
   }
 
   if (!rows.length) return <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.38)' }}>Sin datos por canal</span>
