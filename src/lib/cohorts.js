@@ -370,6 +370,44 @@ export function buildInstagram(igRows, dateRange) {
   }
 }
 
+export function buildInstagramContent(rows, dateRange) {
+  if (!rows || !rows.length) return []
+  const { start, end } = dateRange
+  const startStr = start.toISOString().slice(0, 10)
+  const endStr = end.toISOString().slice(0, 10)
+  // Sheet 'instagram_content':
+  // A:fecha B:media_id C:tipo D:caption E:permalink F:thumbnail_url
+  // G:reach H:views I:total_interactions J:likes K:comments L:shares M:saved
+  // N:avg_watch_time O:watch_time_total P:engagement_rate Q:save_rate R:share_rate S:nuevos_seguidores
+  const items = []
+  for (const row of rows) {
+    if (!row || !row[0]) continue
+    const fecha = normalizeDate(row[0])
+    if (fecha < startStr || fecha > endStr) continue
+    items.push({
+      fecha,
+      mediaId: String(row[1] || ''),
+      tipo: String(row[2] || ''),
+      caption: String(row[3] || ''),
+      permalink: String(row[4] || ''),
+      thumbnail: String(row[5] || ''),
+      reach: sf(row[6]),
+      views: sf(row[7]),
+      interactions: sf(row[8]),
+      likes: sf(row[9]),
+      comments: sf(row[10]),
+      shares: sf(row[11]),
+      saved: sf(row[12]),
+      avgWatchTime: sf(row[13]),
+      engagementRate: sf(row[15]),
+      saveRate: sf(row[16]),
+      shareRate: sf(row[17]),
+      nuevosSeguidores: sf(row[18]),
+    })
+  }
+  return items.sort((a, b) => b.interactions - a.interactions)
+}
+
 export function buildSeo(scRows, dateRange) {
   const { start, end } = dateRange
   const startStr = start.toISOString().slice(0, 10)

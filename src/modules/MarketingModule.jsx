@@ -205,7 +205,7 @@ function ChannelSummaryTable({ ads, gads, instagram, seo, ux, cohort }) {
   )
 }
 
-export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, instagram, seo, ux }) {
+export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, instagram, igContent, seo, ux }) {
   const [channel, setChannel] = useState('todos')
   const [openMetric, setOpenMetric] = useState(null)
 
@@ -404,7 +404,7 @@ export function MarketingModule({ cohort, prevCohort, allCohorts, ads, gads, ins
       {channel === 'todos' && <ChannelSummaryTable ads={ads} gads={gads} instagram={instagram} seo={seo} ux={ux} cohort={cohort} />}
       {channel === 'meta' && <AdsTab ads={ads} />}
       {channel === 'gads' && <GoogleAdsTab data={gads} />}
-      {channel === 'social' && <InstagramTab data={instagram} />}
+      {channel === 'social' && <InstagramTab data={instagram} content={igContent} />}
       {channel === 'seoref' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <SeoTab data={seo} />
