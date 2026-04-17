@@ -174,8 +174,10 @@ function ChannelSummaryTable({ ads, gads, instagram, seo, ux, cohort }) {
   }
 
   if (seo || ux) {
-    const leads = (src['Google'] || 0) + (src['Referido'] || 0)
-    const ventas = (salesSrc['Google'] || 0) + (salesSrc['Referido'] || 0)
+    // Agrupa todo lo que llega vía búsqueda orgánica + referidos + tráfico directo
+    const SEO_REF_KEYS = ['Google', 'Organic Search', 'Referido', 'Direct traffic']
+    const leads = SEO_REF_KEYS.reduce((s, k) => s + (src[k] || 0), 0)
+    const ventas = SEO_REF_KEYS.reduce((s, k) => s + (salesSrc[k] || 0), 0)
     rows.push({ canal: 'SEO / Referido', inversion: 0, leads, cpl: 0, ventas })
   }
 
