@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Delta } from '../components/KPI.jsx'
 import { MiniChart } from '../components/MiniChart.jsx'
 import { DataTable } from '../components/DataTable.jsx'
 import {
-  computeClientTable, computeRecentChurn, aggregateHistorico,
+  computeClientTable, computeRecentChurn, aggregateHistorico, computeOverviewKPIs,
 } from '../lib/maestro.js'
 
 const ACCENT = '#2D7AFF'
@@ -90,8 +90,18 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
   const clients = useMemo(() => computeClientTable(serviciosData, modelFilter), [serviciosData, modelFilter])
   const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter), [serviciosData, modelFilter])
 
+  // KPIs desde Servicios (fuente primaria — no depende del Histórico)
+  const kpis = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
+
+  // AOV y Life Span: priorizar Servicios, fallback a Histórico
+  const aov = kpis.aov > 0 ? kpis.aov : h?.aov || 0
+  const lifeSpan = kpis.permanencia > 0 ? kpis.permanencia : h?.lifeSpan || 0
+  const ltgp = h?.ltgp || 0
+
+  const [showChart, setShowChart] = useState(null)
+
   if (!serviciosData.length && !historico.length) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos del Registro Maestro.</div>
+    return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos de Servicios.</div>
   }
 
   // NRR color
@@ -100,30 +110,51 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
   return (
     <>
       {/* ── MÉTRICAS NORTE ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
         <NorthCard
           label="Clientes activos" highlight
-          value={h?.clientesActivos ?? clients.length}
-          sub={`${h?.cNuevos > 0 ? `+${h.cNuevos} nuevos` : ''}${h?.cNuevos > 0 && h?.cPerdidos > 0 ? ' · ' : ''}${h?.cPerdidos > 0 ? `−${h.cPerdidos} bajas` : ''}`}
+          value={kpis.clientesActivos || h?.clientesActivos || clients.length}
+          sub={`${kpis.serviciosActivos} servicios · MRR ${fmt(kpis.mrr)}`}
           delta={hPrev ? <Delta current={h?.clientesActivos} previous={hPrev?.clientesActivos} /> : null}
         />
-        <NorthCard label="AOV" value={h?.aov > 0 ? fmt(h.aov) : '—'}
-          sub="MRR / cliente activo"
-          delta={hPrev ? <Delta current={h?.aov} previous={hPrev?.aov} /> : null}
-        />
-        <NorthCard label="Life Span" value={h?.lifeSpan > 0 ? `${h.lifeSpan.toFixed(1)}m` : '—'}
-          sub="permanencia promedio"
-          delta={hPrev ? <Delta current={h?.lifeSpan} previous={hPrev?.lifeSpan} /> : null}
-        />
-        <NorthCard label="NRR" value={h?.nrr > 0 ? `${Math.round(h.nrr)}` : '—'}
-          color={nrrColor} sub="Net Revenue Retention"
-          delta={hPrev ? <Delta current={h?.nrr} previous={hPrev?.nrr} /> : null}
-        />
-        <NorthCard label="LTGP" value={h?.ltgp > 0 ? fmt(h.ltgp) : '—'}
-          sub={h?.ltgpActual > 0 ? `actual ${fmt(h.ltgpActual)}` : undefined}
-          delta={hPrev ? <Delta current={h?.ltgp} previous={hPrev?.ltgp} /> : null}
-        />
+        <div onClick={() => setShowChart(showChart === 'aov' ? null : 'aov')} style={{ cursor: 'pointer' }}>
+          <NorthCard label="AOV" value={aov > 0 ? fmt(aov) : '—'}
+            sub="MRR / cliente activo"
+            delta={hPrev?.aov > 0 ? <Delta current={aov} previous={hPrev.aov} /> : null}
+          />
+        </div>
+        <div onClick={() => setShowChart(showChart === 'lifeSpan' ? null : 'lifeSpan')} style={{ cursor: 'pointer' }}>
+          <NorthCard label="Life Span" value={lifeSpan > 0 ? `${lifeSpan.toFixed(1)}m` : '—'}
+            sub="permanencia promedio"
+            delta={hPrev?.lifeSpan > 0 ? <Delta current={lifeSpan} previous={hPrev.lifeSpan} /> : null}
+          />
+        </div>
+        <div onClick={() => setShowChart(showChart === 'ltgp' ? null : 'ltgp')} style={{ cursor: 'pointer' }}>
+          <NorthCard label="LTGP" value={ltgp > 0 ? fmt(ltgp) : '—'}
+            sub={h?.ltgpActual > 0 ? `actual ${fmt(h.ltgpActual)}` : undefined}
+            delta={hPrev?.ltgp > 0 ? <Delta current={ltgp} previous={hPrev.ltgp} /> : null}
+          />
+        </div>
       </div>
+
+      {/* ── EVOLUCIÓN KPI SELECCIONADO ──────────────────────────────────── */}
+      {showChart && hist12.length > 1 && (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 24 }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>
+            Evolución — {showChart === 'aov' ? 'AOV' : showChart === 'lifeSpan' ? 'Life Span' : 'LTGP'}
+          </span>
+          <MiniChart
+            data={hist12.map(r => ({
+              label: r.label,
+              value: showChart === 'aov' ? r.aov : showChart === 'lifeSpan' ? r.lifeSpan : r.ltgp,
+            }))}
+            dataKey="value"
+            color={showChart === 'ltgp' ? GREEN : ACCENT}
+            prefix={showChart === 'lifeSpan' ? '' : '$'}
+            height={140}
+          />
+        </div>
+      )}
 
       {/* ── MOVIMIENTO DEL MES ─────────────────────────────────────────────── */}
       {h && (
@@ -193,7 +224,7 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
       <Divider title={`Clientes activos${modelFilter !== 'todos' ? ` — ${modelFilter}` : ''}`} />
       <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
         <DataTable
-          rows={clients}
+          rows={clients.map(c => ({ ...c, aov: c.serviciosCount > 0 ? c.mrr / c.serviciosCount : c.mrr })).sort((a, b) => b.aov - a.aov)}
           columns={[
             { key: 'nombre', label: 'Cliente' },
             { key: 'tipo', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
@@ -206,6 +237,7 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
               </div>
             )},
             { key: 'mrr', label: 'MRR', align: 'right', render: v => <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span> },
+            { key: 'aov', label: 'AOV', align: 'right', render: v => fmt(v) },
             { key: 'meses', label: 'Meses', align: 'right', render: v => v > 0 ? `${v}m` : '—' },
             { key: 'ltr', label: 'LTR', align: 'right', render: v => fmt(v) },
           ]}
