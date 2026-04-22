@@ -434,8 +434,8 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       {churned.length > 0 && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
           {churnCohort.map((c, i) => {
-            const colors = [DANGER, '#F59E0B', '#FBBF24', GREEN]
-            const labels = ['Churn temprano', 'Mid-early', 'Mid-late', 'Tarde']
+            const colors = ['#F59E0B', '#F59E0B', DANGER, '#991B1B']
+            const labels = ['Esperable', 'Atención', 'Grave', 'Crítico']
             return (
               <div key={i} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 12, padding: '14px 16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
