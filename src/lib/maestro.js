@@ -225,7 +225,10 @@ export function computeCollectionPace(xeroRaw, currentRow, prevRow) {
 //   F(5):Cobros del mes G(6):Cobros de deuda H(7):Deuda nueva I(8):Deuda histórica
 //   J(9):Incobrable K(10):%Efic.Cobro L(11):Gastos Op M(12):Comisiones Stripe
 //   N(13):Gastos Admin O(14):Total Gastos P(15):Ganancia Bruta Q(16):%Margen Bruto
-//   R(17):Ganancia Neta S(18):%Margen Neto
+//   R(17):Ganancia Neta S(18):%Margen Neto T(19):Margen Mes
+//   V(21):Clientes activos W(22):Clientes nuevos X(23):Clientes bajas
+//   Y(24):$ Nuevos Z(25):$ Bajas AA(26):$ Upsells AB(27):$ Downsells
+//   AC(28):$ MRR Neto AD(29):% Churn AE(30):NRR
 
 export function parseERUnificado(raw = []) {
   return raw
@@ -264,6 +267,17 @@ export function parseERUnificado(raw = []) {
         gananciaNeta: +r[17] || 0,
         pctMargenNeto: +r[18] || 0,
         margenMes: +r[19] || 0,
+        // Fulfillment (columnas V-AE)
+        clientesActivos: +r[21] || 0,
+        clientesNuevos: +r[22] || 0,
+        clientesBajas: +r[23] || 0,
+        mNuevos: +r[24] || 0,
+        mBajas: +r[25] || 0,
+        mUpsells: +r[26] || 0,
+        mDownsells: +r[27] || 0,
+        mrrNeto: +r[28] || 0,
+        pctChurn: +r[29] || 0,
+        nrr: +r[30] || 0,
       }
     })
     .sort((a, b) => {

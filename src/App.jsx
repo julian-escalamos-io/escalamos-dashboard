@@ -356,7 +356,7 @@ function Dashboard() {
                 />
               )}
               {activeModule === 'fulfillment' && allowedModules.includes('fulfillment') && (
-                <FulfillmentModule servicios={servicios} modelFilter={modelFilter} historico={historico} dateRange={dateRange} />
+                <FulfillmentModule servicios={servicios} modelFilter={modelFilter} erUnificado={erUnificado} dateRange={dateRange} />
               )}
               {activeModule === 'finanzas' && allowedModules.includes('finanzas') && (
                 <FinanzasModule erUnificado={erUnificado} er={er} egresos={egresos} servicios={servicios} pendingInvoices={pendingInvoices} incobrables={incobrables} xeroRaw={data?.xeroRaw} libroDiario={data?.libroDiario} role={role} selectedERMonth={selectedERMonth} modelFilter={modelFilter} subTab={finanzasSubTab} onSubTabChange={setFinanzasSubTab} />
