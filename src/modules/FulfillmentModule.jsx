@@ -59,15 +59,18 @@ function NorthCard({ label, value, sub, color, highlight, delta }) {
   )
 }
 
-export function FulfillmentModule({ servicios, modelFilter, historico = [], selectedERMonth }) {
+export function FulfillmentModule({ servicios, modelFilter, historico = [], dateRange }) {
   const serviciosData = servicios || []
 
-  // Último mes disponible en histórico (o el selectedERMonth)
+  // Mes seleccionado derivado del filtro de fechas
   const monthKeys = useMemo(() => [...new Set(historico.map(r => r.monthKey))].sort(), [historico])
   const currentMonthKey = useMemo(() => {
-    if (selectedERMonth && monthKeys.includes(selectedERMonth)) return selectedERMonth
+    if (dateRange?.end) {
+      const endKey = `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
+      if (monthKeys.includes(endKey)) return endKey
+    }
     return monthKeys[monthKeys.length - 1] || null
-  }, [monthKeys, selectedERMonth])
+  }, [monthKeys, dateRange])
 
   const prevMonthKey = useMemo(() => {
     if (!currentMonthKey) return null
@@ -137,24 +140,34 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
         </div>
       </div>
 
-      {/* ── MÉTRICAS OPERATIVAS (segunda fila) ──────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 10 }}>
-        <NorthCard label="MRR Neto" value={fmt(kpis.mrr)} sub="ingreso recurrente mensual" />
-        <NorthCard label="NRR" value={h?.nrr > 0 ? `${Math.round(h.nrr)}%` : '—'}
-          color={nrrColor} sub="net revenue retention" />
-        <NorthCard label="Clientes nuevos" value={h?.cNuevos > 0 ? `+${h.cNuevos}` : '—'}
-          color={h?.cNuevos > 0 ? GREEN : undefined} sub={h?.mNuevos > 0 ? fmt(h.mNuevos) : undefined} />
-        <NorthCard label="Clientes bajas" value={h?.cPerdidos > 0 ? `${h.cPerdidos}` : '—'}
-          color={h?.cPerdidos > 0 ? DANGER : undefined} sub={h?.mPerdidos > 0 ? fmt(h.mPerdidos) : undefined} />
-        <NorthCard label="Churn rate" value={h?.pctChurnTri > 0 ? fmtPct(h.pctChurnTri) : '—'}
-          color={h?.pctChurnTri > 0.05 ? DANGER : h?.pctChurnTri > 0.02 ? AMBER : GREEN}
-          sub="trimestral" />
+      {/* ── MÉTRICAS OPERATIVAS (filas secundarias — más sutiles) ──────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8, marginBottom: 8 }}>
+        {[
+          { label: 'MRR Neto', value: h?.mrrNeto ? fmt(h.mrrNeto) : '—', sub: 'ingresos + pérdidas' },
+          { label: 'NRR', value: h?.nrr > 0 ? `${Math.round(h.nrr)}%` : '—', color: nrrColor },
+          { label: 'C. Nuevos', value: h?.cNuevos > 0 ? `+${h.cNuevos}` : '—', color: GREEN, sub: h?.mNuevos > 0 ? fmt(h.mNuevos) : undefined },
+          { label: 'C. Bajas', value: h?.cPerdidos > 0 ? `${h.cPerdidos}` : '—', color: h?.cPerdidos > 0 ? DANGER : undefined, sub: h?.mPerdidos > 0 ? fmt(h.mPerdidos) : undefined },
+          { label: 'Churn rate', value: h?.pctChurnTri > 0 ? fmtPct(h.pctChurnTri) : '—', color: h?.pctChurnTri > 0.05 ? DANGER : h?.pctChurnTri > 0.02 ? AMBER : GREEN, sub: 'trimestral' },
+        ].map((m, i) => (
+          <div key={i} style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 12, padding: '12px 14px' }}>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>{m.label}</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: m.color || 'rgba(26,31,54,0.7)' }}>{m.value}</span>
+            {m.sub && <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.3)', fontWeight: 600, display: 'block', marginTop: 2 }}>{m.sub}</span>}
+          </div>
+        ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
-        <NorthCard label="$ Nuevos" value={h?.mNuevos > 0 ? fmt(h.mNuevos) : '—'} color={GREEN} />
-        <NorthCard label="$ Bajas" value={h?.mPerdidos > 0 ? fmt(h.mPerdidos) : '—'} color={h?.mPerdidos > 0 ? DANGER : undefined} />
-        <NorthCard label="$ Upsells" value={h?.mUpsells > 0 ? fmt(h.mUpsells) : '—'} color={GREEN} />
-        <NorthCard label="$ Downsells" value={h?.mDownsells > 0 ? fmt(h.mDownsells) : '—'} color={h?.mDownsells > 0 ? AMBER : undefined} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 10 }}>
+        {[
+          { label: '$ Nuevos', value: h?.mNuevos > 0 ? fmt(h.mNuevos) : '—', color: GREEN },
+          { label: '$ Bajas', value: h?.mPerdidos > 0 ? fmt(h.mPerdidos) : '—', color: h?.mPerdidos > 0 ? DANGER : undefined },
+          { label: '$ Upsells', value: h?.mUpsells > 0 ? fmt(h.mUpsells) : '—', color: GREEN },
+          { label: '$ Downsells', value: h?.mDownsells > 0 ? fmt(h.mDownsells) : '—', color: h?.mDownsells > 0 ? AMBER : undefined },
+        ].map((m, i) => (
+          <div key={i} style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 12, padding: '12px 14px' }}>
+            <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>{m.label}</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: m.color || 'rgba(26,31,54,0.7)' }}>{m.value}</span>
+          </div>
+        ))}
       </div>
 
       {/* ── EVOLUCIÓN KPI SELECCIONADO ──────────────────────────────────── */}
@@ -179,53 +192,6 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
             height={140}
           />
         </div>
-      )}
-
-      {/* ── MOVIMIENTO DEL MES ─────────────────────────────────────────────── */}
-      {h && (
-        <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24 }}>
-            {/* Entradas */}
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: GREEN }} />
-                <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>Entradas</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
-                <Stat label="C. Nuevos" value={fmtN(h.cNuevos)} color={GREEN} sub={fmt(h.mNuevos)} />
-                <Stat label="Upsells" value={fmtN(h.upsells)} color={GREEN} sub={fmt(h.mUpsells)} />
-                <Stat label="$ Nuevos" value={fmt(h.mNuevos)} color={GREEN} />
-                <Stat label="$ Upsells" value={fmt(h.mUpsells)} color={GREEN} />
-              </div>
-            </div>
-            {/* Salidas */}
-            <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 22px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: DANGER }} />
-                <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>Salidas</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 16 }}>
-                <Stat label="C. Perdidos" value={fmtN(h.cPerdidos)} color={h.cPerdidos > 0 ? DANGER : 'rgba(26,31,54,0.5)'} sub={fmt(h.mPerdidos)} />
-                <Stat label="Downsells" value={fmtN(h.downsells)} color={h.downsells > 0 ? AMBER : 'rgba(26,31,54,0.5)'} sub={fmt(h.mDownsells)} />
-                <Stat label="$ Perdidos" value={fmt(h.mPerdidos)} color={h.mPerdidos > 0 ? DANGER : 'rgba(26,31,54,0.5)'} />
-                <Stat label="$ Downsells" value={fmt(h.mDownsells)} color={h.mDownsells > 0 ? AMBER : 'rgba(26,31,54,0.5)'} />
-              </div>
-            </div>
-          </div>
-
-          {/* Churn & Retention */}
-          <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 16, padding: '18px 22px', marginBottom: 24 }}>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2.5, color: 'rgba(26,31,54,0.5)', fontWeight: 700, display: 'block', marginBottom: 18 }}>Churn &amp; Retention</span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 20 }}>
-              <Stat label="% Churn Tri" value={fmtPct(h.pctChurnTri)} color={h.pctChurnTri > 0.05 ? DANGER : h.pctChurnTri > 0.02 ? AMBER : GREEN} />
-              <Stat label="% Churn A" value={fmtPct(h.pctChurnA)} color={h.pctChurnA > 0.15 ? DANGER : h.pctChurnA > 0.08 ? AMBER : GREEN} />
-              <Stat label="% MRR Neto" value={fmtPct(h.pctMRRNeto)} color={h.pctMRRNeto > 0 ? GREEN : DANGER} />
-              <Stat label="NRR" value={h.nrr > 0 ? `${Math.round(h.nrr)}` : '—'} color={nrrColor} />
-              <Stat label="Life Retention" value={h.lifeRetention > 0 ? `${h.lifeRetention.toFixed(1)}m` : '—'} />
-              <Stat label="Life Span" value={h.lifeSpan > 0 ? `${h.lifeSpan.toFixed(1)}m` : '—'} />
-            </div>
-          </div>
-        </>
       )}
 
       {/* ── EVOLUCIÓN 12 MESES ─────────────────────────────────────────────── */}

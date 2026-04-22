@@ -326,7 +326,7 @@ export function parseHistorico(raw = []) {
       ltgpActual: +r[23] || 0,      // X
       mrr: +r[24] || 0,             // Y
       cashCollected: +r[25] || 0,   // Z
-      comisiones: +r[28] || 0,
+      mrrNeto: +r[28] || 0,        // AC — MRR Neto (ingresos + pérdidas)
       extraccion: +r[29] || 0,
       margenTransaccion: +r[30] || 0,
       gastosDirectos: +r[32] || 0,
@@ -364,7 +364,7 @@ export function aggregateHistorico(historico, targetMonthKey, modelFilter) {
     mDownsells: s('mDownsells'),
     mPerdidos: s('mPerdidos'),
     cashCollected,
-    comisiones: s('comisiones'),
+    mrrNeto: s('mrrNeto'),
     extraccion: s('extraccion'),
     margenTransaccion: s('margenTransaccion'),
     gastosDirectos: s('gastosDirectos'),
