@@ -1,17 +1,25 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { Delta } from '../components/KPI.jsx'
-import { MiniChart } from '../components/MiniChart.jsx'
+import { Sparkline } from '../components/Sparkline.jsx'
 import { RevenueCollectedChart } from '../components/RevenueCollectedChart.jsx'
 import { DataTable } from '../components/DataTable.jsx'
-import { computeOverviewKPIs, computeModelBreakdown, computeChurn } from '../lib/maestro.js'
+import { computeOverviewKPIs, computeChurn, computeModelBreakdown } from '../lib/maestro.js'
 
 const ACCENT = '#2D7AFF'
 const DANGER = '#E03E3E'
 const GREEN = '#059669'
+const AMBER = '#F59E0B'
 
-function fmt(v) { return v > 0 ? `$${Math.round(v).toLocaleString('en-US')}` : '—' }
+function fmt(v) { return v > 0 ? `$${Math.round(v).toLocaleString('en-US')}` : v < 0 ? `-$${Math.round(Math.abs(v)).toLocaleString('en-US')}` : '—' }
 function fmtPct(v, decimals = 1) { return (v !== null && v !== undefined && v !== 0) ? `${(v * 100).toFixed(decimals)}%` : '—' }
 function fmtDelta(v) { if (!v) return null; const pct = (v * 100).toFixed(1); return `${v > 0 ? '+' : ''}${pct}%` }
+
+const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+function mkLabel(mk) {
+  const [y, m] = (mk || '').split('-')
+  if (!y || !m) return mk || ''
+  return `${MESES_LABEL[parseInt(m) - 1]} ${y.slice(2)}`
+}
 
 const Divider = ({ title }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '28px 0 16px' }}>
@@ -22,13 +30,11 @@ const Divider = ({ title }) => (
 )
 
 // ─── Métrica norte grande ──────────────────────────────────────────────────────
-function NorthCard({ label, children, highlight, accent, style = {} }) {
+function NorthCard({ label, children, highlight, style = {} }) {
   return (
     <div style={{
-      borderRadius: 16, padding: '20px 22px',
-      background: highlight
-        ? `linear-gradient(135deg, #1e3fa3 0%, ${ACCENT} 100%)`
-        : '#FFFFFF',
+      borderRadius: 16, padding: '22px 24px',
+      background: highlight ? `linear-gradient(135deg, #1e3fa3 0%, ${ACCENT} 100%)` : '#FFFFFF',
       border: highlight ? `1px solid rgba(45,122,255,0.3)` : '1px solid rgba(0,0,0,0.07)',
       boxShadow: highlight ? '0 4px 20px rgba(45,122,255,0.22)' : '0 2px 8px rgba(0,0,0,0.05)',
       display: 'flex', flexDirection: 'column', gap: 6,
@@ -42,64 +48,52 @@ function NorthCard({ label, children, highlight, accent, style = {} }) {
   )
 }
 
-function InsightsBlock({ erCurrent, serviciosKPIs }) {
-  const [loading, setLoading] = useState(false)
-  const [insights, setInsights] = useState(null)
-  const [error, setError] = useState(null)
-
-  async function generate() {
-    setLoading(true); setError(null)
-    try {
-      const resp = await fetch('/api/insights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ module: 'overview', data: { er: erCurrent, servicios: serviciosKPIs }, period: erCurrent?.monthLabel }),
-      })
-      if (!resp.ok) throw new Error(`Error ${resp.status}`)
-      setInsights(await resp.json())
-    } catch (e) { setError(e.message) }
-    finally { setLoading(false) }
-  }
-
+// Card de salud con semáforo
+function HealthCard({ label, value, sub, color }) {
   return (
-    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: insights ? 16 : 0 }}>
-        <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700 }}>Análisis ejecutivo</span>
-        {!insights && <button onClick={generate} disabled={loading} style={{ padding: '8px 18px', borderRadius: 8, border: `1px solid ${ACCENT}`, background: 'rgba(45,122,255,0.1)', color: ACCENT, fontSize: 11, fontWeight: 700, fontFamily: 'Montserrat', cursor: loading ? 'not-allowed' : 'pointer' }}>
-          {loading ? '✦ Analizando...' : '✦ Generar análisis'}
-        </button>}
-        {insights && <button onClick={() => setInsights(null)} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.07)', background: 'transparent', color: 'rgba(26,31,54,0.5)', fontSize: 10, cursor: 'pointer', fontFamily: 'Montserrat' }}>↺ regenerar</button>}
-      </div>
-      {error && <p style={{ color: DANGER, fontSize: 12, marginTop: 12 }}>Error: {error}</p>}
-      {!insights && !loading && <p style={{ fontSize: 13, color: 'rgba(26,31,54,0.5)', marginTop: 12, fontWeight: 500 }}>Claude analiza el estado de la agencia: margen, churn, concentración de revenue, oportunidades.</p>}
-      {insights && (
-        <>
-          <p style={{ fontSize: 14, color: 'rgba(26,31,54,0.75)', lineHeight: 1.7, margin: '0 0 16px', fontWeight: 500 }}>{insights.conclusion}</p>
-          <div style={{ background: 'rgba(45,122,255,0.05)', border: '1px solid rgba(45,122,255,0.12)', borderRadius: 10, padding: '14px 18px', marginBottom: 16 }}>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: ACCENT, fontWeight: 700, display: 'block', marginBottom: 6 }}>Cuello de botella</span>
-            <p style={{ fontSize: 13, color: 'rgba(26,31,54,0.65)', lineHeight: 1.6, margin: 0, fontWeight: 500 }}>{insights.bottleneck}</p>
-          </div>
-          {(insights.actions || []).map((a, i) => (
-            <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 800, color: ACCENT, minWidth: 20 }}>{i + 1}.</span>
-              <span style={{ fontSize: 13, color: 'rgba(26,31,54,0.7)', lineHeight: 1.6, fontWeight: 500 }}>{a}</span>
-            </div>
-          ))}
-        </>
-      )}
+    <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '16px 18px' }}>
+      <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, display: 'block', marginBottom: 6 }}>{label}</span>
+      <span style={{ fontSize: 24, fontWeight: 900, color, letterSpacing: -0.5, lineHeight: 1 }}>{value}</span>
+      {sub && <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600, display: 'block', marginTop: 4 }}>{sub}</span>}
     </div>
   )
 }
 
-export function OverviewModule({ servicios, er, modelFilter, selectedERMonth, cac, allCohorts = [] }) {
+// Chip estadístico para "Pulso por frente"
+function StatChip({ label, value, color }) {
+  return (
+    <div>
+      <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.42)', fontWeight: 700, display: 'block', marginBottom: 2 }}>{label}</span>
+      <span style={{ fontSize: 16, fontWeight: 800, color: color || 'rgba(26,31,54,0.78)' }}>{value}</span>
+    </div>
+  )
+}
+
+const ModelBadge = ({ tipo }) => {
+  const colors = { Boutique: '#A78BFA', Agencia: '#2D7AFF', Soft: '#34D399', Financiera: '#FBBF24', Consultoría: '#F97316' }
+  const color = colors[tipo] || 'rgba(26,31,54,0.3)'
+  return <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, background: `${color}18`, color, fontWeight: 700 }}>{tipo || '—'}</span>
+}
+
+const MODELOS_CORE = ['boutique', 'agencia', 'consultoría', 'consultoria']
+
+export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], modelFilter, selectedERMonth, dateRange, selectedCohort, prevCohort, allCohorts = [] }) {
   const erRows = er || []
   const serviciosData = servicios || []
 
+  // Mes actual y anterior (del filtro de fechas)
+  const currentMonthKey = useMemo(() => {
+    if (dateRange?.end) {
+      return `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
+    }
+    if (selectedERMonth) return selectedERMonth
+    return erRows.length ? erRows[erRows.length - 1].monthKey : null
+  }, [dateRange, selectedERMonth, erRows])
+
   const currentER = useMemo(() => {
     if (!erRows.length) return null
-    if (selectedERMonth) return erRows.find(r => r.monthKey === selectedERMonth) || erRows[erRows.length - 1]
-    return erRows[erRows.length - 1]
-  }, [erRows, selectedERMonth])
+    return erRows.find(r => r.monthKey === currentMonthKey) || erRows[erRows.length - 1]
+  }, [erRows, currentMonthKey])
 
   const prevER = useMemo(() => {
     if (!currentER || !erRows.length) return null
@@ -107,178 +101,316 @@ export function OverviewModule({ servicios, er, modelFilter, selectedERMonth, ca
     return idx > 0 ? erRows[idx - 1] : null
   }, [erRows, currentER])
 
+  // KPIs proyectados desde Servicios
   const serviciosKPIs = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
   const churn = useMemo(() => currentER ? computeChurn(serviciosData, currentER.monthKey, modelFilter) : 0, [serviciosData, currentER, modelFilter])
   const modelBreakdown = useMemo(() => computeModelBreakdown(serviciosData), [serviciosData])
 
-  // Charts — siempre últimos 12 meses, independiente del filtro de modelo
+  // ── Costos del mes (para Ganancia Proyectada) ──────────────────────────────
+  // Costos totales = del ER del mes (gastos directos + indirectos)
+  const costosDelMes = useMemo(() => {
+    if (!currentER) return 0
+    return (currentER.gastos || 0)
+  }, [currentER])
+
+  // MRR Proyectado y Ganancia Proyectada
+  const mrrProyectado = serviciosKPIs.mrr || 0
+  const gananciaProyectada = mrrProyectado - costosDelMes
+  const margenProyectado = mrrProyectado > 0 ? gananciaProyectada / mrrProyectado : 0
+
+  // Cash collected del mes
+  const cashCollected = currentER?.cashCollected || 0
+  const pctCobrado = mrrProyectado > 0 ? cashCollected / mrrProyectado : 0
+
+  // Crecimiento MoM y YoY
+  const mrrPrev = prevER ? (prevER.revenue || 0) : 0
+  const mrrYearAgo = useMemo(() => {
+    if (!currentMonthKey) return 0
+    const [y, m] = currentMonthKey.split('-')
+    const yearAgoKey = `${parseInt(y) - 1}-${m}`
+    const r = erRows.find(r => r.monthKey === yearAgoKey)
+    return r ? r.revenue : 0
+  }, [erRows, currentMonthKey])
+
+  const crecimientoMoM = mrrPrev > 0 ? (mrrProyectado - mrrPrev) / mrrPrev : 0
+  const crecimientoYoY = mrrYearAgo > 0 ? (mrrProyectado - mrrYearAgo) / mrrYearAgo : 0
+
+  // ── Charts: últimos 12 meses (para evolución) ──────────────────────────────
   const last12 = erRows.slice(-12)
-  const revenueCollectedChart = useMemo(() =>
-    last12.map(r => {
-      const parts = r.monthLabel.split(' ')
-      return { label: parts.length >= 2 ? `${parts[0]} ${parts[1]}` : r.monthLabel, revenue: r.revenue, cashCollected: r.cashCollected }
-    }),
+  const chartData = useMemo(() =>
+    last12.map(r => ({
+      label: mkLabel(r.monthKey),
+      revenue: r.revenue || 0,
+      cashCollected: r.cashCollected || 0,
+      ganancia: r.ganancia || 0,
+    })),
     [erRows]
   )
   const totalRevenue12 = useMemo(() => last12.reduce((s, r) => s + (r.revenue || 0), 0), [erRows])
   const totalCash12 = useMemo(() => last12.reduce((s, r) => s + (r.cashCollected || 0), 0), [erRows])
-  const pctCobrado = totalRevenue12 > 0 ? totalCash12 / totalRevenue12 : 0
-  const gananciasChart = useMemo(() => erRows.slice(-12).map(r => ({ label: r.monthLabel, ganancia: r.ganancia })), [erRows])
+  const totalGanancia12 = useMemo(() => last12.reduce((s, r) => s + (r.ganancia || 0), 0), [erRows])
+  const pctCobrado12 = totalRevenue12 > 0 ? totalCash12 / totalRevenue12 : 0
 
-  // CAC/LTV ratio
-  const ltv = serviciosKPIs.ltvPromedio
-  const cacLtvRatio = cac && ltv ? (ltv / cac).toFixed(1) : null
+  // ── Salud del modelo ──────────────────────────────────────────────────────
+  const cac = selectedCohort?.cac || 0
+  // LTGP = LTR promedio × margen bruto promedio
+  const margenBrutoMes = currentER && currentER.revenue > 0 ? (currentER.gananciaBruta || 0) / currentER.revenue : 0.5
+  const ltgp = serviciosKPIs.ltvPromedio * margenBrutoMes
+
+  const ltvCacRatio = cac > 0 && ltgp > 0 ? ltgp / cac : 0
+  const payback = cac > 0 && ltgp > 0 && serviciosKPIs.permanencia > 0 ? cac / (ltgp / serviciosKPIs.permanencia) : 0
+
+  // NRR ponderado del mes (de filas por modelo del ER)
+  const nrrWavg = useMemo(() => {
+    const monthRows = erUnificado.filter(r => r.monthKey === currentMonthKey && !r.isAcumulado && !r.isTotal)
+    const coreRows = modelFilter === 'todos'
+      ? monthRows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
+      : monthRows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
+    const totalCli = coreRows.reduce((s, r) => s + (r.clientesActivos || 0), 0)
+    if (totalCli === 0) return 0
+    const wsum = coreRows.reduce((s, r) => s + (r.nrr || 0) * (r.clientesActivos || 0), 0)
+    const avg = wsum / totalCli
+    return avg <= 2 ? avg * 100 : avg // decimal o entero
+  }, [erUnificado, currentMonthKey, modelFilter])
+
+  const ltvCacColor = ltvCacRatio >= 3 ? GREEN : ltvCacRatio >= 2 ? AMBER : ltvCacRatio > 0 ? DANGER : 'rgba(26,31,54,0.3)'
+  const paybackColor = payback === 0 ? 'rgba(26,31,54,0.3)' : payback <= 6 ? GREEN : payback <= 12 ? AMBER : DANGER
+  const margenBrutoColor = margenBrutoMes >= 0.5 ? GREEN : margenBrutoMes >= 0.3 ? AMBER : DANGER
+  const nrrColor = nrrWavg >= 100 ? GREEN : nrrWavg >= 90 ? AMBER : nrrWavg > 0 ? DANGER : 'rgba(26,31,54,0.3)'
+
+  // ── Pulso por frente: Adquisición ──────────────────────────────────────────
+  const cohort = selectedCohort
+  const tasaConversion = cohort && cohort.leadsCount > 0 ? (cohort.closuresCount / cohort.leadsCount) : 0
+
+  // Sparkline de leads y churn — últimos 12 meses de allCohorts y erUnificado
+  const leadsSparkData = useMemo(() => {
+    return (allCohorts || []).slice(-12).map(c => ({
+      label: mkLabel(c.month),
+      v: c.leadsCount || 0,
+    }))
+  }, [allCohorts])
+
+  const churnSparkData = useMemo(() => {
+    const months = [...new Set(erUnificado.filter(r => !r.isAcumulado && !r.isTotal).map(r => r.monthKey))].sort()
+    return months.slice(-12).map(mk => {
+      const rows = erUnificado.filter(r => r.monthKey === mk && !r.isAcumulado && !r.isTotal)
+      const coreRows = modelFilter === 'todos'
+        ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
+        : rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
+      const totalCli = coreRows.reduce((s, r) => s + (r.clientesActivos || 0), 0)
+      const wavg = totalCli > 0 ? coreRows.reduce((s, r) => s + (r.pctChurn || 0) * (r.clientesActivos || 0), 0) / totalCli : 0
+      return { label: mkLabel(mk), v: +(wavg * 100).toFixed(1) }
+    })
+  }, [erUnificado, modelFilter])
+
+  // ── Pulso por frente: Retención ────────────────────────────────────────────
+  // Métricas del mes desde el ER
+  const monthFulfillment = useMemo(() => {
+    const rows = erUnificado.filter(r => r.monthKey === currentMonthKey && !r.isAcumulado && !r.isTotal)
+    const coreRows = modelFilter === 'todos'
+      ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
+      : rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
+    const sum = (f) => coreRows.reduce((s, r) => s + (r[f] || 0), 0)
+    const totalCli = sum('clientesActivos')
+    const wavg = (f) => totalCli > 0 ? coreRows.reduce((s, r) => s + (r[f] || 0) * (r.clientesActivos || 0), 0) / totalCli : 0
+    return {
+      lifeSpan: wavg('erLifeSpan'),
+      pctChurn: wavg('pctChurn'),
+      mrrNeto: sum('mrrNeto'),
+      clientesBajas: sum('clientesBajas'),
+    }
+  }, [erUnificado, currentMonthKey, modelFilter])
+
+  // ── Desglose por modelo ───────────────────────────────────────────────────
+  const modelos = useMemo(() => {
+    if (!modelBreakdown.length) return []
+    return modelBreakdown
+      .filter(m => m.clientesActivos > 0 && (modelFilter === 'todos' || m.model === modelFilter))
+      .map(m => {
+        // Buscar fila ER del modelo en mes actual
+        const erMes = erUnificado.find(r => r.monthKey === currentMonthKey && !r.isAcumulado && !r.isTotal && r.modelo === m.model)
+        const erMesPrev = prevER && erUnificado.find(r => r.monthKey === prevER.monthKey && !r.isAcumulado && !r.isTotal && r.modelo === m.model)
+        const ganancia = erMes?.ganancia || 0
+        const revenue = erMes?.revenue || 0
+        const margen = revenue > 0 ? ganancia / revenue : 0
+        const mrrPrev = erMesPrev?.revenue || 0
+        const crecMoM = mrrPrev > 0 ? (revenue - mrrPrev) / mrrPrev : 0
+        const margenBrutoModel = revenue > 0 && erMes?.gananciaBruta ? erMes.gananciaBruta / revenue : margenBrutoMes
+        const ltgpModel = m.ltvPromedio * margenBrutoModel
+        return {
+          model: m.model,
+          clientes: m.clientesActivos,
+          mrr: m.mrr,
+          aov: m.aov,
+          ltgp: ltgpModel,
+          ganancia,
+          margen,
+          crecMoM,
+        }
+      })
+      .sort((a, b) => b.mrr - a.mrr)
+  }, [modelBreakdown, modelFilter, erUnificado, currentMonthKey, prevER, margenBrutoMes])
 
   if (!erRows.length && !serviciosData.length) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos del Registro Maestro.</div>
+    return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos disponibles.</div>
   }
 
   return (
     <>
-      {/* ── MÉTRICAS NORTE ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr 1fr 1fr', gap: 10, marginBottom: 24 }}>
-
-        {/* 1. MRR Total */}
-        <NorthCard label="MRR Total" highlight>
+      {/* ═══ 1. PULSO DEL NEGOCIO ═══════════════════════════════════════════ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
+        {/* MRR Proyectado + Crecimiento */}
+        <NorthCard label="MRR Proyectado" highlight>
           <span style={{ fontSize: 38, fontWeight: 900, color: '#fff', letterSpacing: -1.5, lineHeight: 1 }}>
-            {fmt(serviciosKPIs.mrr)}
+            {fmt(mrrProyectado)}
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{serviciosKPIs.clientesActivos} clientes · {serviciosKPIs.serviciosActivos} servicios</span>
+          <div style={{ display: 'flex', gap: 12, marginTop: 6, alignItems: 'center' }}>
+            {crecimientoMoM !== 0 && (
+              <span style={{ fontSize: 11, fontWeight: 800, color: crecimientoMoM > 0 ? '#86EFAC' : '#FCA5A5', background: 'rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 6 }}>
+                MoM {fmtDelta(crecimientoMoM)}
+              </span>
+            )}
+            {crecimientoYoY !== 0 && (
+              <span style={{ fontSize: 11, fontWeight: 800, color: crecimientoYoY > 0 ? '#86EFAC' : '#FCA5A5', background: 'rgba(255,255,255,0.1)', padding: '3px 8px', borderRadius: 6 }}>
+                YoY {fmtDelta(crecimientoYoY)}
+              </span>
+            )}
           </div>
+          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.55)', fontWeight: 600, marginTop: 8, display: 'block' }}>
+            {serviciosKPIs.clientesActivos} clientes · {serviciosKPIs.serviciosActivos} servicios
+          </span>
         </NorthCard>
 
-        {/* 2. Growth */}
-        <NorthCard label="Crecimiento">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 2 }}>
-            <div>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 2 }}>vs mes anterior</span>
-              <span style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5, color: currentER?.pctMensual > 0 ? GREEN : currentER?.pctMensual < 0 ? DANGER : 'rgba(26,31,54,0.5)' }}>
-                {currentER?.pctMensual ? fmtDelta(currentER.pctMensual) : '—'}
-              </span>
-            </div>
-            <div style={{ height: 1, background: 'rgba(0,0,0,0.06)' }} />
-            <div>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block', marginBottom: 2 }}>vs año anterior</span>
-              <span style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.3, color: currentER?.pctAnual > 0 ? GREEN : currentER?.pctAnual < 0 ? DANGER : 'rgba(26,31,54,0.5)' }}>
-                {currentER?.pctAnual ? fmtDelta(currentER.pctAnual) : '—'}
-              </span>
-            </div>
-          </div>
-        </NorthCard>
-
-        {/* 3. Ganancia Neta */}
-        <NorthCard label="Ganancia Neta">
-          <span style={{ fontSize: 28, fontWeight: 800, color: currentER?.ganancia > 0 ? GREEN : DANGER, letterSpacing: -0.5, lineHeight: 1.1 }}>
-            {fmt(currentER?.ganancia)}
+        {/* Ganancia Proyectada */}
+        <NorthCard label="Ganancia Proyectada">
+          <span style={{ fontSize: 28, fontWeight: 800, color: gananciaProyectada > 0 ? GREEN : DANGER, letterSpacing: -0.5, lineHeight: 1.1 }}>
+            {fmt(gananciaProyectada)}
           </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: currentER?.margenNeto > 0.25 ? ACCENT : currentER?.margenNeto > 0.1 ? 'rgba(26,31,54,0.6)' : DANGER }}>
-              {fmtPct(currentER?.margenNeto)}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: margenProyectado > 0.25 ? ACCENT : margenProyectado > 0.1 ? 'rgba(26,31,54,0.6)' : DANGER }}>
+              {fmtPct(margenProyectado)}
             </span>
             <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>margen</span>
           </div>
-          {prevER && <Delta current={currentER?.ganancia} previous={prevER?.ganancia} />}
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600, marginTop: 6, display: 'block' }}>MRR − costos del mes</span>
         </NorthCard>
 
-        {/* 4. CAC vs LTV */}
-        <NorthCard label="CAC vs LTV">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div>
-                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block' }}>CAC</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: 'rgba(26,31,54,0.75)', letterSpacing: -0.3 }}>{cac ? fmt(cac) : '—'}</span>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block' }}>LTV</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: 'rgba(26,31,54,0.75)', letterSpacing: -0.3 }}>{fmt(ltv)}</span>
-              </div>
-            </div>
-            {cacLtvRatio && (
-              <div style={{ background: parseFloat(cacLtvRatio) >= 3 ? 'rgba(5,150,105,0.08)' : 'rgba(224,62,62,0.07)', borderRadius: 8, padding: '5px 10px', textAlign: 'center' }}>
-                <span style={{ fontSize: 12, fontWeight: 800, color: parseFloat(cacLtvRatio) >= 3 ? GREEN : DANGER }}>
-                  {cacLtvRatio}x LTV/CAC
-                </span>
-                <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.4)', marginLeft: 5, fontWeight: 600 }}>{parseFloat(cacLtvRatio) >= 3 ? '✓ saludable' : '⚠ bajo'}</span>
-              </div>
-            )}
+        {/* Cash Collected */}
+        <NorthCard label="Cash Collected">
+          <span style={{ fontSize: 28, fontWeight: 800, color: '#1a1f36', letterSpacing: -0.5, lineHeight: 1.1 }}>
+            {fmt(cashCollected)}
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+            <span style={{ fontSize: 18, fontWeight: 800, color: pctCobrado >= 0.9 ? GREEN : pctCobrado >= 0.7 ? AMBER : DANGER }}>
+              {fmtPct(pctCobrado)}
+            </span>
+            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>cobrado del MRR</span>
           </div>
-        </NorthCard>
-
-        {/* 5. Clientes y AOV */}
-        <NorthCard label="Clientes y AOV">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 2 }}>
-            <div>
-              <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block' }}>Clientes activos</span>
-              <span style={{ fontSize: 28, fontWeight: 900, color: ACCENT, letterSpacing: -0.5 }}>{serviciosKPIs.clientesActivos || '—'}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div>
-                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block' }}>AOV</span>
-                <span style={{ fontSize: 18, fontWeight: 800, color: 'rgba(26,31,54,0.7)' }}>{fmt(serviciosKPIs.aov)}</span>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 1.5, color: 'rgba(26,31,54,0.38)', fontWeight: 700, display: 'block' }}>Churn</span>
-                <span style={{ fontSize: 18, fontWeight: 800, color: churn > 2 ? DANGER : 'rgba(26,31,54,0.7)' }}>{churn}</span>
-              </div>
-            </div>
-          </div>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600, marginTop: 6, display: 'block' }}>{mkLabel(currentMonthKey)}</span>
         </NorthCard>
       </div>
 
-      {/* ── EVOLUCIÓN 12 MESES ─────────────────────────────────────────────── */}
-      {erRows.length > 1 && (
+      {/* ═══ 2. EVOLUCIÓN ═══════════════════════════════════════════════════ */}
+      {chartData.length > 1 && (
         <>
-          <Divider title="Evolución Revenue & Cash Collected" />
+          <Divider title="Evolución 12 meses" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 220px', gap: 12, marginBottom: 14, alignItems: 'stretch' }}>
-            {/* Chart */}
             <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
-              <RevenueCollectedChart data={revenueCollectedChart} height={170} />
+              <RevenueCollectedChart data={chartData} height={190} />
             </div>
-            {/* Cards resumen 12m */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px', flex: 1 }}>
-                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Revenue 12m</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: ACCENT, letterSpacing: -0.5 }}>{fmt(totalRevenue12)}</span>
-              </div>
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px', flex: 1 }}>
-                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, display: 'block', marginBottom: 6 }}>Cash Collected 12m</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: '#4B5563', letterSpacing: -0.5 }}>{fmt(totalCash12)}</span>
-              </div>
-              <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 12, padding: '14px 18px', flex: 1 }}>
-                <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, display: 'block', marginBottom: 6 }}>% Cobrado</span>
-                <span style={{ fontSize: 22, fontWeight: 800, color: pctCobrado >= 0.9 ? GREEN : pctCobrado >= 0.7 ? '#F59E0B' : DANGER, letterSpacing: -0.5 }}>
-                  {pctCobrado ? `${(pctCobrado * 100).toFixed(1)}%` : '—'}
-                </span>
-              </div>
+              <HealthCard label="Revenue 12m" value={fmt(totalRevenue12)} color={ACCENT} />
+              <HealthCard label="Cash 12m" value={fmt(totalCash12)} color="#4B5563" />
+              <HealthCard label="Ganancia 12m" value={fmt(totalGanancia12)} color={GREEN} />
+              <HealthCard label="% Cobrado promedio" value={fmtPct(pctCobrado12)} color={pctCobrado12 >= 0.9 ? GREEN : pctCobrado12 >= 0.7 ? AMBER : DANGER} />
             </div>
-          </div>
-          <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
-            <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>Ganancia Neta</span>
-            <MiniChart data={gananciasChart} dataKey="ganancia" color={GREEN} prefix="$" />
           </div>
         </>
       )}
 
-      {/* ── DESGLOSE POR MODELO ────────────────────────────────────────────── */}
-      <Divider title="Desglose por modelo" />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
-        <DataTable
-          rows={modelBreakdown.filter(m => m.clientesActivos > 0 && (modelFilter === 'todos' || m.model === modelFilter))}
-          columns={[
-            { key: 'model', label: 'Modelo' },
-            { key: 'clientesActivos', label: 'Clientes', align: 'right' },
-            { key: 'mrr', label: 'MRR', align: 'right', render: v => fmt(v) },
-            { key: 'aov', label: 'AOV', align: 'right', render: v => fmt(v) },
-            { key: 'ltvPromedio', label: 'LTV promedio', align: 'right', render: v => fmt(v) },
-          ]}
-          emptyText="Sin clientes activos"
+      {/* ═══ 3. SALUD DEL MODELO ═══════════════════════════════════════════ */}
+      <Divider title="Salud del modelo" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+        <HealthCard
+          label="LTV / CAC"
+          value={ltvCacRatio > 0 ? `${ltvCacRatio.toFixed(1)}x` : '—'}
+          color={ltvCacColor}
+          sub={ltvCacRatio >= 3 ? 'saludable (≥3x)' : ltvCacRatio >= 2 ? 'aceptable' : ltvCacRatio > 0 ? 'bajo' : 'sin CAC'}
+        />
+        <HealthCard
+          label="Payback"
+          value={payback > 0 ? `${payback.toFixed(1)}m` : '—'}
+          color={paybackColor}
+          sub={payback === 0 ? 'sin datos' : payback <= 6 ? 'rápido (≤6m)' : payback <= 12 ? 'aceptable' : 'lento'}
+        />
+        <HealthCard
+          label="Margen Bruto"
+          value={fmtPct(margenBrutoMes)}
+          color={margenBrutoColor}
+          sub="del revenue del mes"
+        />
+        <HealthCard
+          label="NRR"
+          value={nrrWavg > 0 ? `${Math.round(nrrWavg)}%` : '—'}
+          color={nrrColor}
+          sub={nrrWavg >= 100 ? 'expansión neta' : nrrWavg >= 90 ? 'retención sólida' : nrrWavg > 0 ? 'pérdida neta' : 'sin datos'}
         />
       </div>
 
-      {/* ── ANÁLISIS ──────────────────────────────────────────────────────── */}
-      <Divider title="Análisis ejecutivo" />
-      <InsightsBlock erCurrent={currentER} serviciosKPIs={serviciosKPIs} />
+      {/* ═══ 4. PULSO POR FRENTE ═══════════════════════════════════════════ */}
+      <Divider title="Pulso por frente" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 24 }}>
+        {/* Adquisición */}
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '20px 22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: ACCENT, letterSpacing: 0.5 }}>ADQUISICIÓN</span>
+            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>· marketing</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 14 }}>
+            <StatChip label="Leads" value={cohort?.leadsCount || '—'} />
+            <StatChip label="Inversión" value={cohort?.gasto > 0 ? fmt(cohort.gasto) : '—'} />
+            <StatChip label="CAC" value={cac > 0 ? fmt(cac) : '—'} />
+            <StatChip label="MER" value={cohort?.mer > 0 ? `${cohort.mer.toFixed(1)}x` : '—'} />
+            <StatChip label="Conv." value={tasaConversion > 0 ? fmtPct(tasaConversion) : '—'} />
+          </div>
+          <Sparkline data={leadsSparkData} dataKey="v" color={ACCENT} />
+        </div>
+
+        {/* Retención */}
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '20px 22px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+            <span style={{ fontSize: 11, fontWeight: 800, color: GREEN, letterSpacing: 0.5 }}>RETENCIÓN</span>
+            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>· fulfillment</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 14 }}>
+            <StatChip label="Life Span" value={monthFulfillment.lifeSpan > 0 ? `${monthFulfillment.lifeSpan.toFixed(1)}m` : '—'} />
+            <StatChip label="Churn" value={monthFulfillment.pctChurn > 0 ? `${(monthFulfillment.pctChurn * 100).toFixed(1)}%` : '—'} color={monthFulfillment.pctChurn > 0.05 ? DANGER : undefined} />
+            <StatChip label="NRR" value={nrrWavg > 0 ? `${Math.round(nrrWavg)}%` : '—'} color={nrrColor} />
+            <StatChip label="MRR Neto" value={monthFulfillment.mrrNeto !== 0 ? fmt(monthFulfillment.mrrNeto) : '—'} color={monthFulfillment.mrrNeto > 0 ? GREEN : monthFulfillment.mrrNeto < 0 ? DANGER : undefined} />
+            <StatChip label="C. Bajas" value={monthFulfillment.clientesBajas !== 0 ? `${Math.abs(monthFulfillment.clientesBajas)}` : '—'} color={monthFulfillment.clientesBajas !== 0 ? DANGER : undefined} />
+          </div>
+          <Sparkline data={churnSparkData} dataKey="v" color={DANGER} />
+        </div>
+      </div>
+
+      {/* ═══ 5. DESGLOSE POR MODELO ═══════════════════════════════════════ */}
+      <Divider title="Desglose por modelo" />
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
+        <DataTable
+          rows={modelos}
+          columns={[
+            { key: 'model', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
+            { key: 'clientes', label: 'Clientes', align: 'right' },
+            { key: 'mrr', label: 'MRR', align: 'right', render: v => <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span> },
+            { key: 'aov', label: 'AOV', align: 'right', render: v => fmt(v) },
+            { key: 'ltgp', label: 'LTGP', align: 'right', render: v => fmt(v) },
+            { key: 'ganancia', label: 'Ganancia', align: 'right', render: v => <span style={{ color: v > 0 ? GREEN : v < 0 ? DANGER : 'rgba(26,31,54,0.4)', fontWeight: 700 }}>{fmt(v)}</span> },
+            { key: 'margen', label: 'Margen', align: 'right', render: v => <span style={{ color: v > 0.25 ? GREEN : v > 0.1 ? 'rgba(26,31,54,0.7)' : DANGER, fontWeight: 700 }}>{fmtPct(v)}</span> },
+            { key: 'crecMoM', label: 'MoM', align: 'right', render: v => v !== 0 ? <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700, fontSize: 12 }}>{fmtDelta(v)}</span> : '—' },
+          ]}
+          emptyText="Sin datos por modelo"
+        />
+      </div>
     </>
   )
 }

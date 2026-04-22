@@ -345,9 +345,9 @@ function Dashboard() {
             <>
               {activeModule === 'overview' && allowedModules.includes('overview') && (
                 <OverviewModule
-                  servicios={servicios} er={er}
-                  modelFilter={modelFilter} selectedERMonth={selectedERMonth}
-                  cac={selectedCohort?.cac} allCohorts={allCohorts}
+                  servicios={servicios} er={er} erUnificado={erUnificado} egresos={egresos}
+                  modelFilter={modelFilter} selectedERMonth={selectedERMonth} dateRange={dateRange}
+                  selectedCohort={selectedCohort} prevCohort={prevCohort} allCohorts={allCohorts}
                 />
               )}
               {activeModule === 'marketing' && allowedModules.includes('marketing') && (
