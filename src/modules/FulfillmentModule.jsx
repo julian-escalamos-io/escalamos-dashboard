@@ -106,6 +106,8 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
   }, [erModelRows, monthKeys])
 
   const clients = useMemo(() => computeClientTable(serviciosData, modelFilter), [serviciosData, modelFilter])
+  const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter), [serviciosData, modelFilter])
+  const kpis = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
 
   // Clientes activos reales: para "Todos", excluir Financiera y Soft (son intermediación, no trabajo propio)
   const clientesActivosReales = useMemo(() => {
@@ -118,8 +120,6 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
     )
     return ids.size
   }, [serviciosData, modelFilter, kpis])
-  const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter), [serviciosData, modelFilter])
-  const kpis = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
 
   const aov = h?.aov > 0 ? h.aov : kpis.aov || 0
   const lifeSpan = h?.lifeSpan > 0 ? h.lifeSpan : kpis.permanencia || 0
