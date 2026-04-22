@@ -125,9 +125,9 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
         <NorthCard
           label="Clientes activos" highlight
-          value={kpis.clientesActivos || h?.clientesActivos || clients.length}
+          value={h?.clientesActivos || kpis.clientesActivos || clients.length}
           sub={`${kpis.serviciosActivos} servicios · MRR ${fmt(kpis.mrr)}`}
-          delta={hPrev ? <Delta current={h?.clientesActivos} previous={hPrev?.clientesActivos} /> : null}
+          delta={hPrev?.clientesActivos ? <Delta current={h?.clientesActivos} previous={hPrev.clientesActivos} /> : null}
         />
         <NorthCard label="AOV" value={aov > 0 ? fmt(aov) : '—'}
           sub="MRR / cliente activo"
@@ -174,7 +174,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
           { label: 'MRR Neto', value: h?.mrrNeto ? fmt(h.mrrNeto) : '—', sub: 'ingresos + pérdidas' },
           { label: 'NRR', value: h?.nrr > 0 ? `${Math.round(h.nrr)}%` : '—', color: nrrColor },
           { label: 'C. Nuevos', value: h?.clientesNuevos > 0 ? `+${h.clientesNuevos}` : '—', color: GREEN, sub: h?.mNuevos > 0 ? fmt(h.mNuevos) : undefined },
-          { label: 'C. Bajas', value: h?.clientesBajas > 0 ? `${h.clientesBajas}` : '—', color: h?.clientesBajas > 0 ? DANGER : undefined, sub: h?.mBajas > 0 ? fmt(h.mBajas) : undefined },
+          { label: 'C. Bajas', value: h?.clientesBajas ? `${Math.abs(h.clientesBajas)}` : '—', color: h?.clientesBajas ? DANGER : undefined, sub: h?.mBajas ? fmt(Math.abs(h.mBajas)) : undefined },
           { label: 'Churn rate', value: h?.pctChurn > 0 ? `${(h.pctChurn * 100).toFixed(1)}%` : '—', color: h?.pctChurn > 0.05 ? DANGER : h?.pctChurn > 0.02 ? AMBER : GREEN },
         ].map((m, i) => (
           <div key={i} style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 12, padding: '12px 14px' }}>
@@ -187,9 +187,9 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 10 }}>
         {[
           { label: '$ Nuevos', value: h?.mNuevos > 0 ? fmt(h.mNuevos) : '—', color: GREEN },
-          { label: '$ Bajas', value: h?.mBajas > 0 ? fmt(h.mBajas) : '—', color: h?.mBajas > 0 ? DANGER : undefined },
-          { label: '$ Upsells', value: h?.mUpsells > 0 ? fmt(h.mUpsells) : '—', color: GREEN },
-          { label: '$ Downsells', value: h?.mDownsells > 0 ? fmt(h.mDownsells) : '—', color: h?.mDownsells > 0 ? AMBER : undefined },
+          { label: '$ Bajas', value: h?.mBajas ? fmt(Math.abs(h.mBajas)) : '—', color: h?.mBajas ? DANGER : undefined },
+          { label: '$ Upsells', value: h?.mUpsells ? fmt(Math.abs(h.mUpsells)) : '—', color: GREEN },
+          { label: '$ Downsells', value: h?.mDownsells ? fmt(Math.abs(h.mDownsells)) : '—', color: h?.mDownsells ? AMBER : undefined },
         ].map((m, i) => (
           <div key={i} style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 12, padding: '12px 14px' }}>
             <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>{m.label}</span>
