@@ -63,32 +63,25 @@ export default async function handler(req, res) {
       readSheet(token, xeroId, 'Libro Diario', 'A6:J'),
       readSheet(token, xeroId, '1- Servicios', 'A2:S'),
       readSheet(token, xeroId, '2- Egresos', 'A2:K'),
+      readSheet(token, xeroId, '4- Hist\u00F3rico', 'A1:AZ'),
     ] : []
 
-    const maestroReads = maestroId ? [
-      readSheet(token, maestroId, '4- Hist\u00F3rico', 'A1:AZ'),
-    ] : []
-
-    const [marketingResults, xeroResults, maestroResults] = await Promise.all([
+    const [marketingResults, xeroResults] = await Promise.all([
       Promise.all(marketingReads),
       Promise.all(xeroReads),
-      Promise.all(maestroReads),
     ])
 
     const [metaAds, ghlLeads, ghlVentas, costos, instagram, instagramContent, clarity, searchConsole, ga4Trafico, googleAds] = marketingResults
 
     const response = { metaAds, ghlLeads, ghlVentas, costos, instagram, instagramContent, clarity, searchConsole, ga4Trafico, googleAds }
 
-    if (xeroId && xeroResults.length >= 5) {
+    if (xeroId && xeroResults.length >= 6) {
       response.erUnificado = xeroResults[0]
       response.xeroRaw = xeroResults[1]
       response.libroDiario = xeroResults[2]
       response.servicios = xeroResults[3]
       response.egresos = xeroResults[4]
-    }
-
-    if (maestroId && maestroResults.length === 1) {
-      response.historico = maestroResults[0]
+      response.historico = xeroResults[5]
     }
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=30')
