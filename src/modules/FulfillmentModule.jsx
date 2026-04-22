@@ -138,6 +138,11 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
       </div>
 
       {/* ── EVOLUCIÓN KPI SELECCIONADO ──────────────────────────────────── */}
+      {showChart && hist12.length <= 1 && (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 14, padding: 20, marginBottom: 24, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 13 }}>
+          Sin datos históricos suficientes para mostrar evolución. Verificá que la pestaña "4- Histórico" tenga datos.
+        </div>
+      )}
       {showChart && hist12.length > 1 && (
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 24 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>
@@ -224,7 +229,7 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
       <Divider title={`Clientes activos${modelFilter !== 'todos' ? ` — ${modelFilter}` : ''}`} />
       <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
         <DataTable
-          rows={clients.map(c => ({ ...c, aov: c.serviciosCount > 0 ? c.mrr / c.serviciosCount : c.mrr })).sort((a, b) => b.aov - a.aov)}
+          rows={clients}
           columns={[
             { key: 'nombre', label: 'Cliente' },
             { key: 'tipo', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
@@ -237,7 +242,6 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
               </div>
             )},
             { key: 'mrr', label: 'MRR', align: 'right', render: v => <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span> },
-            { key: 'aov', label: 'AOV', align: 'right', render: v => fmt(v) },
             { key: 'meses', label: 'Meses', align: 'right', render: v => v > 0 ? `${v}m` : '—' },
             { key: 'ltr', label: 'LTR', align: 'right', render: v => fmt(v) },
           ]}

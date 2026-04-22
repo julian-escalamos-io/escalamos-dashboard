@@ -498,7 +498,7 @@ export function computeRecentChurn(servicios, modelFilter) {
         tipo: s.tipo,
         fechaBaja: s.fechaBaja,
         meses: s.meses,
-        ltr: s.ltr,
+        ltr: s.ltr > 0 ? s.ltr : (s.monto * s.meses),
       })
       return acc
     }, [])
