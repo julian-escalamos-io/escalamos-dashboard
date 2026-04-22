@@ -379,7 +379,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       <Divider title={`Clientes activos${modelFilter !== 'todos' ? ` — ${modelFilter}` : ''}`} />
       <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
         <DataTable
-          rows={clients}
+          rows={[...clients].sort((a, b) => b.ltr - a.ltr)}
           columns={[
             { key: 'nombre', label: 'Cliente' },
             { key: 'tipo', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
