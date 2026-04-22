@@ -50,19 +50,17 @@ function NorthCard({ label, value, sub, color, highlight, delta, onClick }) {
 export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], dateRange }) {
   const serviciosData = servicios || []
 
-  // Filas del ER filtradas por modelo (sin acumulado, sin TOTAL si hay filtro de modelo)
-  const erTotalRows = useMemo(() => {
-    let rows = erUnificado.filter(r => !r.isAcumulado)
+  // Siempre usar filas por modelo (no TOTAL) — las filas TOTAL no tienen columnas fulfillment V-AE
+  const erModelRows = useMemo(() => {
+    let rows = erUnificado.filter(r => !r.isAcumulado && !r.isTotal)
     if (modelFilter && modelFilter !== 'todos') {
       rows = rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
-    } else {
-      rows = rows.filter(r => r.isTotal)
     }
     return rows
   }, [erUnificado, modelFilter])
 
   // Meses disponibles
-  const monthKeys = useMemo(() => [...new Set(erTotalRows.map(r => r.monthKey))].sort(), [erTotalRows])
+  const monthKeys = useMemo(() => [...new Set(erModelRows.map(r => r.monthKey))].sort(), [erModelRows])
 
   // Mes seleccionado derivado del filtro de fechas
   const currentMonthKey = useMemo(() => {
@@ -82,7 +80,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
   // Aggregate ER rows for a given month
   const aggMonth = (mk) => {
     if (!mk) return null
-    const rows = erTotalRows.filter(r => r.monthKey === mk)
+    const rows = erModelRows.filter(r => r.monthKey === mk)
     if (!rows.length) return null
     const s = (f) => rows.reduce((a, r) => a + (r[f] || 0), 0)
     const avg = (f) => rows.length ? s(f) / rows.length : 0
@@ -94,8 +92,8 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
     }
   }
 
-  const h = useMemo(() => aggMonth(currentMonthKey), [erTotalRows, currentMonthKey])
-  const hPrev = useMemo(() => aggMonth(prevMonthKey), [erTotalRows, prevMonthKey])
+  const h = useMemo(() => aggMonth(currentMonthKey), [erModelRows, currentMonthKey])
+  const hPrev = useMemo(() => aggMonth(prevMonthKey), [erModelRows, prevMonthKey])
 
   // Últimos 12 meses para charts
   const hist12 = useMemo(() => {
@@ -103,7 +101,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       const agg = aggMonth(mk)
       return { monthKey: mk, label: mk, ...agg }
     }).filter(r => r && (r.clientesActivos > 0 || r.nrr > 0))
-  }, [erTotalRows, monthKeys])
+  }, [erModelRows, monthKeys])
 
   const clients = useMemo(() => computeClientTable(serviciosData, modelFilter), [serviciosData, modelFilter])
   const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter), [serviciosData, modelFilter])

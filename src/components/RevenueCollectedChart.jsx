@@ -2,6 +2,7 @@ import { useState } from 'react'
 
 const BLUE = '#2D7AFF'
 const DARK = '#4B5563'
+const GREEN = '#059669'
 
 function fmtFull(v) {
   if (!v && v !== 0) return '$0'
@@ -25,6 +26,7 @@ export function RevenueCollectedChart({ data, height = 170 }) {
   function yV(v) { return pt + iH - ((v || 0) / maxVal) * iH }
 
   const linePts = data.map((d, i) => ({ x: cx(i), y: yV(d.cashCollected), val: d.cashCollected || 0 }))
+  const ganPts = data.map((d, i) => ({ x: cx(i), y: yV(d.ganancia), val: d.ganancia || 0 }))
 
   function smoothPath(pts) {
     if (pts.length < 2) return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
@@ -41,12 +43,16 @@ export function RevenueCollectedChart({ data, height = 170 }) {
       {/* Legend */}
       <div style={{ display: 'flex', gap: 14, justifyContent: 'flex-end', marginBottom: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(45,122,255,0.3)', border: '1px solid rgba(45,122,255,0.4)' }} />
+          <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Revenue</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <div style={{ width: 20, height: 2, background: DARK, borderRadius: 1 }} />
           <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Cash Collected</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(45,122,255,0.3)', border: '1px solid rgba(45,122,255,0.4)' }} />
-          <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Revenue</span>
+          <div style={{ width: 20, height: 2, background: GREEN, borderRadius: 1 }} />
+          <span style={{ fontSize: 9, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Ganancia</span>
         </div>
       </div>
 
@@ -84,10 +90,23 @@ export function RevenueCollectedChart({ data, height = 170 }) {
         {/* Smooth line — Cash Collected */}
         <path d={smoothPath(linePts)} fill="none" stroke={DARK} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
 
-        {/* Dots */}
+        {/* Smooth line — Ganancia */}
+        {ganPts.some(p => p.val > 0) && (
+          <path d={smoothPath(ganPts)} fill="none" stroke={GREEN} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" strokeDasharray="4 3" />
+        )}
+
+        {/* Dots — Cash */}
         {linePts.map((p, i) => (
           <circle key={i} cx={p.x} cy={p.y} r={hovered === i ? 4.5 : 3}
             fill="#fff" stroke={DARK} strokeWidth="1.8"
+            style={{ transition: 'r 0.1s' }}
+          />
+        ))}
+
+        {/* Dots — Ganancia */}
+        {ganPts.some(p => p.val > 0) && ganPts.map((p, i) => (
+          <circle key={`g${i}`} cx={p.x} cy={p.y} r={hovered === i ? 4 : 2.5}
+            fill="#fff" stroke={GREEN} strokeWidth="1.5"
             style={{ transition: 'r 0.1s' }}
           />
         ))}
@@ -115,32 +134,44 @@ export function RevenueCollectedChart({ data, height = 170 }) {
       </svg>
 
       {/* Tooltip */}
-      {hovered !== null && (
-        <div style={{
-          position: 'absolute', top: 28,
-          left: `${(cx(hovered) / W) * 100}%`,
-          transform: hovered >= n * 0.65 ? 'translateX(-110%)' : 'translateX(10px)',
-          background: '#fff', border: '1px solid rgba(26,31,54,0.1)',
-          borderRadius: 10, padding: '8px 12px',
-          pointerEvents: 'none', zIndex: 10, whiteSpace: 'nowrap',
-          boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-          fontFamily: 'Montserrat, sans-serif',
-        }}>
-          <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 5 }}>{data[hovered].label}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 9, height: 9, borderRadius: 2, background: 'rgba(45,122,255,0.32)', border: '1px solid rgba(45,122,255,0.5)', flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Revenue</span>
-              <span style={{ fontSize: 12, color: BLUE, fontWeight: 800, marginLeft: 4 }}>{fmtFull(data[hovered].revenue)}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#fff', border: `2px solid ${DARK}`, flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Cash Collected</span>
-              <span style={{ fontSize: 12, color: DARK, fontWeight: 800, marginLeft: 4 }}>{fmtFull(data[hovered].cashCollected)}</span>
+      {hovered !== null && (() => {
+        const d = data[hovered]
+        const pctCobrado = d.revenue > 0 ? ((d.cashCollected || 0) / d.revenue * 100).toFixed(0) : 0
+        return (
+          <div style={{
+            position: 'absolute', top: 28,
+            left: `${(cx(hovered) / W) * 100}%`,
+            transform: hovered >= n * 0.65 ? 'translateX(-110%)' : 'translateX(10px)',
+            background: '#fff', border: '1px solid rgba(26,31,54,0.1)',
+            borderRadius: 10, padding: '8px 12px',
+            pointerEvents: 'none', zIndex: 10, whiteSpace: 'nowrap',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+            fontFamily: 'Montserrat, sans-serif',
+          }}>
+            <div style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)', fontWeight: 700, marginBottom: 5 }}>{d.label}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 9, height: 9, borderRadius: 2, background: 'rgba(45,122,255,0.32)', border: '1px solid rgba(45,122,255,0.5)', flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Revenue</span>
+                <span style={{ fontSize: 12, color: BLUE, fontWeight: 800, marginLeft: 4 }}>{fmtFull(d.revenue)}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#fff', border: `2px solid ${DARK}`, flexShrink: 0 }} />
+                <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Cash</span>
+                <span style={{ fontSize: 12, color: DARK, fontWeight: 800, marginLeft: 4 }}>{fmtFull(d.cashCollected)}</span>
+                <span style={{ fontSize: 10, color: pctCobrado >= 90 ? GREEN : 'rgba(26,31,54,0.4)', fontWeight: 700, marginLeft: 2 }}>{pctCobrado}%</span>
+              </div>
+              {d.ganancia !== undefined && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ width: 9, height: 9, borderRadius: '50%', background: '#fff', border: `2px solid ${GREEN}`, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.45)', fontWeight: 600 }}>Ganancia</span>
+                  <span style={{ fontSize: 12, color: GREEN, fontWeight: 800, marginLeft: 4 }}>{fmtFull(d.ganancia)}</span>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }
