@@ -58,7 +58,7 @@ function Sparkline({ data, dataKey, color, prefix = '' }) {
   const gradId = `sp-${dataKey}-${color.replace(/[^a-z0-9]/gi, '')}`
 
   function fmtVal(v) {
-    if (prefix === '$') return v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${Math.round(v)}`
+    if (prefix === '$') return `$${Math.round(v).toLocaleString('en-US')}`
     return v >= 100 ? `${Math.round(v)}` : `${v.toFixed(1)}`
   }
 
@@ -240,6 +240,60 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
     return ids.size
   }, [serviciosData, modelFilter, kpis])
 
+  // ── Upsells detectados desde Servicios ───────────────────────────────────
+  // Si un cliente tiene una línea de servicio con fecha de alta posterior a su primer alta, eso es un upsell
+  const upsellsDetectados = useMemo(() => {
+    const filtered = serviciosData.filter(s =>
+      modelFilter === 'todos' ? MODELOS_CORE.includes(s.tipo.toLowerCase()) : s.tipo.toLowerCase() === modelFilter.toLowerCase()
+    )
+    // Agrupar por cliente, encontrar fecha de alta más antigua
+    const firstAltaByClient = {}
+    for (const s of filtered) {
+      if (!s.inicio) continue
+      if (!firstAltaByClient[s.idCliente] || s.inicio < firstAltaByClient[s.idCliente]) {
+        firstAltaByClient[s.idCliente] = s.inicio
+      }
+    }
+    // Servicios cuya fecha de alta es POSTERIOR a la primera alta del cliente = upsells
+    const upsells = filtered
+      .filter(s => s.inicio && firstAltaByClient[s.idCliente] && s.inicio > firstAltaByClient[s.idCliente])
+      .map(s => ({
+        nombre: s.nombre, tipo: s.tipo, servicio: s.servicio,
+        monto: s.monto, fecha: s.inicio, estado: s.estado,
+      }))
+    // Filtrar por rango de fechas si está definido
+    if (startKey && endKey) {
+      return upsells.filter(u => {
+        const mk = u.fecha.slice(0, 7)
+        return mk >= startKey && mk <= endKey
+      }).sort((a, b) => b.fecha.localeCompare(a.fecha))
+    }
+    return upsells.sort((a, b) => b.fecha.localeCompare(a.fecha))
+  }, [serviciosData, modelFilter, startKey, endKey])
+
+  // ── Cohorte de churn por duración ────────────────────────────────────────
+  // De los clientes que se fueron, ¿en qué momento de su ciclo se fueron?
+  const churnCohort = useMemo(() => {
+    // Agrupar churned por cliente, tomar max meses
+    const byClient = {}
+    for (const c of churned) {
+      if (!byClient[c.idCliente] || c.meses > byClient[c.idCliente].meses) {
+        byClient[c.idCliente] = c
+      }
+    }
+    const churnedList = Object.values(byClient)
+    const bucket = (min, max, label) => {
+      const inRange = churnedList.filter(c => c.meses >= min && (max === null || c.meses < max))
+      return { label, n: inRange.length, totalLtr: inRange.reduce((a, c) => a + (c.ltr || 0), 0) }
+    }
+    return [
+      bucket(0, 4, '0-3m'),
+      bucket(4, 7, '3-6m'),
+      bucket(7, 13, '6-12m'),
+      bucket(13, null, '12m+'),
+    ]
+  }, [churned])
+
   // ── Cohortes de antigüedad ────────────────────────────────────────────────
   const cohortes = useMemo(() => {
     const active = serviciosData.filter(s =>
@@ -376,6 +430,26 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
         />
       </div>
 
+      {/* Cohorte de churn por duración: ¿en qué momento del ciclo se van? */}
+      {churned.length > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 14 }}>
+          {churnCohort.map((c, i) => {
+            const colors = [DANGER, '#F59E0B', '#FBBF24', GREEN]
+            const labels = ['Churn temprano', 'Mid-early', 'Mid-late', 'Tarde']
+            return (
+              <div key={i} style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 12, padding: '14px 16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(26,31,54,0.65)' }}>{c.label}</span>
+                  <span style={{ fontSize: 8, padding: '2px 6px', borderRadius: 4, background: `${colors[i]}15`, color: colors[i], fontWeight: 800, letterSpacing: 0.5 }}>{labels[i].toUpperCase()}</span>
+                </div>
+                <span style={{ fontSize: 24, fontWeight: 900, color: colors[i], lineHeight: 1 }}>{c.n}</span>
+                {c.totalLtr > 0 && <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.45)', fontWeight: 600, display: 'block', marginTop: 4 }}>LTR perdido: {fmt(c.totalLtr)}</span>}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {/* Tabla de bajas recientes */}
       {churned.length > 0 && (
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 20 }}>
@@ -453,6 +527,26 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
           <span style={{ fontSize: 22, fontWeight: 800, color: DANGER }}>{h?.mDownsells ? fmt(Math.abs(h.mDownsells)) : '—'}</span>
         </div>
       </div>
+
+      {/* Tabla de upsells detectados desde Servicios */}
+      {upsellsDetectados.length > 0 && (
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 20 }}>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: GREEN, fontWeight: 700, marginBottom: 4, display: 'block' }}>Upsells detectados ({upsellsDetectados.length})</span>
+          <span style={{ fontSize: 11, color: 'rgba(26,31,54,0.45)', fontWeight: 500, marginBottom: 12, display: 'block' }}>Servicios nuevos agregados a clientes existentes (alta posterior a su primer servicio)</span>
+          <DataTable
+            rows={upsellsDetectados}
+            columns={[
+              { key: 'nombre', label: 'Cliente' },
+              { key: 'tipo', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
+              { key: 'servicio', label: 'Servicio nuevo' },
+              { key: 'fecha', label: 'Fecha alta', render: v => v?.slice(0, 10) || '—' },
+              { key: 'monto', label: 'Monto', align: 'right', render: v => <span style={{ color: GREEN, fontWeight: 700 }}>{fmt(v)}</span> },
+              { key: 'estado', label: 'Estado', render: v => <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: v?.toLowerCase() === 'activo' ? `${GREEN}15` : 'rgba(0,0,0,0.05)', color: v?.toLowerCase() === 'activo' ? GREEN : 'rgba(26,31,54,0.5)', fontWeight: 700 }}>{v}</span> },
+            ]}
+            emptyText="Sin upsells en el período"
+          />
+        </div>
+      )}
 
       {/* ═══ 7. TABLA CLIENTES ACTIVOS ═══════════════════════════════════ */}
       <Divider title={`Clientes activos${modelFilter !== 'todos' ? ` — ${modelFilter}` : ''}`} />
