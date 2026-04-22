@@ -301,8 +301,8 @@ function Dashboard() {
               )
             })()}
 
-            {/* ER month selector — ocultar en Marketing y Finanzas */}
-            {activeModule !== 'marketing' && activeModule !== 'finanzas' && er.length > 0 && (
+            {/* ER month selector — solo visible en módulos que lo necesiten (ninguno actualmente) */}
+            {false && er.length > 0 && (
               <div style={{ display: 'flex', gap: 2, background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: 3, border: '1px solid rgba(255,255,255,0.08)' }}>
                 {er.slice(-6).map(r => {
                   const isActive = (selectedERMonth || er[er.length - 1]?.monthKey) === r.monthKey
