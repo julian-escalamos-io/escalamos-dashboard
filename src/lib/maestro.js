@@ -463,6 +463,10 @@ export function computeClientTable(servicios, modelFilter) {
     }
     byClient[s.idCliente].servicios.push(s.servicio)
     byClient[s.idCliente].mrr += s.monto
+    // Permanencia = servicio con más tiempo activo (máximo)
+    if (s.meses > byClient[s.idCliente].meses) byClient[s.idCliente].meses = s.meses
+    // LTR = mayor LTR entre servicios
+    if (s.ltr > byClient[s.idCliente].ltr) byClient[s.idCliente].ltr = s.ltr
   }
 
   return Object.values(byClient)

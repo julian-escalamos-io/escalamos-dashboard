@@ -96,7 +96,7 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
   // AOV y Life Span: priorizar Servicios, fallback a Histórico
   const aov = kpis.aov > 0 ? kpis.aov : h?.aov || 0
   const lifeSpan = kpis.permanencia > 0 ? kpis.permanencia : h?.lifeSpan || 0
-  const ltgp = h?.ltgp || 0
+  const ltrPromedio = kpis.ltvPromedio > 0 ? kpis.ltvPromedio : 0
 
   const [showChart, setShowChart] = useState(null)
 
@@ -129,12 +129,32 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
             delta={hPrev?.lifeSpan > 0 ? <Delta current={lifeSpan} previous={hPrev.lifeSpan} /> : null}
           />
         </div>
-        <div onClick={() => setShowChart(showChart === 'ltgp' ? null : 'ltgp')} style={{ cursor: 'pointer' }}>
-          <NorthCard label="LTGP" value={ltgp > 0 ? fmt(ltgp) : '—'}
-            sub={h?.ltgpActual > 0 ? `actual ${fmt(h.ltgpActual)}` : undefined}
-            delta={hPrev?.ltgp > 0 ? <Delta current={ltgp} previous={hPrev.ltgp} /> : null}
+        <div onClick={() => setShowChart(showChart === 'ltr' ? null : 'ltr')} style={{ cursor: 'pointer' }}>
+          <NorthCard label="LTR" value={ltrPromedio > 0 ? fmt(ltrPromedio) : '—'}
+            sub="lifetime revenue promedio"
+            delta={hPrev?.ltgp > 0 ? <Delta current={ltrPromedio} previous={hPrev.ltgp} /> : null}
           />
         </div>
+      </div>
+
+      {/* ── MÉTRICAS OPERATIVAS (segunda fila) ──────────────────────────── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 10 }}>
+        <NorthCard label="MRR Neto" value={fmt(kpis.mrr)} sub="ingreso recurrente mensual" />
+        <NorthCard label="NRR" value={h?.nrr > 0 ? `${Math.round(h.nrr)}%` : '—'}
+          color={nrrColor} sub="net revenue retention" />
+        <NorthCard label="Clientes nuevos" value={h?.cNuevos > 0 ? `+${h.cNuevos}` : '—'}
+          color={h?.cNuevos > 0 ? GREEN : undefined} sub={h?.mNuevos > 0 ? fmt(h.mNuevos) : undefined} />
+        <NorthCard label="Clientes bajas" value={h?.cPerdidos > 0 ? `${h.cPerdidos}` : '—'}
+          color={h?.cPerdidos > 0 ? DANGER : undefined} sub={h?.mPerdidos > 0 ? fmt(h.mPerdidos) : undefined} />
+        <NorthCard label="Churn rate" value={h?.pctChurnTri > 0 ? fmtPct(h.pctChurnTri) : '—'}
+          color={h?.pctChurnTri > 0.05 ? DANGER : h?.pctChurnTri > 0.02 ? AMBER : GREEN}
+          sub="trimestral" />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
+        <NorthCard label="$ Nuevos" value={h?.mNuevos > 0 ? fmt(h.mNuevos) : '—'} color={GREEN} />
+        <NorthCard label="$ Bajas" value={h?.mPerdidos > 0 ? fmt(h.mPerdidos) : '—'} color={h?.mPerdidos > 0 ? DANGER : undefined} />
+        <NorthCard label="$ Upsells" value={h?.mUpsells > 0 ? fmt(h.mUpsells) : '—'} color={GREEN} />
+        <NorthCard label="$ Downsells" value={h?.mDownsells > 0 ? fmt(h.mDownsells) : '—'} color={h?.mDownsells > 0 ? AMBER : undefined} />
       </div>
 
       {/* ── EVOLUCIÓN KPI SELECCIONADO ──────────────────────────────────── */}
@@ -146,7 +166,7 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
       {showChart && hist12.length > 1 && (
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 24 }}>
           <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>
-            Evolución — {showChart === 'aov' ? 'AOV' : showChart === 'lifeSpan' ? 'Life Span' : 'LTGP'}
+            Evolución — {showChart === 'aov' ? 'AOV' : showChart === 'lifeSpan' ? 'Life Span' : 'LTR'}
           </span>
           <MiniChart
             data={hist12.map(r => ({
@@ -154,7 +174,7 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], sele
               value: showChart === 'aov' ? r.aov : showChart === 'lifeSpan' ? r.lifeSpan : r.ltgp,
             }))}
             dataKey="value"
-            color={showChart === 'ltgp' ? GREEN : ACCENT}
+            color={showChart === 'ltr' ? GREEN : ACCENT}
             prefix={showChart === 'lifeSpan' ? '' : '$'}
             height={140}
           />
