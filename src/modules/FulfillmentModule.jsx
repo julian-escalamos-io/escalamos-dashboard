@@ -84,11 +84,15 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
     if (!rows.length) return null
     const s = (f) => rows.reduce((a, r) => a + (r[f] || 0), 0)
     const avg = (f) => rows.length ? s(f) / rows.length : 0
+    const clientesActivos = s('clientesActivos')
+    const revenue = s('revenue')
     return {
-      clientesActivos: s('clientesActivos'), clientesNuevos: s('clientesNuevos'),
+      clientesActivos, clientesNuevos: s('clientesNuevos'),
       clientesBajas: s('clientesBajas'), mNuevos: s('mNuevos'), mBajas: s('mBajas'),
       mUpsells: s('mUpsells'), mDownsells: s('mDownsells'), mrrNeto: s('mrrNeto'),
       pctChurn: avg('pctChurn'), nrr: avg('nrr'),
+      revenue,
+      aov: clientesActivos > 0 ? revenue / clientesActivos : 0,
     }
   }
 
@@ -107,7 +111,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
   const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter), [serviciosData, modelFilter])
   const kpis = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
 
-  const aov = kpis.aov > 0 ? kpis.aov : 0
+  const aov = h?.aov > 0 ? h.aov : kpis.aov || 0
   const lifeSpan = kpis.permanencia > 0 ? kpis.permanencia : 0
   const ltrPromedio = kpis.ltvPromedio > 0 ? kpis.ltvPromedio : 0
 
@@ -130,9 +134,9 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
           delta={hPrev?.clientesActivos ? <Delta current={h?.clientesActivos} previous={hPrev.clientesActivos} /> : null}
         />
         <NorthCard label="AOV" value={aov > 0 ? fmt(aov) : '—'}
-          sub="MRR / cliente activo"
+          sub="revenue / cliente activo"
           onClick={() => setShowChart(showChart === 'aov' ? null : 'aov')}
-          delta={hPrev?.clientesActivos > 0 ? <Delta current={aov} previous={kpis.aov} /> : null}
+          delta={hPrev?.aov > 0 ? <Delta current={aov} previous={hPrev.aov} /> : null}
         />
         <NorthCard label="Life Span" value={lifeSpan > 0 ? `${lifeSpan.toFixed(1)}m` : '—'}
           sub="permanencia promedio"
