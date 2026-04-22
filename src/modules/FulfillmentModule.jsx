@@ -77,20 +77,29 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
     return idx > 0 ? monthKeys[idx - 1] : null
   }, [monthKeys, currentMonthKey])
 
+  // Modelos que cuentan como clientes reales (no intermediación)
+  const MODELOS_CORE = ['boutique', 'agencia', 'consultoría', 'consultoria']
+
   // Aggregate ER rows for a given month
   const aggMonth = (mk) => {
     if (!mk) return null
     const rows = erModelRows.filter(r => r.monthKey === mk)
     if (!rows.length) return null
     const s = (f) => rows.reduce((a, r) => a + (r[f] || 0), 0)
-    const avg = (f) => rows.length ? s(f) / rows.length : 0
-    const clientesActivos = s('clientesActivos')
+    // Para "Todos": clientes solo de modelos core (evita duplicados Financiera/Soft)
+    const coreRows = modelFilter === 'todos'
+      ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
+      : rows
+    const clientesActivos = coreRows.reduce((a, r) => a + (r.clientesActivos || 0), 0)
+    // Promedios ponderados por clientes
+    const totalCli = rows.reduce((a, r) => a + (r.clientesActivos || 0), 0)
+    const wavg = (f) => totalCli > 0 ? rows.reduce((a, r) => a + (r[f] || 0) * (r.clientesActivos || 0), 0) / totalCli : 0
     return {
       clientesActivos, clientesNuevos: s('clientesNuevos'),
       clientesBajas: s('clientesBajas'), mNuevos: s('mNuevos'), mBajas: s('mBajas'),
       mUpsells: s('mUpsells'), mDownsells: s('mDownsells'), mrrNeto: s('mrrNeto'),
-      pctChurn: avg('pctChurn'), nrr: avg('nrr'),
-      aov: avg('erAov'), lifeSpan: avg('erLifeSpan'), ltr: avg('erLtr'),
+      pctChurn: wavg('pctChurn'), nrr: wavg('nrr'),
+      aov: wavg('erAov'), lifeSpan: wavg('erLifeSpan'), ltr: wavg('erLtr'),
     }
   }
 
@@ -139,7 +148,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
         <NorthCard
           label="Clientes activos" highlight
-          value={modelFilter !== 'todos' ? (h?.clientesActivos || kpis.clientesActivos) : clientesActivosReales}
+          value={h?.clientesActivos || clientesActivosReales}
           sub={`${kpis.serviciosActivos} servicios · MRR ${fmt(kpis.mrr)}`}
           delta={hPrev?.clientesActivos && modelFilter !== 'todos' ? <Delta current={h?.clientesActivos} previous={hPrev.clientesActivos} /> : null}
         />
@@ -203,7 +212,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
           { label: '$ Nuevos', value: h?.mNuevos > 0 ? fmt(h.mNuevos) : '—', color: GREEN },
           { label: '$ Bajas', value: h?.mBajas ? fmt(Math.abs(h.mBajas)) : '—', color: h?.mBajas ? DANGER : undefined },
           { label: '$ Upsells', value: h?.mUpsells ? fmt(Math.abs(h.mUpsells)) : '—', color: GREEN },
-          { label: '$ Downsells', value: h?.mDownsells ? fmt(Math.abs(h.mDownsells)) : '—', color: h?.mDownsells ? AMBER : undefined },
+          { label: '$ Downsells', value: h?.mDownsells ? fmt(Math.abs(h.mDownsells)) : '—', color: h?.mDownsells ? DANGER : undefined },
         ].map((m, i) => (
           <div key={i} style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 12, padding: '12px 14px' }}>
             <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.35)', fontWeight: 700, display: 'block', marginBottom: 4 }}>{m.label}</span>
