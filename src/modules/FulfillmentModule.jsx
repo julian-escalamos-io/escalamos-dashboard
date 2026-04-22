@@ -130,9 +130,9 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
     return ids.size
   }, [serviciosData, modelFilter, kpis])
 
-  const aov = h?.aov > 0 ? h.aov : kpis.aov || 0
-  const lifeSpan = h?.lifeSpan > 0 ? h.lifeSpan : kpis.permanencia || 0
-  const ltrPromedio = h?.ltr > 0 ? h.ltr : kpis.ltvPromedio || 0
+  const aov = h?.aov > 0 ? h.aov : 0
+  const lifeSpan = h?.lifeSpan > 0 ? h.lifeSpan : 0
+  const ltrPromedio = h?.ltr > 0 ? h.ltr : 0
 
   const [showChart, setShowChart] = useState(null)
 
