@@ -227,7 +227,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
   }, [erModelRows, monthKeys])
 
   const clients = useMemo(() => computeClientTable(serviciosData, modelFilter), [serviciosData, modelFilter])
-  const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter), [serviciosData, modelFilter])
+  const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter, dateRange), [serviciosData, modelFilter, dateRange])
   const kpis = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
 
   const clientesActivosReales = useMemo(() => {
@@ -453,7 +453,9 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       {/* Tabla de bajas recientes */}
       {churned.length > 0 && (
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 20 }}>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, marginBottom: 12, display: 'block' }}>Bajas recientes (3 meses)</span>
+          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, marginBottom: 12, display: 'block' }}>
+            Bajas {isMultiMonth ? `del período (${mkLabel(startKey)} → ${mkLabel(endKey)})` : `de ${mkLabel(currentMonthKey || endKey)}`}
+          </span>
           <DataTable
             rows={churned}
             columns={[

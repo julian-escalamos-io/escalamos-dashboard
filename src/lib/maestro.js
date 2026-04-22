@@ -493,9 +493,17 @@ export function computeClientTable(servicios, modelFilter) {
 
 // Churned clients in last 3 months
 // Solo muestra clientes que NO tienen ningún servicio activo restante (churn real, no downgrade)
-export function computeRecentChurn(servicios, modelFilter) {
-  const now = new Date()
-  const cutoff = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString().slice(0, 7)
+export function computeRecentChurn(servicios, modelFilter, dateRange) {
+  // Si no hay rango, default = últimos 3 meses
+  let startKey, endKey
+  if (dateRange?.start && dateRange?.end) {
+    startKey = `${dateRange.start.getFullYear()}-${String(dateRange.start.getMonth() + 1).padStart(2, '0')}`
+    endKey = `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
+  } else {
+    const now = new Date()
+    startKey = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString().slice(0, 7)
+    endKey = now.toISOString().slice(0, 7)
+  }
 
   // IDs de clientes que aún tienen al menos 1 servicio activo
   const activeClientIds = new Set(
@@ -505,12 +513,13 @@ export function computeRecentChurn(servicios, modelFilter) {
   )
 
   return servicios
-    .filter(s =>
-      s.fechaBaja &&
-      s.fechaBaja.slice(0, 7) >= cutoff &&
-      !activeClientIds.has(s.idCliente) &&
-      (modelFilter === 'todos' || s.tipo.toLowerCase() === modelFilter.toLowerCase())
-    )
+    .filter(s => {
+      if (!s.fechaBaja) return false
+      const bajaKey = s.fechaBaja.slice(0, 7)
+      return bajaKey >= startKey && bajaKey <= endKey &&
+        !activeClientIds.has(s.idCliente) &&
+        (modelFilter === 'todos' || s.tipo.toLowerCase() === modelFilter.toLowerCase())
+    })
     .reduce((acc, s) => {
       const existing = acc.find(r => r.idCliente === s.idCliente)
       if (!existing) acc.push({
