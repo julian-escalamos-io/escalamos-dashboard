@@ -278,6 +278,9 @@ export function parseERUnificado(raw = []) {
         mrrNeto: +r[28] || 0,
         pctChurn: +r[29] || 0,
         nrr: +r[30] || 0,
+        erAov: +r[31] || 0,          // AF — AOV
+        erLifeSpan: +r[32] || 0,     // AG — Life Span
+        erLtr: +r[33] || 0,          // AH — LTR
       }
     })
     .sort((a, b) => {

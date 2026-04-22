@@ -85,14 +85,12 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
     const s = (f) => rows.reduce((a, r) => a + (r[f] || 0), 0)
     const avg = (f) => rows.length ? s(f) / rows.length : 0
     const clientesActivos = s('clientesActivos')
-    const revenue = s('revenue')
     return {
       clientesActivos, clientesNuevos: s('clientesNuevos'),
       clientesBajas: s('clientesBajas'), mNuevos: s('mNuevos'), mBajas: s('mBajas'),
       mUpsells: s('mUpsells'), mDownsells: s('mDownsells'), mrrNeto: s('mrrNeto'),
       pctChurn: avg('pctChurn'), nrr: avg('nrr'),
-      revenue,
-      aov: clientesActivos > 0 ? revenue / clientesActivos : 0,
+      aov: avg('erAov'), lifeSpan: avg('erLifeSpan'), ltr: avg('erLtr'),
     }
   }
 
@@ -108,12 +106,24 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
   }, [erModelRows, monthKeys])
 
   const clients = useMemo(() => computeClientTable(serviciosData, modelFilter), [serviciosData, modelFilter])
+
+  // Clientes activos reales: para "Todos", excluir Financiera y Soft (son intermediación, no trabajo propio)
+  const clientesActivosReales = useMemo(() => {
+    if (modelFilter !== 'todos') return kpis.clientesActivos
+    const modelos = ['boutique', 'agencia', 'consultoría', 'consultoria']
+    const ids = new Set(
+      serviciosData
+        .filter(s => s.estado.toLowerCase() === 'activo' && modelos.includes(s.tipo.toLowerCase()))
+        .map(s => s.idCliente)
+    )
+    return ids.size
+  }, [serviciosData, modelFilter, kpis])
   const churned = useMemo(() => computeRecentChurn(serviciosData, modelFilter), [serviciosData, modelFilter])
   const kpis = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
 
   const aov = h?.aov > 0 ? h.aov : kpis.aov || 0
-  const lifeSpan = kpis.permanencia > 0 ? kpis.permanencia : 0
-  const ltrPromedio = kpis.ltvPromedio > 0 ? kpis.ltvPromedio : 0
+  const lifeSpan = h?.lifeSpan > 0 ? h.lifeSpan : kpis.permanencia || 0
+  const ltrPromedio = h?.ltr > 0 ? h.ltr : kpis.ltvPromedio || 0
 
   const [showChart, setShowChart] = useState(null)
 
@@ -129,9 +139,9 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
         <NorthCard
           label="Clientes activos" highlight
-          value={h?.clientesActivos || kpis.clientesActivos || clients.length}
+          value={modelFilter !== 'todos' ? (h?.clientesActivos || kpis.clientesActivos) : clientesActivosReales}
           sub={`${kpis.serviciosActivos} servicios · MRR ${fmt(kpis.mrr)}`}
-          delta={hPrev?.clientesActivos ? <Delta current={h?.clientesActivos} previous={hPrev.clientesActivos} /> : null}
+          delta={hPrev?.clientesActivos && modelFilter !== 'todos' ? <Delta current={h?.clientesActivos} previous={hPrev.clientesActivos} /> : null}
         />
         <NorthCard label="AOV" value={aov > 0 ? fmt(aov) : '—'}
           sub="revenue / cliente activo"
@@ -149,25 +159,25 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       </div>
 
       {/* ── EVOLUCIÓN KPI SELECCIONADO ──────────────────────────────────── */}
-      {showChart && hist12.length <= 1 && (
-        <div style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 13 }}>
-          Sin datos suficientes para evolución.
-        </div>
-      )}
       {showChart && hist12.length > 1 && (
-        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
-          <span style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.5)', fontWeight: 700, marginBottom: 8, display: 'block' }}>
-            Evolución — {showChart === 'aov' ? 'AOV' : showChart === 'lifeSpan' ? 'Life Span' : 'LTR'}
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', borderRadius: 12, padding: '14px 18px', marginBottom: 10, maxWidth: 600 }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, marginBottom: 4, display: 'block' }}>
+            {showChart === 'aov' ? 'AOV' : showChart === 'lifeSpan' ? 'Life Span' : 'LTR'}
           </span>
           <MiniChart
-            data={hist12.map(r => ({
-              label: r.label,
-              value: showChart === 'aov' ? (r.clientesActivos > 0 ? (r.mrrNeto || 0) / r.clientesActivos : 0) : 0,
-            }))}
+            data={hist12.map(r => {
+              const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+              const [y, m] = r.monthKey.split('-')
+              const lbl = `${MESES[parseInt(m) - 1]} ${y.slice(2)}`
+              return {
+                label: lbl,
+                value: showChart === 'aov' ? r.aov : showChart === 'lifeSpan' ? r.lifeSpan : r.ltr,
+              }
+            })}
             dataKey="value"
             color={ACCENT}
-            prefix="$"
-            height={140}
+            prefix={showChart === 'lifeSpan' ? '' : '$'}
+            height={90}
           />
         </div>
       )}
