@@ -69,6 +69,40 @@ function StatChip({ label, value, color }) {
   )
 }
 
+// Mini chart de barras dobles para Nuevos vs Bajas
+function NuevosBajasBars({ data }) {
+  if (!data || data.length === 0) return null
+  const maxV = Math.max(...data.map(d => Math.max(d.nuevos, d.bajas)), 1)
+  const W = 300, H = 70, pt = 4, pb = 14, pl = 0, pr = 0
+  const iW = W - pl - pr, iH = H - pt - pb
+  const slot = iW / data.length
+  const barW = Math.max(2, (slot * 0.4))
+  const gap = slot * 0.1
+
+  return (
+    <div style={{ width: '100%' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: 70, display: 'block' }}>
+        <line x1={pl} y1={pt + iH} x2={W - pr} y2={pt + iH} stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
+        {data.map((d, i) => {
+          const cx = pl + slot * i + slot / 2
+          const hN = (d.nuevos / maxV) * iH
+          const hB = (d.bajas / maxV) * iH
+          return (
+            <g key={i}>
+              <rect x={cx - barW - gap / 2} y={pt + iH - hN} width={barW} height={hN} fill={GREEN} rx={1} />
+              <rect x={cx + gap / 2} y={pt + iH - hB} width={barW} height={hB} fill={DANGER} rx={1} />
+            </g>
+          )
+        })}
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2, fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600 }}>
+        <span>{data[0]?.label}</span>
+        <span>{data[data.length - 1]?.label}</span>
+      </div>
+    </div>
+  )
+}
+
 const ModelBadge = ({ tipo }) => {
   const colors = { Boutique: '#A78BFA', Agencia: '#2D7AFF', Soft: '#34D399', Financiera: '#FBBF24', Consultoría: '#F97316' }
   const color = colors[tipo] || 'rgba(26,31,54,0.3)'
@@ -107,20 +141,16 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   const modelBreakdown = useMemo(() => computeModelBreakdown(serviciosData), [serviciosData])
 
   // ── Costos del mes (para Ganancia Proyectada) ──────────────────────────────
-  // Costos totales = del ER del mes (gastos directos + indirectos)
+  // gastos puede venir negativo del sheet → usar Math.abs
   const costosDelMes = useMemo(() => {
     if (!currentER) return 0
-    return (currentER.gastos || 0)
+    return Math.abs(currentER.gastos || 0)
   }, [currentER])
 
   // MRR Proyectado y Ganancia Proyectada
   const mrrProyectado = serviciosKPIs.mrr || 0
   const gananciaProyectada = mrrProyectado - costosDelMes
   const margenProyectado = mrrProyectado > 0 ? gananciaProyectada / mrrProyectado : 0
-
-  // Cash collected del mes
-  const cashCollected = currentER?.cashCollected || 0
-  const pctCobrado = mrrProyectado > 0 ? cashCollected / mrrProyectado : 0
 
   // Crecimiento MoM y YoY
   const mrrPrev = prevER ? (prevER.revenue || 0) : 0
@@ -150,6 +180,21 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   const totalCash12 = useMemo(() => last12.reduce((s, r) => s + (r.cashCollected || 0), 0), [erRows])
   const totalGanancia12 = useMemo(() => last12.reduce((s, r) => s + (r.ganancia || 0), 0), [erRows])
   const pctCobrado12 = totalRevenue12 > 0 ? totalCash12 / totalRevenue12 : 0
+  const margen12 = totalRevenue12 > 0 ? totalGanancia12 / totalRevenue12 : 0
+
+  // ── Datos para chart Nuevos vs Bajas (12m) ─────────────────────────────────
+  const nuevosVsBajasData = useMemo(() => {
+    const months = [...new Set(erUnificado.filter(r => !r.isAcumulado && !r.isTotal).map(r => r.monthKey))].sort()
+    return months.slice(-12).map(mk => {
+      const rows = erUnificado.filter(r => r.monthKey === mk && !r.isAcumulado && !r.isTotal)
+      const coreRows = modelFilter === 'todos'
+        ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
+        : rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
+      const nuevos = coreRows.reduce((s, r) => s + (r.clientesNuevos || 0), 0)
+      const bajas = coreRows.reduce((s, r) => s + Math.abs(r.clientesBajas || 0), 0)
+      return { label: mkLabel(mk), nuevos, bajas }
+    })
+  }, [erUnificado, modelFilter])
 
   // ── Salud del modelo ──────────────────────────────────────────────────────
   const cac = selectedCohort?.cac || 0
@@ -224,17 +269,24 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   // ── Desglose por modelo ───────────────────────────────────────────────────
   const modelos = useMemo(() => {
     if (!modelBreakdown.length) return []
+    const findErRow = (mk, modelName) => {
+      if (!mk) return null
+      return erUnificado.find(r =>
+        r.monthKey === mk && !r.isAcumulado && !r.isTotal &&
+        (r.modelo || '').toLowerCase().trim() === modelName.toLowerCase().trim()
+      )
+    }
     return modelBreakdown
       .filter(m => m.clientesActivos > 0 && (modelFilter === 'todos' || m.model === modelFilter))
       .map(m => {
-        // Buscar fila ER del modelo en mes actual
-        const erMes = erUnificado.find(r => r.monthKey === currentMonthKey && !r.isAcumulado && !r.isTotal && r.modelo === m.model)
-        const erMesPrev = prevER && erUnificado.find(r => r.monthKey === prevER.monthKey && !r.isAcumulado && !r.isTotal && r.modelo === m.model)
-        const ganancia = erMes?.ganancia || 0
+        const erMes = findErRow(currentMonthKey, m.model)
+        const erMesPrev = findErRow(prevER?.monthKey, m.model)
+        const ganancia = erMes?.gananciaNeta ?? erMes?.ganancia ?? 0
         const revenue = erMes?.revenue || 0
         const margen = revenue > 0 ? ganancia / revenue : 0
-        const mrrPrev = erMesPrev?.revenue || 0
-        const crecMoM = mrrPrev > 0 ? (revenue - mrrPrev) / mrrPrev : 0
+        const mrrActualER = revenue
+        const mrrPrevER = erMesPrev?.revenue || 0
+        const crecMoM = mrrPrevER > 0 ? (mrrActualER - mrrPrevER) / mrrPrevER : 0
         const margenBrutoModel = revenue > 0 && erMes?.gananciaBruta ? erMes.gananciaBruta / revenue : margenBrutoMes
         const ltgpModel = m.ltvPromedio * margenBrutoModel
         return {
@@ -258,7 +310,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   return (
     <>
       {/* ═══ 1. PULSO DEL NEGOCIO ═══════════════════════════════════════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 12, marginBottom: 24 }}>
         {/* MRR Proyectado + Crecimiento */}
         <NorthCard label="MRR Proyectado" highlight>
           <span style={{ fontSize: 38, fontWeight: 900, color: '#fff', letterSpacing: -1.5, lineHeight: 1 }}>
@@ -292,21 +344,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
             </span>
             <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>margen</span>
           </div>
-          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600, marginTop: 6, display: 'block' }}>MRR − costos del mes</span>
-        </NorthCard>
-
-        {/* Cash Collected */}
-        <NorthCard label="Cash Collected">
-          <span style={{ fontSize: 28, fontWeight: 800, color: '#1a1f36', letterSpacing: -0.5, lineHeight: 1.1 }}>
-            {fmt(cashCollected)}
-          </span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-            <span style={{ fontSize: 18, fontWeight: 800, color: pctCobrado >= 0.9 ? GREEN : pctCobrado >= 0.7 ? AMBER : DANGER }}>
-              {fmtPct(pctCobrado)}
-            </span>
-            <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>cobrado del MRR</span>
-          </div>
-          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600, marginTop: 6, display: 'block' }}>{mkLabel(currentMonthKey)}</span>
+          <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600, marginTop: 6, display: 'block' }}>MRR − costos del mes ({fmt(costosDelMes)})</span>
         </NorthCard>
       </div>
 
@@ -318,43 +356,45 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
             <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
               <RevenueCollectedChart data={chartData} height={190} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <HealthCard label="Revenue 12m" value={fmt(totalRevenue12)} color={ACCENT} />
               <HealthCard label="Cash 12m" value={fmt(totalCash12)} color="#4B5563" />
+              <HealthCard label="% Cobrado" value={fmtPct(pctCobrado12)} color={pctCobrado12 >= 0.9 ? GREEN : pctCobrado12 >= 0.7 ? AMBER : DANGER} />
               <HealthCard label="Ganancia 12m" value={fmt(totalGanancia12)} color={GREEN} />
-              <HealthCard label="% Cobrado promedio" value={fmtPct(pctCobrado12)} color={pctCobrado12 >= 0.9 ? GREEN : pctCobrado12 >= 0.7 ? AMBER : DANGER} />
+              <HealthCard label="Margen 12m" value={fmtPct(margen12)} color={margen12 >= 0.25 ? GREEN : margen12 >= 0.1 ? AMBER : DANGER} />
             </div>
           </div>
         </>
       )}
 
-      {/* ═══ 3. SALUD DEL MODELO ═══════════════════════════════════════════ */}
-      <Divider title="Salud del modelo" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+      {/* ═══ 3. UNIDAD ECONÓMICA + EVOLUCIÓN CLIENTES ═══════════════════ */}
+      <Divider title="Unidad económica" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: 12, marginBottom: 24 }}>
         <HealthCard
-          label="LTV / CAC"
-          value={ltvCacRatio > 0 ? `${ltvCacRatio.toFixed(1)}x` : '—'}
-          color={ltvCacColor}
-          sub={ltvCacRatio >= 3 ? 'saludable (≥3x)' : ltvCacRatio >= 2 ? 'aceptable' : ltvCacRatio > 0 ? 'bajo' : 'sin CAC'}
+          label="LTV (LTGP)"
+          value={ltgp > 0 ? fmt(ltgp) : '—'}
+          color={ACCENT}
+          sub="LTR × margen bruto"
         />
         <HealthCard
-          label="Payback"
-          value={payback > 0 ? `${payback.toFixed(1)}m` : '—'}
-          color={paybackColor}
-          sub={payback === 0 ? 'sin datos' : payback <= 6 ? 'rápido (≤6m)' : payback <= 12 ? 'aceptable' : 'lento'}
+          label="CAC"
+          value={cac > 0 ? fmt(cac) : '—'}
+          color="#1a1f36"
+          sub={cac > 0 && ltgp > 0 ? `${(ltgp / cac).toFixed(1)}x LTV/CAC` : 'sin CAC del cohort'}
         />
-        <HealthCard
-          label="Margen Bruto"
-          value={fmtPct(margenBrutoMes)}
-          color={margenBrutoColor}
-          sub="del revenue del mes"
-        />
-        <HealthCard
-          label="NRR"
-          value={nrrWavg > 0 ? `${Math.round(nrrWavg)}%` : '—'}
-          color={nrrColor}
-          sub={nrrWavg >= 100 ? 'expansión neta' : nrrWavg >= 90 ? 'retención sólida' : nrrWavg > 0 ? 'pérdida neta' : 'sin datos'}
-        />
+        {/* Chart Nuevos vs Bajas */}
+        <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
+          <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, display: 'block', marginBottom: 8 }}>Nuevos vs Bajas — 12 meses</span>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 8, fontSize: 10, color: 'rgba(26,31,54,0.5)', fontWeight: 600 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 10, height: 2, background: GREEN, borderRadius: 1 }} /> Nuevos
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ width: 10, height: 2, background: DANGER, borderRadius: 1 }} /> Bajas
+            </span>
+          </div>
+          <NuevosBajasBars data={nuevosVsBajasData} />
+        </div>
       </div>
 
       {/* ═══ 4. PULSO POR FRENTE ═══════════════════════════════════════════ */}
@@ -366,12 +406,13 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
             <span style={{ fontSize: 11, fontWeight: 800, color: ACCENT, letterSpacing: 0.5 }}>ADQUISICIÓN</span>
             <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.35)', fontWeight: 600 }}>· marketing</span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14, marginBottom: 14 }}>
-            <StatChip label="Leads" value={cohort?.leadsCount || '—'} />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12, marginBottom: 14 }}>
+            <StatChip label="Ventas" value={cohort?.closuresCount || '—'} />
+            <StatChip label="MER" value={cohort?.mer > 0 ? `${cohort.mer.toFixed(1)}x` : '—'} />
             <StatChip label="Inversión" value={cohort?.gasto > 0 ? fmt(cohort.gasto) : '—'} />
             <StatChip label="CAC" value={cac > 0 ? fmt(cac) : '—'} />
-            <StatChip label="MER" value={cohort?.mer > 0 ? `${cohort.mer.toFixed(1)}x` : '—'} />
-            <StatChip label="Conv." value={tasaConversion > 0 ? fmtPct(tasaConversion) : '—'} />
+            <StatChip label="Leads" value={cohort?.leadsCount || '—'} />
+            <StatChip label="CPL" value={cohort?.cpl > 0 ? fmt(cohort.cpl) : '—'} />
           </div>
           <Sparkline data={leadsSparkData} dataKey="v" color={ACCENT} />
         </div>

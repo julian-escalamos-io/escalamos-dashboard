@@ -439,7 +439,7 @@ export function computeChurn(servicios, periodKey, modelFilter) {
 // ─── Desglose por modelo ──────────────────────────────────────────────────────
 
 export function computeModelBreakdown(servicios) {
-  const models = ['Boutique', 'Agencia', 'Soft', 'Financiera']
+  const models = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría']
   return models.map(model => {
     const f = servicios.filter(s =>
       s.estado.toLowerCase() === 'activo' &&
