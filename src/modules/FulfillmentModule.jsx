@@ -91,9 +91,8 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
       : rows
     const clientesActivos = coreRows.reduce((a, r) => a + (r.clientesActivos || 0), 0)
-    // Promedios ponderados por clientes
-    const totalCli = rows.reduce((a, r) => a + (r.clientesActivos || 0), 0)
-    const wavg = (f) => totalCli > 0 ? rows.reduce((a, r) => a + (r[f] || 0) * (r.clientesActivos || 0), 0) / totalCli : 0
+    // Promedios ponderados por clientes core (misma base que clientesActivos)
+    const wavg = (f) => clientesActivos > 0 ? coreRows.reduce((a, r) => a + (r[f] || 0) * (r.clientesActivos || 0), 0) / clientesActivos : 0
     return {
       clientesActivos, clientesNuevos: s('clientesNuevos'),
       clientesBajas: s('clientesBajas'), mNuevos: s('mNuevos'), mBajas: s('mBajas'),
