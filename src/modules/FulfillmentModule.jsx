@@ -107,11 +107,21 @@ export function FulfillmentModule({ servicios, modelFilter, historico = [], date
     return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos de Servicios.</div>
   }
 
+  // Debug: mostrar si Histórico cargó (temporal)
+  const historicoDebug = !historico.length ? (
+    <div style={{ background: 'rgba(224,62,62,0.08)', border: '1px solid rgba(224,62,62,0.2)', borderRadius: 10, padding: '10px 16px', marginBottom: 12, fontSize: 12, color: DANGER }}>
+      ⚠ El tab "4- Histórico" no devolvió datos. Verificá que exista en el sheet de Xero con ese nombre exacto (incluyendo el acento en la ó).
+      {currentMonthKey && <span style={{ color: 'rgba(26,31,54,0.5)' }}> · Mes buscado: {currentMonthKey}</span>}
+    </div>
+  ) : null
+
   // NRR color
   const nrrColor = h?.nrr >= 100 ? GREEN : h?.nrr >= 90 ? AMBER : DANGER
 
   return (
     <>
+      {historicoDebug}
+
       {/* ── MÉTRICAS NORTE ─────────────────────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
         <NorthCard
