@@ -277,8 +277,8 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     return coreRows.reduce((s, r) => s + (r.erLtr || 0) * (r.clientesActivos || 0), 0) / totalCli
   }, [erUnificado, filterMonthKey, modelFilter])
 
-  const ltvCacRatio = cac > 0 && ltgp > 0 ? ltgp / cac : 0
-  const payback = cac > 0 && ltgp > 0 && serviciosKPIs.permanencia > 0 ? cac / (ltgp / serviciosKPIs.permanencia) : 0
+  const ltvCacRatio = cac > 0 && ltrFromER > 0 ? ltrFromER / cac : 0
+  const payback = cac > 0 && ltrFromER > 0 && serviciosKPIs.permanencia > 0 ? cac / (ltrFromER / serviciosKPIs.permanencia) : 0
 
   // NRR ponderado del mes (de filas por modelo del ER)
   const nrrWavg = useMemo(() => {
