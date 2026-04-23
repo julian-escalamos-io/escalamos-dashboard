@@ -49,11 +49,11 @@ function NorthCard({ label, children, highlight, style = {} }) {
 }
 
 // Card de salud con semáforo
-function HealthCard({ label, value, sub, color }) {
+function HealthCard({ label, value, sub, color, weight = 900 }) {
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '16px 18px' }}>
       <span style={{ fontSize: 9, textTransform: 'uppercase', letterSpacing: 2, color: 'rgba(26,31,54,0.4)', fontWeight: 700, display: 'block', marginBottom: 6 }}>{label}</span>
-      <span style={{ fontSize: 24, fontWeight: 900, color, letterSpacing: -0.5, lineHeight: 1 }}>{value}</span>
+      <span style={{ fontSize: 24, fontWeight: weight, color, letterSpacing: -0.5, lineHeight: 1 }}>{value}</span>
       {sub && <span style={{ fontSize: 10, color: 'rgba(26,31,54,0.4)', fontWeight: 600, display: 'block', marginTop: 4 }}>{sub}</span>}
     </div>
   )
@@ -115,21 +115,41 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   const erRows = er || []
   const serviciosData = servicios || []
 
-  // Overview ignora el filtro de fechas — siempre vista actual (último mes con datos)
+  // currentMonthKey: SIEMPRE último mes con datos (top cards + chart no se filtran)
   const currentMonthKey = useMemo(() => {
     return erRows.length ? erRows[erRows.length - 1].monthKey : null
   }, [erRows])
+
+  // filterMonthKey: derivado del dateRange (afecta Unidad económica, Pulso por frente, Desglose por modelo)
+  const filterMonthKey = useMemo(() => {
+    if (dateRange?.end) {
+      const k = `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
+      if (erRows.find(r => r.monthKey === k)) return k
+    }
+    return currentMonthKey
+  }, [dateRange, erRows, currentMonthKey])
 
   const currentER = useMemo(() => {
     if (!erRows.length) return null
     return erRows.find(r => r.monthKey === currentMonthKey) || erRows[erRows.length - 1]
   }, [erRows, currentMonthKey])
 
+  const filterER = useMemo(() => {
+    if (!erRows.length) return null
+    return erRows.find(r => r.monthKey === filterMonthKey) || currentER
+  }, [erRows, filterMonthKey, currentER])
+
   const prevER = useMemo(() => {
     if (!currentER || !erRows.length) return null
     const idx = erRows.findIndex(r => r.monthKey === currentER.monthKey)
     return idx > 0 ? erRows[idx - 1] : null
   }, [erRows, currentER])
+
+  const prevFilterER = useMemo(() => {
+    if (!filterER || !erRows.length) return null
+    const idx = erRows.findIndex(r => r.monthKey === filterER.monthKey)
+    return idx > 0 ? erRows[idx - 1] : null
+  }, [erRows, filterER])
 
   // KPIs proyectados desde Servicios
   const serviciosKPIs = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
@@ -213,10 +233,10 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     })
   }, [erUnificado, modelFilter])
 
-  // ── Salud del modelo ──────────────────────────────────────────────────────
+  // ── Salud del modelo (filtrable por fecha) ────────────────────────────────
   const cac = selectedCohort?.cac || 0
-  // LTGP = LTR promedio × margen bruto promedio
-  const margenBrutoMes = currentER && currentER.revenue > 0 ? (currentER.gananciaBruta || 0) / currentER.revenue : 0.5
+  // LTGP = LTR promedio × margen bruto del mes filtrado
+  const margenBrutoMes = filterER && filterER.revenue > 0 ? Math.abs(filterER.gananciaBruta || 0) / filterER.revenue : 0.5
   const ltgp = serviciosKPIs.ltvPromedio * margenBrutoMes
 
   const ltvCacRatio = cac > 0 && ltgp > 0 ? ltgp / cac : 0
@@ -224,7 +244,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
 
   // NRR ponderado del mes (de filas por modelo del ER)
   const nrrWavg = useMemo(() => {
-    const monthRows = erUnificado.filter(r => r.monthKey === currentMonthKey && !r.isAcumulado && !r.isTotal)
+    const monthRows = erUnificado.filter(r => r.monthKey === filterMonthKey && !r.isAcumulado && !r.isTotal)
     const coreRows = modelFilter === 'todos'
       ? monthRows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
       : monthRows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
@@ -233,7 +253,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     const wsum = coreRows.reduce((s, r) => s + (r.nrr || 0) * (r.clientesActivos || 0), 0)
     const avg = wsum / totalCli
     return avg <= 2 ? avg * 100 : avg // decimal o entero
-  }, [erUnificado, currentMonthKey, modelFilter])
+  }, [erUnificado, filterMonthKey, modelFilter])
 
   const ltvCacColor = ltvCacRatio >= 3 ? GREEN : ltvCacRatio >= 2 ? AMBER : ltvCacRatio > 0 ? DANGER : 'rgba(26,31,54,0.3)'
   const paybackColor = payback === 0 ? 'rgba(26,31,54,0.3)' : payback <= 6 ? GREEN : payback <= 12 ? AMBER : DANGER
@@ -268,7 +288,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   // ── Pulso por frente: Retención ────────────────────────────────────────────
   // Métricas del mes desde el ER
   const monthFulfillment = useMemo(() => {
-    const rows = erUnificado.filter(r => r.monthKey === currentMonthKey && !r.isAcumulado && !r.isTotal)
+    const rows = erUnificado.filter(r => r.monthKey === filterMonthKey && !r.isAcumulado && !r.isTotal)
     const coreRows = modelFilter === 'todos'
       ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
       : rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
@@ -281,7 +301,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
       mrrNeto: sum('mrrNeto'),
       clientesBajas: sum('clientesBajas'),
     }
-  }, [erUnificado, currentMonthKey, modelFilter])
+  }, [erUnificado, filterMonthKey, modelFilter])
 
   // ── Desglose por modelo ───────────────────────────────────────────────────
   const modelos = useMemo(() => {
@@ -296,8 +316,8 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     return modelBreakdown
       .filter(m => m.clientesActivos > 0 && (modelFilter === 'todos' || m.model === modelFilter))
       .map(m => {
-        const erMes = findErRow(currentMonthKey, m.model)
-        const erMesPrev = findErRow(prevER?.monthKey, m.model)
+        const erMes = findErRow(filterMonthKey, m.model)
+        const erMesPrev = findErRow(prevFilterER?.monthKey, m.model)
         const ganancia = erMes?.gananciaNeta ?? erMes?.ganancia ?? 0
         const revenue = erMes?.revenue || 0
         const margen = revenue > 0 ? ganancia / revenue : 0
@@ -318,7 +338,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
         }
       })
       .sort((a, b) => b.mrr - a.mrr)
-  }, [modelBreakdown, modelFilter, erUnificado, currentMonthKey, prevER, margenBrutoMes])
+  }, [modelBreakdown, modelFilter, erUnificado, filterMonthKey, prevFilterER, margenBrutoMes])
 
   if (!erRows.length && !serviciosData.length) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos disponibles.</div>
@@ -365,7 +385,26 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
         </NorthCard>
       </div>
 
-      {/* ═══ 2. EVOLUCIÓN ═══════════════════════════════════════════════════ */}
+      {/* ═══ 2. DESGLOSE POR MODELO ═══════════════════════════════════════ */}
+      <Divider title="Desglose por modelo" />
+      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
+        <DataTable
+          rows={modelos}
+          columns={[
+            { key: 'model', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
+            { key: 'clientes', label: 'Clientes', align: 'right' },
+            { key: 'mrr', label: 'MRR', align: 'right', render: v => <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span> },
+            { key: 'aov', label: 'AOV', align: 'right', render: v => fmt(v) },
+            { key: 'ltgp', label: 'LTGP', align: 'right', render: v => fmt(v) },
+            { key: 'ganancia', label: 'Ganancia', align: 'right', render: v => <span style={{ color: v > 0 ? GREEN : v < 0 ? DANGER : 'rgba(26,31,54,0.4)', fontWeight: 700 }}>{fmt(v)}</span> },
+            { key: 'margen', label: 'Margen', align: 'right', render: v => <span style={{ color: v > 0.25 ? GREEN : v > 0.1 ? 'rgba(26,31,54,0.7)' : DANGER, fontWeight: 700 }}>{fmtPct(v)}</span> },
+            { key: 'crecMoM', label: 'MoM', align: 'right', render: v => v !== 0 ? <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700, fontSize: 12 }}>{fmtDelta(v)}</span> : '—' },
+          ]}
+          emptyText="Sin datos por modelo"
+        />
+      </div>
+
+      {/* ═══ 3. EVOLUCIÓN ═══════════════════════════════════════════════════ */}
       {chartData.length > 1 && (
         <>
           <Divider title="Evolución 12 meses" />
@@ -376,7 +415,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <HealthCard label="Revenue 12m" value={fmt(totalRevenue12)} color={ACCENT} />
               <HealthCard label="Cash 12m" value={fmt(totalCash12)} color="#4B5563" />
-              <HealthCard label="% Cobrado" value={fmtPct(pctCobrado12)} color={pctCobrado12 >= 0.9 ? GREEN : pctCobrado12 >= 0.7 ? AMBER : DANGER} />
+              <HealthCard label="% Cobrado" value={fmtPct(pctCobrado12)} color="rgba(26,31,54,0.55)" weight={500} />
               <HealthCard label="Ganancia 12m" value={fmt(totalGanancia12)} color={GREEN} />
               <HealthCard label="Margen 12m" value={fmtPct(margen12)} color={margen12 >= 0.25 ? GREEN : margen12 >= 0.1 ? AMBER : DANGER} />
             </div>
@@ -451,24 +490,6 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
         </div>
       </div>
 
-      {/* ═══ 5. DESGLOSE POR MODELO ═══════════════════════════════════════ */}
-      <Divider title="Desglose por modelo" />
-      <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: 20, marginBottom: 10 }}>
-        <DataTable
-          rows={modelos}
-          columns={[
-            { key: 'model', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
-            { key: 'clientes', label: 'Clientes', align: 'right' },
-            { key: 'mrr', label: 'MRR', align: 'right', render: v => <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span> },
-            { key: 'aov', label: 'AOV', align: 'right', render: v => fmt(v) },
-            { key: 'ltgp', label: 'LTGP', align: 'right', render: v => fmt(v) },
-            { key: 'ganancia', label: 'Ganancia', align: 'right', render: v => <span style={{ color: v > 0 ? GREEN : v < 0 ? DANGER : 'rgba(26,31,54,0.4)', fontWeight: 700 }}>{fmt(v)}</span> },
-            { key: 'margen', label: 'Margen', align: 'right', render: v => <span style={{ color: v > 0.25 ? GREEN : v > 0.1 ? 'rgba(26,31,54,0.7)' : DANGER, fontWeight: 700 }}>{fmtPct(v)}</span> },
-            { key: 'crecMoM', label: 'MoM', align: 'right', render: v => v !== 0 ? <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700, fontSize: 12 }}>{fmtDelta(v)}</span> : '—' },
-          ]}
-          emptyText="Sin datos por modelo"
-        />
-      </div>
     </>
   )
 }

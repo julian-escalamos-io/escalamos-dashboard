@@ -449,7 +449,8 @@ export function computeModelBreakdown(servicios) {
     const mrr = f.reduce((sum, s) => sum + s.monto, 0)
     const clientesActivos = clientIds.length
     const aov = clientesActivos > 0 ? mrr / clientesActivos : 0
-    const ltrs = f.map(s => s.ltr).filter(v => v > 0)
+    // LTR con fallback: si el sheet tiene 0, usar monto × meses
+    const ltrs = f.map(s => s.ltr > 0 ? s.ltr : (s.monto * s.meses)).filter(v => v > 0)
     const ltvPromedio = ltrs.length > 0 ? ltrs.reduce((a, b) => a + b, 0) / ltrs.length : 0
     return { model, clientesActivos, mrr, aov, ltvPromedio }
   })
