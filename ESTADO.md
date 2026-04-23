@@ -1,5 +1,5 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-22_
+_Última actualización: 2026-04-22_ (Overview restructure narrativo)
 
 ---
 
@@ -81,10 +81,45 @@ api/
 
 ## Módulos
 
-### Overview
-5 métricas norte: MRR Total, Crecimiento, Ganancia Neta, CAC vs LTV, Clientes y AOV.
-Evolución 12m (Revenue + Cash + Ganancia), desglose por modelo.
-**Pendiente restructure** (planificado, no implementado aún).
+### Overview (reestructurado abr-22)
+**Filosofía:** vista ejecutiva de 30s. Responde: ¿facturo y gano? ¿estoy creciendo? ¿unidad económica funciona? ¿qué pasa por modelo?
+
+**Layout en 5 secciones:**
+
+1. **Pulso del negocio** (top, no se filtra) — siempre estado actual:
+   - **MRR Proyectado** (highlight azul): MRR de servicios activos + MoM/YoY badges + clientes/servicios
+   - **Ganancia Proyectada**: MRR − costos del mes (calculados desde egresos como Finanzas: directos del modelo + indirectos generales ponderados por share del MRR)
+
+2. **Desglose por modelo** (filtrable) — tabla 8 cols:
+   - Modelo · Clientes · MRR · AOV · LTGP · Ganancia · Margen · Crecimiento MoM
+   - LTGP = LTR del modelo × margen bruto del modelo (con fallback a margen del mes)
+   - Match case-insensitive del modelo entre `computeModelBreakdown` y filas del ER
+
+3. **Evolución 12 meses** (no se filtra, siempre 12m):
+   - Chart combinado: Revenue (barras) + Cash Collected (línea) + Ganancia Neta (línea verde punteada)
+   - Tooltip con los 3 valores + % cobrado del mes
+   - 5 cards al costado: Revenue 12m · Cash 12m · % Cobrado (gris, sin negrita) · Ganancia 12m · Margen 12m
+
+4. **Unidad económica** (filtrable) — 3 cards:
+   - **LTR**: ponderado por clientes activos desde columna AH del ER (modelos core)
+   - **CAC**: del cohort de Marketing seleccionado, sub muestra ratio LTR/CAC
+   - **Chart Nuevos vs Bajas 12m**: barras dobles (verde nuevos, roja bajas) con tooltip al hover
+
+5. **Pulso por frente** (filtrable) — 2 columnas lado a lado:
+   - **Adquisición**: 6 chips (Ventas · MER · Inversión · CAC · Leads · CPL) + sparkline 12m de leads
+   - **Retención**: 5 chips (Life Span · Churn · NRR · MRR Neto · C. Bajas) + sparkline 12m de churn
+
+**Comportamiento del filtro de fecha:**
+- NO afecta: Top cards (MRR/Ganancia Proyectada), Evolución 12m
+- SÍ afecta: Desglose por modelo, Unidad económica, Pulso por frente
+- Razón: top cards son "vista actual proyectada", chart es histórico
+
+**Eliminado del Overview viejo:**
+- Análisis ejecutivo IA (no aporta en overview)
+- Card Cash Collected del top (cortoplacista)
+- Cards aisladas de Crecimiento, CAC vs LTV, Clientes y AOV (consolidadas en estructura nueva)
+- Chart separado de Ganancia Neta (integrado al combinado)
+- Payback, Margen Bruto y NRR del overview (viven en módulos específicos)
 
 ### Marketing (reestructurado abr-16)
 **Filtros:** Este mes / Mes anterior / 12 meses (agrega cohorte) / Custom
@@ -175,6 +210,25 @@ ER Proyectado | P&L | Cobros Pendientes | Anexo BMR (admin-only)
 - Tabla clientes ordenada por LTR
 - Eliminada lectura del Registro Maestro
 
+### Overview — Restructure narrativo (sesión cont. abr-22)
+- **Filosofía:** vista ejecutiva 30s con narrativa: ¿facturo? → ¿crezco? → ¿unidad económica? → ¿por modelo?
+- **Top cards:** MRR Proyectado (highlight con MoM/YoY) + Ganancia Proyectada (proyectada con costos de egresos)
+- **Costos proyectados:** mismo cálculo que Finanzas (directos + indirectos ponderados por share MRR)
+- **Desglose por modelo arriba** (8 cols: Modelo, Clientes, MRR, AOV, LTGP, Ganancia, Margen, MoM)
+- **Evolución 12m:** chart Revenue+Cash+Ganancia con tooltip % cobrado + 5 cards al costado
+- **Unidad económica:** LTR (del ER, no Servicios) + CAC + chart Nuevos vs Bajas con hover
+- **Pulso por frente:** Adquisición (6 chips: Ventas, MER, Inversión, CAC, Leads, CPL) + Retención (5 chips)
+- Sparkline + KPIWithChart extraídos a `src/components/Sparkline.jsx` (reutilizado en Fulfillment)
+- Colores de modelos unificados: Boutique amber, Agencia azul, Soft gris, Financiera verde, Consultoría púrpura
+- Filtro de fecha: NO afecta top cards/chart 12m, SÍ afecta resto
+- Eliminado: análisis ejecutivo IA, Cash Collected del top, chart separado de Ganancia, Payback/Margen/NRR (viven en módulos específicos)
+- LTR: ponderado por clientes activos desde columna AH del ER (modelos core)
+- LTR fallback en `computeOverviewKPIs` y `computeModelBreakdown`: si sheet tiene 0 → monto × meses
+- Consultoría agregada a `computeModelBreakdown`
+- % Cobrado en cards de evolución: gris neutral sin negrita (es info, no acción)
+- Top bar sticky al scrollear (filtros siempre visibles)
+- Tabla bajas: filtrada por rango de fechas seleccionado
+
 ### Infraestructura
 - Auto-deploy GitHub → Vercel reconectado
 - ESTADO.md actualizado
@@ -191,6 +245,8 @@ ER Proyectado | P&L | Cobros Pendientes | Anexo BMR (admin-only)
 ---
 
 ## Próximos pasos
-- [ ] Restructure Overview (planificado — MRR Proyectado, CAC vs LTGP, desglose modelo arriba, filas marketing + retention)
+- [x] Restructure Overview (completado abr-22 con narrativa ejecutiva)
+- [ ] Margen proyectado por modelo (mes en curso) en tabla Desglose
+- [ ] Tab dedicado de upsells/downsells con detalle (en vez de notas en sheet)
 - [ ] Verificar datos Fulfillment con datos reales completos
 - [ ] Evaluar persistencia del chat en localStorage
