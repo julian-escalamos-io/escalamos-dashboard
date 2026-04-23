@@ -59,8 +59,17 @@ export function parseServicios(raw = []) {
       ltr: +r[13] || 0,       // N: LTR
       pm: String(r[15] || ''),  // P: PM (BMR, JB, etc.)
       metodoPago: r[16] || '', // Q: Pago
+      // Columna U ("Clasif") del sheet "1- Servicios" — r[20] en 0-indexed.
+      // Vacío = cliente comercial normal; "Partner" excluye al cliente de promedios.
+      clasificacion: String(r[20] || '').trim(),
     }))
 }
+
+// Partners quedan fuera de promedios del Dashboard (AOV, LTV, % margen, churn).
+// Se siguen mostrando en listas de clientes con badge visual. Solo clientes
+// con Clasificación vacía cuentan como "comerciales" para métricas agregadas.
+export const esComercial = (servicio) =>
+  !servicio?.clasificacion || servicio.clasificacion === ''
 
 export function parseEgresos(raw = []) {
   return raw
@@ -410,6 +419,7 @@ export function aggregateHistorico(historico, targetMonthKey, modelFilter) {
 export function computeOverviewKPIs(servicios, modelFilter) {
   const f = servicios.filter(s =>
     s.estado.toLowerCase() === 'activo' &&
+    esComercial(s) &&
     (modelFilter === 'todos' || s.tipo.toLowerCase() === modelFilter.toLowerCase())
   )
 
@@ -431,6 +441,7 @@ export function computeOverviewKPIs(servicios, modelFilter) {
 export function computeChurn(servicios, periodKey, modelFilter) {
   const churned = servicios.filter(s =>
     s.fechaBaja &&
+    esComercial(s) &&
     s.fechaBaja.slice(0, 7) === periodKey &&
     (modelFilter === 'todos' || s.tipo.toLowerCase() === modelFilter.toLowerCase())
   )
@@ -444,6 +455,7 @@ export function computeModelBreakdown(servicios) {
   return models.map(model => {
     const f = servicios.filter(s =>
       s.estado.toLowerCase() === 'activo' &&
+      esComercial(s) &&
       s.tipo === model
     )
     const clientIds = [...new Set(f.map(s => s.idCliente))]
@@ -473,6 +485,7 @@ export function computeClientTable(servicios, modelFilter) {
         idCliente: s.idCliente,
         nombre: s.nombre,
         tipo: s.tipo,
+        clasificacion: s.clasificacion,
         servicios: [],
         mrr: 0,
         meses: s.meses,
@@ -517,6 +530,7 @@ export function computeRecentChurn(servicios, modelFilter, dateRange) {
   return servicios
     .filter(s => {
       if (!s.fechaBaja) return false
+      if (!esComercial(s)) return false
       const bajaKey = s.fechaBaja.slice(0, 7)
       return bajaKey >= startKey && bajaKey <= endKey &&
         !activeClientIds.has(s.idCliente) &&
@@ -541,7 +555,7 @@ export function computeRecentChurn(servicios, modelFilter, dateRange) {
 export function computeLTVByModel(servicios) {
   const models = ['Boutique', 'Agencia', 'Soft', 'Financiera']
   return models.map(model => {
-    const f = servicios.filter(s => s.tipo === model && s.ltr > 0)
+    const f = servicios.filter(s => s.tipo === model && s.ltr > 0 && esComercial(s))
     const ltvPromedio = f.length > 0 ? f.reduce((s, x) => s + x.ltr, 0) / f.length : 0
     return { model, ltvPromedio, count: f.length }
   })
@@ -551,6 +565,7 @@ export function computeLTVByModel(servicios) {
 export function computeTopLTV(servicios, modelFilter) {
   const byClient = {}
   for (const s of servicios) {
+    if (!esComercial(s)) continue
     if (modelFilter !== 'todos' && s.tipo.toLowerCase() !== modelFilter.toLowerCase()) continue
     if (!byClient[s.idCliente] || s.ltr > byClient[s.idCliente].ltr) {
       byClient[s.idCliente] = { idCliente: s.idCliente, nombre: s.nombre, tipo: s.tipo, ltr: s.ltr, meses: s.meses }

@@ -1,5 +1,15 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-22_ (Overview restructure narrativo)
+_Última actualización: 2026-04-23_ (exclusión de Partners en promedios)
+
+---
+
+## Último cambio (2026-04-23) — Exclusión de Partners de promedios
+
+- Sheet "1- Servicios" ahora tiene columna **U = `Clasif`**. Valor vacío = cliente comercial. Valor `Partner` = cliente excluido de promedios (hoy: MAS Brokers, Hardcore Suplementos).
+- [src/lib/maestro.js](src/lib/maestro.js) expone `esComercial(servicio)` y aplica filtro en `computeOverviewKPIs`, `computeModelBreakdown`, `computeLTVByModel`, `computeTopLTV`, `computeChurn` y `computeRecentChurn`.
+- `computeClientTable` **no filtra** (muestra a todos) pero propaga `clasificacion` al row.
+- [src/modules/FulfillmentModule.jsx](src/modules/FulfillmentModule.jsx) usa `ClienteCell` para mostrar chip "PARTNER" junto al nombre en tablas de clientes activos y upsells.
+- **Fuera de alcance (deuda reconocida):** el Estado de Resultados del Sheet y el reporte Slack WF12 siguen incluyendo a Partners en sus promedios. Documentado en [Administracion/decisiones_y_contexto_operativo.md §11](../Administracion/decisiones_y_contexto_operativo.md).
 
 ---
 

@@ -34,6 +34,18 @@ const ModelBadge = ({ tipo }) => {
   return <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, background: `${color}18`, color, fontWeight: 700 }}>{tipo || '—'}</span>
 }
 
+const ClasificacionBadge = ({ clasificacion }) => {
+  if (!clasificacion) return null
+  return <span style={{ fontSize: 9, padding: '2px 7px', borderRadius: 20, background: 'rgba(26,31,54,0.08)', color: 'rgba(26,31,54,0.6)', fontWeight: 700, marginLeft: 8, letterSpacing: 0.3, textTransform: 'uppercase' }}>{clasificacion}</span>
+}
+
+const ClienteCell = ({ nombre, clasificacion }) => (
+  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <span>{nombre || '—'}</span>
+    <ClasificacionBadge clasificacion={clasificacion} />
+  </span>
+)
+
 // ── Modelos que cuentan como clientes reales ────────────────────────────────
 const MODELOS_CORE = ['boutique', 'agencia', 'consultoría', 'consultoria']
 
@@ -157,6 +169,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
       .map(s => ({
         nombre: s.nombre, tipo: s.tipo, servicio: s.servicio,
         monto: s.monto, fecha: s.inicio, estado: s.estado,
+        clasificacion: s.clasificacion,
       }))
     // Filtrar por rango de fechas si está definido
     if (startKey && endKey) {
@@ -435,7 +448,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
           <DataTable
             rows={upsellsDetectados}
             columns={[
-              { key: 'nombre', label: 'Cliente' },
+              { key: 'nombre', label: 'Cliente', render: (v, row) => <ClienteCell nombre={v} clasificacion={row.clasificacion} /> },
               { key: 'tipo', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
               { key: 'servicio', label: 'Servicio nuevo' },
               { key: 'fecha', label: 'Fecha alta', render: v => v?.slice(0, 10) || '—' },
@@ -453,7 +466,7 @@ export function FulfillmentModule({ servicios, modelFilter, erUnificado = [], da
         <DataTable
           rows={[...clients].sort((a, b) => b.ltr - a.ltr)}
           columns={[
-            { key: 'nombre', label: 'Cliente' },
+            { key: 'nombre', label: 'Cliente', render: (v, row) => <ClienteCell nombre={v} clasificacion={row.clasificacion} /> },
             { key: 'tipo', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
             { key: 'servicios', label: 'Servicios', render: v => (
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 280 }}>
