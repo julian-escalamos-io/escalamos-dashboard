@@ -264,9 +264,18 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
 
   // ── Salud del modelo (filtrable por fecha) ────────────────────────────────
   const cac = selectedCohort?.cac || 0
-  // LTGP = LTR promedio × margen bruto del mes filtrado
   const margenBrutoMes = filterER && filterER.revenue > 0 ? Math.abs(filterER.gananciaBruta || 0) / filterER.revenue : 0.5
-  const ltgp = serviciosKPIs.ltvPromedio * margenBrutoMes
+
+  // LTR del ER (columna AH) — ponderado por clientes activos de modelos core
+  const ltrFromER = useMemo(() => {
+    const rows = erUnificado.filter(r => r.monthKey === filterMonthKey && !r.isAcumulado && !r.isTotal)
+    const coreRows = modelFilter === 'todos'
+      ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
+      : rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
+    const totalCli = coreRows.reduce((s, r) => s + (r.clientesActivos || 0), 0)
+    if (totalCli === 0) return 0
+    return coreRows.reduce((s, r) => s + (r.erLtr || 0) * (r.clientesActivos || 0), 0) / totalCli
+  }, [erUnificado, filterMonthKey, modelFilter])
 
   const ltvCacRatio = cac > 0 && ltgp > 0 ? ltgp / cac : 0
   const payback = cac > 0 && ltgp > 0 && serviciosKPIs.permanencia > 0 ? cac / (ltgp / serviciosKPIs.permanencia) : 0
@@ -456,16 +465,16 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
       <Divider title="Unidad económica" />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: 12, marginBottom: 24 }}>
         <HealthCard
-          label="LTV (LTGP)"
-          value={ltgp > 0 ? fmt(ltgp) : '—'}
+          label="LTR"
+          value={ltrFromER > 0 ? fmt(ltrFromER) : '—'}
           color={ACCENT}
-          sub="LTR × margen bruto"
+          sub="lifetime revenue del ER"
         />
         <HealthCard
           label="CAC"
           value={cac > 0 ? fmt(cac) : '—'}
           color="#1a1f36"
-          sub={cac > 0 && ltgp > 0 ? `${(ltgp / cac).toFixed(1)}x LTV/CAC` : 'sin CAC del cohort'}
+          sub={cac > 0 && ltrFromER > 0 ? `${(ltrFromER / cac).toFixed(1)}x LTR/CAC` : 'sin CAC del cohort'}
         />
         {/* Chart Nuevos vs Bajas */}
         <div style={{ background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', borderRadius: 14, padding: '14px 18px' }}>
