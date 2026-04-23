@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       readSheet(token, xeroId, 'Estado de Resultados', 'A5:AH'),
       readSheet(token, xeroId, 'Xero - Raw Data', 'A2:O'),
       readSheet(token, xeroId, 'Libro Diario', 'A6:J'),
-      readSheet(token, xeroId, '1- Servicios', 'A2:S'),
+      readSheet(token, xeroId, '1- Servicios', 'A2:U'),
       readSheet(token, xeroId, '2- Egresos', 'A2:K'),
     ] : []
 
