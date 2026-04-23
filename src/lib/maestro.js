@@ -417,7 +417,8 @@ export function computeOverviewKPIs(servicios, modelFilter) {
   const mrr = f.reduce((sum, s) => sum + s.monto, 0)
   const clientesActivos = clientIds.length
   const aov = clientesActivos > 0 ? mrr / clientesActivos : 0
-  const ltrs = f.map(s => s.ltr).filter(v => v > 0)
+  // LTR fallback: sheet → si 0, monto × meses
+  const ltrs = f.map(s => s.ltr > 0 ? s.ltr : (s.monto * s.meses)).filter(v => v > 0)
   const ltvPromedio = ltrs.length > 0 ? ltrs.reduce((a, b) => a + b, 0) / ltrs.length : 0
   const mesesArr = f.map(s => s.meses).filter(v => v > 0)
   const permanencia = mesesArr.length > 0 ? mesesArr.reduce((a, b) => a + b, 0) / mesesArr.length : 0

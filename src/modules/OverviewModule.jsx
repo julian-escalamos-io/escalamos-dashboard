@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Delta } from '../components/KPI.jsx'
 import { Sparkline } from '../components/Sparkline.jsx'
 import { RevenueCollectedChart } from '../components/RevenueCollectedChart.jsx'
@@ -71,6 +71,7 @@ function StatChip({ label, value, color }) {
 
 // Mini chart de barras dobles para Nuevos vs Bajas
 function NuevosBajasBars({ data }) {
+  const [hovered, setHovered] = useState(null)
   if (!data || data.length === 0) return null
   const maxV = Math.max(...data.map(d => Math.max(d.nuevos, d.bajas)), 1)
   const W = 300, H = 70, pt = 4, pb = 14, pl = 0, pr = 0
@@ -78,19 +79,25 @@ function NuevosBajasBars({ data }) {
   const slot = iW / data.length
   const barW = Math.max(2, (slot * 0.4))
   const gap = slot * 0.1
+  const hp = hovered !== null ? data[hovered] : null
 
   return (
-    <div style={{ width: '100%' }}>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: '100%', height: 70, display: 'block' }}>
+    <div style={{ width: '100%', position: 'relative' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none"
+        style={{ width: '100%', height: 70, display: 'block' }}
+        onMouseLeave={() => setHovered(null)}>
         <line x1={pl} y1={pt + iH} x2={W - pr} y2={pt + iH} stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" vectorEffect="non-scaling-stroke" />
         {data.map((d, i) => {
           const cx = pl + slot * i + slot / 2
           const hN = (d.nuevos / maxV) * iH
           const hB = (d.bajas / maxV) * iH
+          const isHov = hovered === i
           return (
             <g key={i}>
-              <rect x={cx - barW - gap / 2} y={pt + iH - hN} width={barW} height={hN} fill={GREEN} rx={1} />
-              <rect x={cx + gap / 2} y={pt + iH - hB} width={barW} height={hB} fill={DANGER} rx={1} />
+              <rect x={cx - barW - gap / 2} y={pt + iH - hN} width={barW} height={hN} fill={GREEN} rx={1} opacity={isHov || hovered === null ? 1 : 0.4} />
+              <rect x={cx + gap / 2} y={pt + iH - hB} width={barW} height={hB} fill={DANGER} rx={1} opacity={isHov || hovered === null ? 1 : 0.4} />
+              <rect x={cx - slot / 2} y={pt} width={slot} height={iH} fill="transparent"
+                style={{ cursor: 'crosshair' }} onMouseEnter={() => setHovered(i)} />
             </g>
           )
         })}
@@ -99,12 +106,34 @@ function NuevosBajasBars({ data }) {
         <span>{data[0]?.label}</span>
         <span>{data[data.length - 1]?.label}</span>
       </div>
+      {hp && (
+        <div style={{
+          position: 'absolute', top: -8,
+          left: `${((hovered + 0.5) / data.length) * 100}%`,
+          transform: hovered >= data.length * 0.7 ? 'translate(-100%, -100%)' : 'translate(8px, -100%)',
+          background: '#1a1f36', color: '#fff', borderRadius: 6, padding: '5px 9px',
+          pointerEvents: 'none', zIndex: 10, whiteSpace: 'nowrap',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)', minWidth: 90,
+        }}>
+          <div style={{ fontSize: 9, opacity: 0.6, fontWeight: 600, marginBottom: 3 }}>{hp.label}</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 2 }}>
+            <span style={{ width: 7, height: 7, borderRadius: 1, background: GREEN }} />
+            <span style={{ fontSize: 10, opacity: 0.7 }}>Nuevos</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: GREEN, marginLeft: 'auto' }}>{hp.nuevos}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <span style={{ width: 7, height: 7, borderRadius: 1, background: DANGER }} />
+            <span style={{ fontSize: 10, opacity: 0.7 }}>Bajas</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: DANGER, marginLeft: 'auto' }}>{hp.bajas}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 const ModelBadge = ({ tipo }) => {
-  const colors = { Boutique: '#A78BFA', Agencia: '#2D7AFF', Soft: '#34D399', Financiera: '#FBBF24', Consultoría: '#F97316' }
+  const colors = { Boutique: '#F59E0B', Agencia: '#3B82F6', Soft: '#6B7280', Financiera: '#10B981', Consultoría: '#A855F7' }
   const color = colors[tipo] || 'rgba(26,31,54,0.3)'
   return <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, background: `${color}18`, color, fontWeight: 700 }}>{tipo || '—'}</span>
 }

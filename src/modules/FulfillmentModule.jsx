@@ -29,7 +29,7 @@ const Divider = ({ title }) => (
 )
 
 const ModelBadge = ({ tipo }) => {
-  const colors = { Boutique: '#A78BFA', Agencia: '#2D7AFF', Soft: '#34D399', Financiera: '#FBBF24' }
+  const colors = { Boutique: '#F59E0B', Agencia: '#3B82F6', Soft: '#6B7280', Financiera: '#10B981', Consultoría: '#A855F7' }
   const color = colors[tipo] || 'rgba(26,31,54,0.3)'
   return <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, background: `${color}18`, color, fontWeight: 700 }}>{tipo || '—'}</span>
 }
