@@ -115,14 +115,10 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   const erRows = er || []
   const serviciosData = servicios || []
 
-  // Mes actual y anterior (del filtro de fechas)
+  // Overview ignora el filtro de fechas — siempre vista actual (último mes con datos)
   const currentMonthKey = useMemo(() => {
-    if (dateRange?.end) {
-      return `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
-    }
-    if (selectedERMonth) return selectedERMonth
     return erRows.length ? erRows[erRows.length - 1].monthKey : null
-  }, [dateRange, selectedERMonth, erRows])
+  }, [erRows])
 
   const currentER = useMemo(() => {
     if (!erRows.length) return null
@@ -140,12 +136,33 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   const churn = useMemo(() => currentER ? computeChurn(serviciosData, currentER.monthKey, modelFilter) : 0, [serviciosData, currentER, modelFilter])
   const modelBreakdown = useMemo(() => computeModelBreakdown(serviciosData), [serviciosData])
 
-  // ── Costos del mes (para Ganancia Proyectada) ──────────────────────────────
-  // gastos puede venir negativo del sheet → usar Math.abs
+  // ── Costos proyectados desde egresos (como Finanzas) ─────────────────────
+  // MRR por modelo para calcular share (ponderación de costos indirectos)
+  const mrrByUnit = useMemo(() => {
+    const active = serviciosData.filter(s => s.estado?.toLowerCase() === 'activo')
+    const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, 'Consultoría': 0, total: 0 }
+    for (const s of active) {
+      if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
+      result.total += s.monto
+    }
+    return result
+  }, [serviciosData])
+
+  const isUnit = modelFilter && modelFilter !== 'todos'
+  const share = isUnit && mrrByUnit.total > 0 ? (mrrByUnit[modelFilter] || 0) / mrrByUnit.total : 1
+
   const costosDelMes = useMemo(() => {
-    if (!currentER) return 0
-    return Math.abs(currentER.gastos || 0)
-  }, [currentER])
+    const egresoMes = (e) => Math.abs(e.montoPorMes || e.monto || 0)
+    // Directos: del modelo (o de unidades específicas si filter=todos)
+    const directos = isUnit
+      ? (egresos || []).filter(e => e.modelo?.toLowerCase() === modelFilter.toLowerCase())
+      : (egresos || []).filter(e => e.modelo?.toLowerCase() !== 'todos')
+    const totalDirectos = directos.reduce((s, e) => s + egresoMes(e), 0)
+    // Indirectos: gastos generales (modelo='todos'), ponderados por share
+    const indirectos = (egresos || []).filter(e => e.modelo?.toLowerCase() === 'todos')
+    const totalIndirectos = indirectos.reduce((s, e) => s + egresoMes(e) * share, 0)
+    return totalDirectos + totalIndirectos
+  }, [egresos, isUnit, modelFilter, share])
 
   // MRR Proyectado y Ganancia Proyectada
   const mrrProyectado = serviciosKPIs.mrr || 0
