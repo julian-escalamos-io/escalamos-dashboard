@@ -1,9 +1,15 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-28_ (modelo "Agencia - Juan Bangher" + acceso multi-modelo Clerk)
+_Última actualización: 2026-04-28_ (modelo "Agencia - Juan Bangher" + acceso multi-modelo Clerk + eliminación de sub-tab Anexo BMR)
 
 ---
 
-## Último cambio (2026-04-28) — Modelo "Agencia - Juan Bangher" + acceso multi-modelo
+## Último cambio (2026-04-28) — Eliminación sub-tab "Anexo BMR" en Finanzas
+
+- Eliminado el sub-tab **Anexo BMR** del módulo Finanzas (función `BMRTab` y render condicional). El sub-tab existía como solución provisoria para transparentar la liquidación de Juan Bangher (33% sobre ganancia neta de sus clientes) cuando todavía no había modelo propio. Ahora redundante: el filtro `Agencia - Juan Bangher` muestra el mismo PnL aislado.
+- Limpieza: removida prop `role` de `FinanzasModule` (solo se usaba para gatear el tab BMR — los demás sub-tabs son visibles para todos los roles que ya pueden ver Finanzas).
+- Bundle bajó ~9 kB.
+
+## Cambio previo (2026-04-28) — Modelo "Agencia - Juan Bangher" + acceso multi-modelo
 
 - Nuevo modelo **"Agencia - Juan Bangher"** agregado como **modelo independiente core** (suma a promedios ponderados, MRR Neto, conteo "Todos" igual que Boutique/Agencia/Consultoría).
 - Color asignado: **cyan `#06B6D4`** (label en dropdown: "Agencia · J. Bangher").
@@ -63,7 +69,7 @@ src/
     OverviewModule.jsx     — Métricas norte + evolución + desglose modelo
     MarketingModule.jsx    — Cohortes, pipeline, canales (reestructurado abr-16)
     FulfillmentModule.jsx  — Narrativa AOV→Retención→Churn→LTR→MRR (reestructurado abr-22)
-    FinanzasModule.jsx     — 4 sub-tabs: ER Proyectado | P&L | Cobros | Anexo BMR
+    FinanzasModule.jsx     — 3 sub-tabs: ER Proyectado | P&L | Cobros
   lib/
     cohorts.js             — buildCohorts, aggregateCohorts, buildMetaAds, buildGoogleAds, buildInstagram, buildInstagramContent, buildSeo, buildUx
     maestro.js             — parseServicios, parseEgresos, parseERUnificado (con cols V-AH fulfillment), computeOverviewKPIs, computeClientTable, computeRecentChurn
@@ -181,8 +187,8 @@ api/
 **12 meses:** suma movimientos, último mes para estado
 **Promedios ponderados** por clientes core (excluye Financiera/Soft)
 
-### Finanzas — 4 sub-tabs
-ER Proyectado | P&L | Cobros Pendientes | Anexo BMR (admin-only)
+### Finanzas — 3 sub-tabs
+ER Proyectado | P&L | Cobros Pendientes
 
 ---
 
