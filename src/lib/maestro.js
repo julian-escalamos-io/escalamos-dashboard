@@ -48,7 +48,7 @@ export function parseServicios(raw = []) {
     .map(r => ({
       idCliente: r[0],
       nombre: r[1] || '',
-      tipo: r[2] || '',        // C: Boutique | Agencia | Soft | Financiera | Consultoria
+      tipo: r[2] || '',        // C: Boutique | Agencia | Agencia - Juan Bangher | Soft | Financiera | Consultoria
       estado: r[3] || '',      // D: Activo | Inactivo
       inicio: excelToISO(r[4]),
       fechaBaja: excelToISO(r[5]),

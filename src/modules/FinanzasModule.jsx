@@ -537,14 +537,14 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
   const [openUnidad, setOpenUnidad] = useState(false)
   const mrrByUnit = useMemo(() => {
     const active = (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo')
-    const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, Consultoría: 0, total: 0 }
+    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, Soft: 0, Financiera: 0, Consultoría: 0, total: 0 }
     for (const s of active) {
       if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
       result.total += s.monto
     }
     return result
   }, [servicios])
-  const shareOf = (unit) => mrrByUnit.total > 0 ? mrrByUnit[unit] / mrrByUnit.total : 0
+  const shareOf = (unit) => mrrByUnit.total > 0 ? (mrrByUnit[unit] || 0) / mrrByUnit.total : 0
   const todosItems = egresos.filter(e => e.modelo?.toLowerCase() === 'todos')
   const isUnit = modelFilter && modelFilter !== 'todos'
   const unitSpecific = isUnit
@@ -699,7 +699,7 @@ function IngresosTab({ servicios, modelFilter }) {
   const mrr = active.reduce((s, r) => s + r.monto, 0)
   const clientes = [...new Set(active.map(s => s.idCliente))].length
 
-  const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría']
+  const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Soft', 'Financiera', 'Consultoría']
   const byModelo = useMemo(() => {
     const groups = {}
     for (const s of active) {
@@ -786,7 +786,7 @@ function ERProyectadoTab({ egresos, servicios, modelFilter }) {
   // MRR por modelo
   const mrrByUnit = useMemo(() => {
     const active = (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo')
-    const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, 'Consultoría': 0, total: 0 }
+    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, Soft: 0, Financiera: 0, 'Consultoría': 0, total: 0 }
     for (const s of active) {
       if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
       result.total += s.monto
@@ -796,7 +796,7 @@ function ERProyectadoTab({ egresos, servicios, modelFilter }) {
 
   const isUnit = modelFilter && modelFilter !== 'todos'
   const mrr = isUnit ? (mrrByUnit[modelFilter] || 0) : mrrByUnit.total
-  const shareOf = (unit) => mrrByUnit.total > 0 ? mrrByUnit[unit] / mrrByUnit.total : 0
+  const shareOf = (unit) => mrrByUnit.total > 0 ? (mrrByUnit[unit] || 0) / mrrByUnit.total : 0
   const share = isUnit ? shareOf(modelFilter) : null
   const factor = share !== null ? share : 1
 
@@ -827,7 +827,7 @@ function ERProyectadoTab({ egresos, servicios, modelFilter }) {
       (modelFilter === 'todos' || s.tipo?.toLowerCase() === modelFilter.toLowerCase())
     ), [servicios, modelFilter])
 
-  const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría']
+  const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Soft', 'Financiera', 'Consultoría']
   const byModelo = useMemo(() => {
     const groups = {}
     for (const s of active) {

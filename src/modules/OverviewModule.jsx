@@ -189,7 +189,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   // MRR por modelo para calcular share (ponderación de costos indirectos)
   const mrrByUnit = useMemo(() => {
     const active = serviciosData.filter(s => s.estado?.toLowerCase() === 'activo')
-    const result = { Boutique: 0, Agencia: 0, Soft: 0, Financiera: 0, 'Consultoría': 0, total: 0 }
+    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, Soft: 0, Financiera: 0, 'Consultoría': 0, total: 0 }
     for (const s of active) {
       if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
       result.total += s.monto
