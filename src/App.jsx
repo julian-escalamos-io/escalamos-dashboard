@@ -45,7 +45,15 @@ function Dashboard() {
   const { getToken } = useAuth()
 
   const role = isLoaded ? (user?.publicMetadata?.role || 'ops') : null
-  const lockedModel = isLoaded ? (user?.publicMetadata?.model || null) : null
+  // lockedModels: array de modelos permitidos. Soporta:
+  //   - publicMetadata.models = ['Agencia', 'Agencia - Juan Bangher']  (nuevo, multi)
+  //   - publicMetadata.model  = 'Agencia'                              (legacy, single)
+  //   - null                                                            (admin: ve todos)
+  const lockedModels = isLoaded
+    ? (Array.isArray(user?.publicMetadata?.models) && user.publicMetadata.models.length > 0
+        ? user.publicMetadata.models
+        : (user?.publicMetadata?.model ? [user.publicMetadata.model] : null))
+    : null
   const allowedModules = MODULES_BY_ROLE[role] || []
 
   const [activeModule, setActiveModule] = useState('overview')
@@ -61,10 +69,12 @@ function Dashboard() {
 
   const [modelFilter, setModelFilter] = useState('todos')
 
-  // Fijar el filtro de modelo si el usuario tiene uno asignado
+  // Si el usuario tiene modelos bloqueados, pre-seleccionar el primero.
+  // Con un solo modelo, el dropdown queda oculto (filtro fijo).
+  // Con varios, el dropdown muestra solo esos modelos para switcheo.
   useEffect(() => {
-    if (lockedModel) setModelFilter(lockedModel)
-  }, [lockedModel])
+    if (lockedModels && lockedModels.length > 0) setModelFilter(lockedModels[0])
+  }, [lockedModels])
   const currentMonthKey = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` })()
   const [selectedERMonth, setSelectedERMonth] = useState(currentMonthKey)
   const [finanzasSubTab, setFinanzasSubTab] = useState('proyeccion')
@@ -207,9 +217,10 @@ function Dashboard() {
     if (allowedModules.includes(mod)) setActiveModule(mod)
   }
 
-  // Si el modelo está bloqueado, ignorar cambios manuales
+  // Solo permitir cambios a modelos dentro del set permitido (si hay restricción)
   const handleModelChange = (model) => {
-    if (!lockedModel) setModelFilter(model)
+    if (lockedModels && !lockedModels.includes(model)) return
+    setModelFilter(model)
   }
 
   if (!isLoaded) return null
@@ -259,16 +270,21 @@ function Dashboard() {
 
           {/* Center/Right: filters */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            {/* Model filter — dropdown (oculto si el modelo está bloqueado) */}
-            {!lockedModel && (() => {
-              const MODELS = [
+            {/* Model filter — dropdown (oculto si solo hay 1 modelo bloqueado) */}
+            {(!lockedModels || lockedModels.length > 1) && (() => {
+              const ALL_MODELS = [
                 { value: 'todos',      label: 'Todos',      color: 'rgba(255,255,255,0.6)' },
                 { value: 'Boutique',   label: 'Boutique',   color: '#F59E0B' },
                 { value: 'Agencia',    label: 'Agencia',    color: '#60A5FA' },
+                { value: 'Agencia - Juan Bangher', label: 'Agencia · J. Bangher', color: '#06B6D4' },
                 { value: 'Soft',       label: 'Soft',       color: 'rgba(255,255,255,0.5)' },
                 { value: 'Financiera', label: 'Financiera', color: '#34D399' },
                 { value: 'Consultoría', label: 'Consultoría', color: '#A855F7' },
               ]
+              // Si el usuario tiene modelos bloqueados, restringir a esos (sin "Todos")
+              const MODELS = lockedModels
+                ? ALL_MODELS.filter(m => lockedModels.includes(m.value))
+                : ALL_MODELS
               const current = MODELS.find(m => m.value === modelFilter) || MODELS[0]
               return (
                 <select

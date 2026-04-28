@@ -1,9 +1,24 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-23_ (exclusión de Partners en promedios)
+_Última actualización: 2026-04-28_ (modelo "Agencia - Juan Bangher" + acceso multi-modelo Clerk)
 
 ---
 
-## Último cambio (2026-04-23) — Exclusión de Partners de promedios
+## Último cambio (2026-04-28) — Modelo "Agencia - Juan Bangher" + acceso multi-modelo
+
+- Nuevo modelo **"Agencia - Juan Bangher"** agregado como **modelo independiente core** (suma a promedios ponderados, MRR Neto, conteo "Todos" igual que Boutique/Agencia/Consultoría).
+- Color asignado: **cyan `#06B6D4`** (label en dropdown: "Agencia · J. Bangher").
+- Listas hardcodeadas actualizadas: [App.jsx:264-274](src/App.jsx) (dropdown), [maestro.js:454](src/lib/maestro.js) (`computeModelBreakdown`), [maestro.js:556](src/lib/maestro.js) (`computeLTVByModel`), [FinanzasModule.jsx:129](src/modules/FinanzasModule.jsx) (modelos), [FinanzasModule.jsx:448-457](src/modules/FinanzasModule.jsx) (`MODELO_ORDER` + `MODELO_COLORS`), [OverviewModule.jsx:135-141](src/modules/OverviewModule.jsx) (colors + `MODELOS_CORE`), [FulfillmentModule.jsx:32, 50](src/modules/FulfillmentModule.jsx) (colors + `MODELOS_CORE`).
+- **Acceso Clerk multi-modelo:** [App.jsx:48-77, 220-223, 273-289](src/App.jsx). `lockedModel` (string) → `lockedModels` (array). Soporta `publicMetadata.models = ["Agencia", "Agencia - Juan Bangher"]` (nuevo, preferido) y mantiene retrocompat con `publicMetadata.model = "X"` (legacy, single).
+  - 0 modelos bloqueados (admin) → dropdown muestra los 7 (Todos + 6 modelos).
+  - 1 modelo bloqueado → dropdown oculto, filtro fijo (igual que antes).
+  - 2+ modelos bloqueados → dropdown muestra solo esos modelos (sin "Todos") y permite switcheo.
+- **Acción manual pendiente:** en Clerk dashboard, setear `publicMetadata.models = ["Agencia", "Agencia - Juan Bangher"]` en el usuario de Juan.
+- **Deuda conocida:** Sheet `Estado de Resultados` (Xero) todavía no tiene fila para "Agencia - Juan Bangher" en columnas V-AH. Hasta que se cargue, Fulfillment muestra métricas en 0 para ese modelo (AOV, Life Span, Churn, NRR, LTR del ER). Overview/Marketing funcionan normal porque vienen de `1- Servicios`, `2- Egresos`, `ghl_*`. Cuando se cargue la fila ER, las métricas aparecen automáticamente sin redeploy (próximo refresh SWR de 5 min).
+- **Fuera de alcance:** reporte Slack WF12 sigue sin saber del modelo nuevo (deuda heredada de Partners — ver §2026-04-23).
+
+---
+
+## Cambio anterior (2026-04-23) — Exclusión de Partners de promedios
 
 - Sheet "1- Servicios" ahora tiene columna **U = `Clasif`**. Valor vacío = cliente comercial. Valor `Partner` = cliente excluido de promedios (hoy: MAS Brokers, Hardcore Suplementos).
 - [src/lib/maestro.js](src/lib/maestro.js) expone `esComercial(servicio)` y aplica filtro en `computeOverviewKPIs`, `computeModelBreakdown`, `computeLTVByModel`, `computeTopLTV`, `computeChurn` y `computeRecentChurn`.

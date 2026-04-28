@@ -451,7 +451,7 @@ export function computeChurn(servicios, periodKey, modelFilter) {
 // ─── Desglose por modelo ──────────────────────────────────────────────────────
 
 export function computeModelBreakdown(servicios) {
-  const models = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría']
+  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Soft', 'Financiera', 'Consultoría']
   return models.map(model => {
     const f = servicios.filter(s =>
       s.estado.toLowerCase() === 'activo' &&
@@ -553,7 +553,7 @@ export function computeRecentChurn(servicios, modelFilter, dateRange) {
 
 // LTV by model
 export function computeLTVByModel(servicios) {
-  const models = ['Boutique', 'Agencia', 'Soft', 'Financiera']
+  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Soft', 'Financiera']
   return models.map(model => {
     const f = servicios.filter(s => s.tipo === model && s.ltr > 0 && esComercial(s))
     const ltvPromedio = f.length > 0 ? f.reduce((s, x) => s + x.ltr, 0) / f.length : 0

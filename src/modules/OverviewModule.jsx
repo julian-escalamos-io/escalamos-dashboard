@@ -133,12 +133,12 @@ function NuevosBajasBars({ data }) {
 }
 
 const ModelBadge = ({ tipo }) => {
-  const colors = { Boutique: '#F59E0B', Agencia: '#3B82F6', Soft: '#6B7280', Financiera: '#10B981', Consultoría: '#A855F7' }
+  const colors = { Boutique: '#F59E0B', Agencia: '#3B82F6', 'Agencia - Juan Bangher': '#06B6D4', Soft: '#6B7280', Financiera: '#10B981', Consultoría: '#A855F7' }
   const color = colors[tipo] || 'rgba(26,31,54,0.3)'
   return <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, background: `${color}18`, color, fontWeight: 700 }}>{tipo || '—'}</span>
 }
 
-const MODELOS_CORE = ['boutique', 'agencia', 'consultoría', 'consultoria']
+const MODELOS_CORE = ['boutique', 'agencia', 'agencia - juan bangher', 'consultoría', 'consultoria']
 
 export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], modelFilter, selectedERMonth, dateRange, selectedCohort, prevCohort, allCohorts = [] }) {
   const erRows = er || []

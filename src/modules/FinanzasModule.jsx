@@ -126,7 +126,7 @@ function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
   // Desglose por modelo del mes actual (solo si filtro = todos)
   const modelBreakdown = useMemo(() => {
     if (modelFilter !== 'todos' || !currentRow) return []
-    const modelos = ['Boutique', 'Agencia', 'Soft', 'Financiera', 'Consultoría', 'Todos']
+    const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Soft', 'Financiera', 'Consultoría', 'Todos']
     return modelos
       .map(m => erUnificado.find(r => r.monthKey === currentRow.monthKey && r.modelo === m && !r.isTotal && !r.isAcumulado))
       .filter(Boolean)
@@ -445,14 +445,15 @@ function DeudasTab({ pendingInvoices, erUnificado, modelFilter }) {
 }
 
 // ─── Egresos Tab ──────────────────────────────────────────────────────────────
-const MODELO_ORDER = { todos: 0, Todos: 0, boutique: 1, Boutique: 1, agencia: 2, Agencia: 2, soft: 3, Soft: 3, financiera: 4, Financiera: 4, consultoria: 5, Consultoría: 5 }
+const MODELO_ORDER = { todos: 0, Todos: 0, boutique: 1, Boutique: 1, agencia: 2, Agencia: 2, 'agencia - juan bangher': 3, 'Agencia - Juan Bangher': 3, soft: 4, Soft: 4, financiera: 5, Financiera: 5, consultoria: 6, Consultoría: 6 }
 const MODELO_COLORS = {
-  Todos:       { bg: 'rgba(0,0,0,0.05)',        color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
-  Boutique:    { bg: 'rgba(245,158,11,0.1)',   color: '#D97706',               border: 'rgba(245,158,11,0.25)' },
-  Agencia:     { bg: 'rgba(59,130,246,0.1)',   color: '#2D7AFF',               border: 'rgba(59,130,246,0.25)' },
-  Soft:        { bg: 'rgba(0,0,0,0.04)',       color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
-  Financiera:  { bg: 'rgba(16,185,129,0.1)',   color: '#059669',               border: 'rgba(16,185,129,0.25)' },
-  Consultoría: { bg: 'rgba(168,85,247,0.1)',   color: '#A855F7',               border: 'rgba(168,85,247,0.25)' },
+  Todos:                       { bg: 'rgba(0,0,0,0.05)',        color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
+  Boutique:                    { bg: 'rgba(245,158,11,0.1)',   color: '#D97706',               border: 'rgba(245,158,11,0.25)' },
+  Agencia:                     { bg: 'rgba(59,130,246,0.1)',   color: '#2D7AFF',               border: 'rgba(59,130,246,0.25)' },
+  'Agencia - Juan Bangher':    { bg: 'rgba(6,182,212,0.1)',    color: '#0891B2',               border: 'rgba(6,182,212,0.25)'  },
+  Soft:                        { bg: 'rgba(0,0,0,0.04)',       color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
+  Financiera:                  { bg: 'rgba(16,185,129,0.1)',   color: '#059669',               border: 'rgba(16,185,129,0.25)' },
+  Consultoría:                 { bg: 'rgba(168,85,247,0.1)',   color: '#A855F7',               border: 'rgba(168,85,247,0.25)' },
 }
 function ModeloBadge({ value, size = 11 }) {
   const c = MODELO_COLORS[value] || MODELO_COLORS.Todos
