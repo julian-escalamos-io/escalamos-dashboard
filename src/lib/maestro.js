@@ -184,6 +184,9 @@ function normalizeModelo(m) {
   //   4. Iteración intermedia que usó "Agencia - Tomas Barchiessi" (deprecada el mismo día).
   if (m === 'Consultoria' || m === 'Consultoría') return 'Agencia - Barchiessi'
   if (m === 'Agencia - Tomas Barchiessi' || m === 'Agencia - Tomás Barchiessi') return 'Agencia - Barchiessi'
+  // Xero usa "Agencia - Bangher" (solo apellido). El dashboard mantiene "Agencia - Juan Bangher"
+  // por compatibilidad con datos previos del sheet `1- Servicios`. Mapeamos para que matcheen.
+  if (m === 'Agencia - Bangher') return 'Agencia - Juan Bangher'
   return m
 }
 
@@ -238,23 +241,25 @@ export function computeCollectionPace(xeroRaw, currentRow, prevRow) {
 }
 
 // ─── E.R. Unificado (Xero) ───────────────────────────────────────────────────
-// Columns: A(0):Año B(1):Mes C(2):Modelo D(3):Revenue E(4):Cash Collected
-//   F(5):Cobros del mes G(6):Cobros de deuda H(7):Deuda nueva I(8):Deuda histórica
-//   J(9):Incobrable K(10):%Efic.Cobro L(11):Gastos Op M(12):Comisiones Stripe
-//   N(13):Gastos Admin O(14):Total Gastos P(15):Ganancia Bruta Q(16):%Margen Bruto
-//   R(17):Ganancia Neta S(18):%Margen Neto T(19):Margen Mes
-//   V(21):Clientes activos W(22):Clientes nuevos X(23):Clientes bajas
-//   Y(24):$ Nuevos Z(25):$ Bajas AA(26):$ Upsells AB(27):$ Downsells
-//   AC(28):$ MRR Neto AD(29):% Churn AE(30):NRR
+// Estructura del sheet (cambió 2026-04-29 — se agregó col C "Aux Orden" numérica
+// para ordenamiento, todas las columnas de datos bajaron una posición):
+// A(0):Año B(1):Mes C(2):Aux Orden D(3):Modelo E(4):Revenue F(5):Cash Collected
+//   G(6):Cobros del mes H(7):Cobros de deuda I(8):Deuda nueva J(9):Deuda histórica
+//   K(10):Incobrable L(11):%Efic.Cobro M(12):Gastos Op N(13):Comisiones Stripe
+//   O(14):Gastos Admin P(15):Total Gastos Q(16):Ganancia Bruta R(17):%Margen Bruto
+//   S(18):Ganancia Neta T(19):%Margen Neto U(20):Margen Mes
+//   W(22):Clientes activos X(23):Clientes nuevos Y(24):Clientes bajas
+//   Z(25):$ Nuevos AA(26):$ Bajas AB(27):$ Upsells AC(28):$ Downsells
+//   AD(29):$ MRR Neto AE(30):% Churn AF(31):NRR AG(32):AOV AH(33):LifeSpan AI(34):LTR
 
 export function parseERUnificado(raw = []) {
   return raw
-    .filter(r => r[0] && r[1] && r[2]) // skip empty/separator rows
+    .filter(r => r[0] && r[1] && r[3]) // skip empty/separator rows (filtramos por modelo en col D)
     .map(r => {
       const year = +r[0]
       const mesRaw = r[1]
       const month = toMonthNum(mesRaw)
-      const modelo = normalizeModelo(String(r[2] || ''))
+      const modelo = normalizeModelo(String(r[3] || ''))
       const isAcumulado = String(mesRaw).toLowerCase() === 'acumulado'
       const mk = isAcumulado ? `${year}-acum` : monthKey(year, mesRaw)
       const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
@@ -267,37 +272,37 @@ export function parseERUnificado(raw = []) {
         modelo,
         isTotal: modelo === 'TOTAL' || modelo === 'TOTAL ANUAL',
         isAcumulado,
-        revenue: +r[3] || 0,
-        cashCollected: +r[4] || 0,
-        cobrosATiempo: +r[5] || 0,
-        cobrosDeuda: +r[6] || 0,
-        deudaNueva: +r[7] || 0,
-        deudaHistorica: +r[8] || 0,
-        incobrable: +r[9] || 0,
-        pctEficCobro: +r[10] || 0,
-        gastosOp: +r[11] || 0,
-        comisionesStripe: +r[12] || 0,
-        gastosAdmin: +r[13] || 0,
-        totalGastos: +r[14] || 0,
-        gananciaBruta: +r[15] || 0,
-        pctMargenBruto: +r[16] || 0,
-        gananciaNeta: +r[17] || 0,
-        pctMargenNeto: +r[18] || 0,
-        margenMes: +r[19] || 0,
-        // Fulfillment (columnas V-AE)
-        clientesActivos: +r[21] || 0,
-        clientesNuevos: +r[22] || 0,
-        clientesBajas: +r[23] || 0,
-        mNuevos: +r[24] || 0,
-        mBajas: +r[25] || 0,
-        mUpsells: +r[26] || 0,
-        mDownsells: +r[27] || 0,
-        mrrNeto: +r[28] || 0,
-        pctChurn: +r[29] || 0,
-        nrr: +r[30] || 0,
-        erAov: +r[31] || 0,          // AF — AOV
-        erLifeSpan: +r[32] || 0,     // AG — Life Span
-        erLtr: +r[33] || 0,          // AH — LTR
+        revenue: +r[4] || 0,
+        cashCollected: +r[5] || 0,
+        cobrosATiempo: +r[6] || 0,
+        cobrosDeuda: +r[7] || 0,
+        deudaNueva: +r[8] || 0,
+        deudaHistorica: +r[9] || 0,
+        incobrable: +r[10] || 0,
+        pctEficCobro: +r[11] || 0,
+        gastosOp: +r[12] || 0,
+        comisionesStripe: +r[13] || 0,
+        gastosAdmin: +r[14] || 0,
+        totalGastos: +r[15] || 0,
+        gananciaBruta: +r[16] || 0,
+        pctMargenBruto: +r[17] || 0,
+        gananciaNeta: +r[18] || 0,
+        pctMargenNeto: +r[19] || 0,
+        margenMes: +r[20] || 0,
+        // Fulfillment (columnas W-AI, gap en V/r[21] sin uso)
+        clientesActivos: +r[22] || 0,
+        clientesNuevos: +r[23] || 0,
+        clientesBajas: +r[24] || 0,
+        mNuevos: +r[25] || 0,
+        mBajas: +r[26] || 0,
+        mUpsells: +r[27] || 0,
+        mDownsells: +r[28] || 0,
+        mrrNeto: +r[29] || 0,
+        pctChurn: +r[30] || 0,
+        nrr: +r[31] || 0,
+        erAov: +r[32] || 0,          // AG — AOV
+        erLifeSpan: +r[33] || 0,     // AH — Life Span
+        erLtr: +r[34] || 0,          // AI — LTR
       }
     })
     .sort((a, b) => {

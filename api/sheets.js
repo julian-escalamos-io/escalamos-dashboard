@@ -58,7 +58,7 @@ export default async function handler(req, res) {
     ]
 
     const xeroReads = xeroId ? [
-      readSheet(token, xeroId, 'Estado de Resultados', 'A5:AH'),
+      readSheet(token, xeroId, 'Estado de Resultados', 'A5:AI'),
       readSheet(token, xeroId, 'Xero - Raw Data', 'A2:O'),
       readSheet(token, xeroId, 'Libro Diario', 'A6:J'),
       readSheet(token, xeroId, '1- Servicios', 'A2:U'),
