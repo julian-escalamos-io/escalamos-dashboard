@@ -277,9 +277,9 @@ function Dashboard() {
                 { value: 'Boutique',   label: 'Boutique',   color: '#F59E0B' },
                 { value: 'Agencia',    label: 'Agencia',    color: '#60A5FA' },
                 { value: 'Agencia - Juan Bangher', label: 'Agencia - Juan Bangher', color: '#06B6D4' },
+                { value: 'Agencia - Barchiessi', label: 'Agencia - Barchiessi', color: '#06B6D4' },
                 { value: 'Soft',       label: 'Soft',       color: 'rgba(255,255,255,0.5)' },
                 { value: 'Financiera', label: 'Financiera', color: '#34D399' },
-                { value: 'Agencia - Barchiessi', label: 'Agencia - Barchiessi', color: '#06B6D4' },
               ]
               // Si el usuario tiene modelos bloqueados, restringir a esos (sin "Todos")
               const MODELS = lockedModels
