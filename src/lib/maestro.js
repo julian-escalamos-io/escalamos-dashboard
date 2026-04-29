@@ -48,7 +48,7 @@ export function parseServicios(raw = []) {
     .map(r => ({
       idCliente: r[0],
       nombre: r[1] || '',
-      tipo: normalizeModelo(r[2] || ''),  // C: Boutique | Agencia | Agencia - Juan Bangher | Agencia - Tomas Barchiessi | Soft | Financiera
+      tipo: normalizeModelo(r[2] || ''),  // C: Boutique | Agencia | Agencia - Juan Bangher | Agencia - Barchiessi | Soft | Financiera
       estado: r[3] || '',      // D: Activo | Inactivo
       inicio: excelToISO(r[4]),
       fechaBaja: excelToISO(r[5]),
@@ -175,10 +175,15 @@ export function parseIncobrables(raw = []) {
 }
 
 function normalizeModelo(m) {
-  // Renombre 2026-04-29: el modelo "Consultoría" pasó a ser "Agencia - Tomas Barchiessi".
-  // Mapeamos ambas formas (con y sin tilde) por si Xero no propaga el rename del
-  // tracking category retroactivamente, o si quedan filas viejas en "1- Servicios".
-  if (m === 'Consultoria' || m === 'Consultoría') return 'Agencia - Tomas Barchiessi'
+  // Renombre 2026-04-29: el modelo "Consultoría" pasó a ser "Agencia - Barchiessi"
+  // (solo apellido, mismo patrón que "Agencia - Bangher" en Xero).
+  // Mapeamos formas viejas para tolerar:
+  //   1. Datos históricos en Xero antes del rename del tracking category.
+  //   2. Filas en `1- Servicios` con tipo viejo si se olvida actualizar.
+  //   3. Cache SWR durante la transición.
+  //   4. Iteración intermedia que usó "Agencia - Tomas Barchiessi" (deprecada el mismo día).
+  if (m === 'Consultoria' || m === 'Consultoría') return 'Agencia - Barchiessi'
+  if (m === 'Agencia - Tomas Barchiessi' || m === 'Agencia - Tomás Barchiessi') return 'Agencia - Barchiessi'
   return m
 }
 
@@ -454,7 +459,7 @@ export function computeChurn(servicios, periodKey, modelFilter) {
 // ─── Desglose por modelo ──────────────────────────────────────────────────────
 
 export function computeModelBreakdown(servicios) {
-  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Tomas Barchiessi', 'Soft', 'Financiera']
+  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Barchiessi', 'Soft', 'Financiera']
   return models.map(model => {
     const f = servicios.filter(s =>
       s.estado.toLowerCase() === 'activo' &&
@@ -556,7 +561,7 @@ export function computeRecentChurn(servicios, modelFilter, dateRange) {
 
 // LTV by model
 export function computeLTVByModel(servicios) {
-  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Tomas Barchiessi', 'Soft', 'Financiera']
+  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Barchiessi', 'Soft', 'Financiera']
   return models.map(model => {
     const f = servicios.filter(s => s.tipo === model && s.ltr > 0 && esComercial(s))
     const ltvPromedio = f.length > 0 ? f.reduce((s, x) => s + x.ltr, 0) / f.length : 0

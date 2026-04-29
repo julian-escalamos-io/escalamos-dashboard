@@ -1,20 +1,23 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-29_ (renombre Consultoría → "Agencia - Tomas Barchiessi" como unidad de negocio)
+_Última actualización: 2026-04-29_ (renombre Consultoría → "Agencia - Barchiessi" como unidad de negocio)
 
 ---
 
-## Último cambio (2026-04-29) — Renombre Consultoría → "Agencia - Tomas Barchiessi"
+## Último cambio (2026-04-29) — Renombre Consultoría → "Agencia - Barchiessi"
 
-- Renombrado el modelo `Consultoría` → `Agencia - Tomas Barchiessi` (sin tilde) en todo el dashboard. Refleja la transición a estructura por unidades de negocio con líderes (ver `Escalamos.io/decisiones_y_contexto_operativo.md`).
-- Color asignado: **cyan `#06B6D4`** (mismo que Juan Bangher por decisión de Julián). Si en uso real molesta no diferenciar visualmente Juan/Tomas, se ajusta en una iteración corta.
-- **Red de seguridad para datos históricos:** `normalizeModelo` ([maestro.js:177-182](src/lib/maestro.js)) ahora mapea `Consultoría` y `Consultoria` → `Agencia - Tomas Barchiessi`. Cubre 3 casos: (1) si Xero no propaga el rename retroactivamente, (2) clientes en `1- Servicios` con tipo viejo, (3) cache SWR durante la transición.
-- **Aplicación de `normalizeModelo` extendida:** ahora también pasa por `parseServicios.tipo` y `parseEgresos.modelo` (antes solo se aplicaba en `parseERUnificado` y `parsePending/Incobrables`). Esto garantiza que filtros y matching por modelo funcionen igual con datos viejos o nuevos.
-- **Bonus fix:** `computeLTVByModel` ahora incluye explícitamente al modelo nuevo (antes Consultoría faltaba — bug pre-existente heredado).
-- Listas hardcodeadas actualizadas: [App.jsx:282](src/App.jsx) (dropdown), [maestro.js:454, 558](src/lib/maestro.js) (computeModelBreakdown + computeLTVByModel), [OverviewModule.jsx:136, 141, 192](src/modules/OverviewModule.jsx), [FulfillmentModule.jsx:32, 50](src/modules/FulfillmentModule.jsx), [FinanzasModule.jsx:129, 448, 456, 540, 702, 789, 830](src/modules/FinanzasModule.jsx) (MODELO_ORDER, MODELO_COLORS, listas, inits).
-- **Acciones manuales pendientes (Julián):**
-  1. Renombrar el Tracking Category option en **Xero** → "Agencia - Tomas Barchiessi". Verificar que filas históricas se actualicen automáticamente (deberían, por referencia interna por ID).
-  2. Actualizar manualmente las filas con `tipo = Consultoría` en sheet `1- Servicios` (col C) → "Agencia - Tomas Barchiessi". Aplica a clientes activos e inactivos. (No es estrictamente necesario por el normalizeModelo, pero se recomienda por limpieza).
-  3. Si Tomás necesita acceso al Dashboard, setear `publicMetadata.models = ["Agencia - Tomas Barchiessi"]` en Clerk.
+- Renombrado el modelo `Consultoría` → `Agencia - Barchiessi` (solo apellido, mismo patrón que `Agencia - Bangher` en Xero). Refleja la transición a estructura por unidades de negocio con líderes — ver `Escalamos.io/decisiones_y_contexto_operativo.md`.
+- **Convención de naming:** apellido sin nombre, sin tilde. En el dashboard el modelo Juan Bangher conserva el label completo "Agencia - Juan Bangher" por compatibilidad con datos previos; esa diferencia entre Xero (apellido) y dashboard (nombre + apellido) para Juan es deuda menor — no hace falta arreglarla ahora.
+- Color asignado: **cyan `#06B6D4`** (mismo que Juan Bangher por decisión de Julián).
+- **Red de seguridad en `normalizeModelo`** ([maestro.js:177-187](src/lib/maestro.js)) — mapea formas viejas a `Agencia - Barchiessi`:
+  - `Consultoría` / `Consultoria` (datos pre-rename)
+  - `Agencia - Tomas Barchiessi` / `Agencia - Tomás Barchiessi` (iteración intermedia deprecada el mismo día — solo precaución por si se filtró en algún lado)
+- **Aplicación de `normalizeModelo` extendida:** ahora también pasa por `parseServicios.tipo` y `parseEgresos.modelo` (antes solo `parseERUnificado` y `parsePending/Incobrables`). Garantiza matching consistente entre datos del Sheet y filtros del dashboard.
+- **Bonus fix:** `computeLTVByModel` ahora incluye explícitamente al modelo nuevo (antes Consultoría faltaba — bug pre-existente).
+- Archivos tocados: [App.jsx](src/App.jsx) (dropdown), [maestro.js](src/lib/maestro.js) (normalizeModelo + 2 listas), [OverviewModule.jsx](src/modules/OverviewModule.jsx), [FulfillmentModule.jsx](src/modules/FulfillmentModule.jsx), [FinanzasModule.jsx](src/modules/FinanzasModule.jsx) (MODELO_ORDER, MODELO_COLORS, 3 listas, 2 inits).
+- **Estado de acciones manuales (vos hiciste):**
+  1. ✅ Xero — renombrado el Tracking Category option a "Agencia - Barchiessi".
+  2. ✅ Sheet `1- Servicios` — filas con `tipo = Consultoría` actualizadas.
+  3. ⏸ Clerk — Tomás aún no necesita acceso al dashboard. Cuando lo necesite: setear `publicMetadata.models = ["Agencia - Barchiessi"]`.
 - **Deuda heredada:** reporte Slack WF12 sigue sin saber del modelo nuevo (mismo patrón que Juan Bangher — ver §2026-04-28 y `Administracion/decisiones_y_contexto_operativo.md §11`).
 
 ---

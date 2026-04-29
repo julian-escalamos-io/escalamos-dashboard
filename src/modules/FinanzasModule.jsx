@@ -126,7 +126,7 @@ function PLTab({ erUnificado, modelFilter, pendingInvoices, xeroRaw }) {
   // Desglose por modelo del mes actual (solo si filtro = todos)
   const modelBreakdown = useMemo(() => {
     if (modelFilter !== 'todos' || !currentRow) return []
-    const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Tomas Barchiessi', 'Soft', 'Financiera', 'Todos']
+    const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Barchiessi', 'Soft', 'Financiera', 'Todos']
     return modelos
       .map(m => erUnificado.find(r => r.monthKey === currentRow.monthKey && r.modelo === m && !r.isTotal && !r.isAcumulado))
       .filter(Boolean)
@@ -445,13 +445,13 @@ function DeudasTab({ pendingInvoices, erUnificado, modelFilter }) {
 }
 
 // ─── Egresos Tab ──────────────────────────────────────────────────────────────
-const MODELO_ORDER = { todos: 0, Todos: 0, boutique: 1, Boutique: 1, agencia: 2, Agencia: 2, 'agencia - juan bangher': 3, 'Agencia - Juan Bangher': 3, 'agencia - tomas barchiessi': 4, 'Agencia - Tomas Barchiessi': 4, soft: 5, Soft: 5, financiera: 6, Financiera: 6 }
+const MODELO_ORDER = { todos: 0, Todos: 0, boutique: 1, Boutique: 1, agencia: 2, Agencia: 2, 'agencia - juan bangher': 3, 'Agencia - Juan Bangher': 3, 'agencia - barchiessi': 4, 'Agencia - Barchiessi': 4, soft: 5, Soft: 5, financiera: 6, Financiera: 6 }
 const MODELO_COLORS = {
   Todos:                       { bg: 'rgba(0,0,0,0.05)',        color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
   Boutique:                    { bg: 'rgba(245,158,11,0.1)',   color: '#D97706',               border: 'rgba(245,158,11,0.25)' },
   Agencia:                     { bg: 'rgba(59,130,246,0.1)',   color: '#2D7AFF',               border: 'rgba(59,130,246,0.25)' },
   'Agencia - Juan Bangher':    { bg: 'rgba(6,182,212,0.1)',    color: '#0891B2',               border: 'rgba(6,182,212,0.25)'  },
-  'Agencia - Tomas Barchiessi':{ bg: 'rgba(6,182,212,0.1)',    color: '#0891B2',               border: 'rgba(6,182,212,0.25)'  },
+  'Agencia - Barchiessi':{ bg: 'rgba(6,182,212,0.1)',    color: '#0891B2',               border: 'rgba(6,182,212,0.25)'  },
   Soft:                        { bg: 'rgba(0,0,0,0.04)',       color: 'rgba(26,31,54,0.55)',   border: 'rgba(0,0,0,0.1)'       },
   Financiera:                  { bg: 'rgba(16,185,129,0.1)',   color: '#059669',               border: 'rgba(16,185,129,0.25)' },
 }
@@ -537,7 +537,7 @@ function EgresosTab({ egresos, modelFilter, servicios }) {
   const [openUnidad, setOpenUnidad] = useState(false)
   const mrrByUnit = useMemo(() => {
     const active = (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo')
-    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, 'Agencia - Tomas Barchiessi': 0, Soft: 0, Financiera: 0, total: 0 }
+    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, 'Agencia - Barchiessi': 0, Soft: 0, Financiera: 0, total: 0 }
     for (const s of active) {
       if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
       result.total += s.monto
@@ -699,7 +699,7 @@ function IngresosTab({ servicios, modelFilter }) {
   const mrr = active.reduce((s, r) => s + r.monto, 0)
   const clientes = [...new Set(active.map(s => s.idCliente))].length
 
-  const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Tomas Barchiessi', 'Soft', 'Financiera']
+  const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Barchiessi', 'Soft', 'Financiera']
   const byModelo = useMemo(() => {
     const groups = {}
     for (const s of active) {
@@ -786,7 +786,7 @@ function ERProyectadoTab({ egresos, servicios, modelFilter }) {
   // MRR por modelo
   const mrrByUnit = useMemo(() => {
     const active = (servicios || []).filter(s => s.estado?.toLowerCase() === 'activo')
-    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, 'Agencia - Tomas Barchiessi': 0, Soft: 0, Financiera: 0, total: 0 }
+    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, 'Agencia - Barchiessi': 0, Soft: 0, Financiera: 0, total: 0 }
     for (const s of active) {
       if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
       result.total += s.monto
@@ -827,7 +827,7 @@ function ERProyectadoTab({ egresos, servicios, modelFilter }) {
       (modelFilter === 'todos' || s.tipo?.toLowerCase() === modelFilter.toLowerCase())
     ), [servicios, modelFilter])
 
-  const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Tomas Barchiessi', 'Soft', 'Financiera']
+  const modelos = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Barchiessi', 'Soft', 'Financiera']
   const byModelo = useMemo(() => {
     const groups = {}
     for (const s of active) {
