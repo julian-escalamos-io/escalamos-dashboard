@@ -133,12 +133,12 @@ function NuevosBajasBars({ data }) {
 }
 
 const ModelBadge = ({ tipo }) => {
-  const colors = { Boutique: '#F59E0B', Agencia: '#3B82F6', 'Agencia - Juan Bangher': '#06B6D4', Soft: '#6B7280', Financiera: '#10B981', Consultoría: '#A855F7' }
+  const colors = { Boutique: '#F59E0B', Agencia: '#3B82F6', 'Agencia - Juan Bangher': '#06B6D4', 'Agencia - Tomas Barchiessi': '#06B6D4', Soft: '#6B7280', Financiera: '#10B981' }
   const color = colors[tipo] || 'rgba(26,31,54,0.3)'
   return <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 20, background: `${color}18`, color, fontWeight: 700 }}>{tipo || '—'}</span>
 }
 
-const MODELOS_CORE = ['boutique', 'agencia', 'agencia - juan bangher', 'consultoría', 'consultoria']
+const MODELOS_CORE = ['boutique', 'agencia', 'agencia - juan bangher', 'agencia - tomas barchiessi']
 
 export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], modelFilter, selectedERMonth, dateRange, selectedCohort, prevCohort, allCohorts = [] }) {
   const erRows = er || []
@@ -189,7 +189,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   // MRR por modelo para calcular share (ponderación de costos indirectos)
   const mrrByUnit = useMemo(() => {
     const active = serviciosData.filter(s => s.estado?.toLowerCase() === 'activo')
-    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, Soft: 0, Financiera: 0, 'Consultoría': 0, total: 0 }
+    const result = { Boutique: 0, Agencia: 0, 'Agencia - Juan Bangher': 0, 'Agencia - Tomas Barchiessi': 0, Soft: 0, Financiera: 0, total: 0 }
     for (const s of active) {
       if (result[s.tipo] !== undefined) result[s.tipo] += s.monto
       result.total += s.monto

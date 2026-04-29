@@ -279,7 +279,7 @@ function Dashboard() {
                 { value: 'Agencia - Juan Bangher', label: 'Agencia - Juan Bangher', color: '#06B6D4' },
                 { value: 'Soft',       label: 'Soft',       color: 'rgba(255,255,255,0.5)' },
                 { value: 'Financiera', label: 'Financiera', color: '#34D399' },
-                { value: 'Consultoría', label: 'Consultoría', color: '#A855F7' },
+                { value: 'Agencia - Tomas Barchiessi', label: 'Agencia - Tomas Barchiessi', color: '#06B6D4' },
               ]
               // Si el usuario tiene modelos bloqueados, restringir a esos (sin "Todos")
               const MODELS = lockedModels

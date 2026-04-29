@@ -1,9 +1,25 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-28_ (modelo "Agencia - Juan Bangher" + acceso multi-modelo Clerk + eliminación de sub-tab Anexo BMR)
+_Última actualización: 2026-04-29_ (renombre Consultoría → "Agencia - Tomas Barchiessi" como unidad de negocio)
 
 ---
 
-## Último cambio (2026-04-28) — Eliminación sub-tab "Anexo BMR" en Finanzas
+## Último cambio (2026-04-29) — Renombre Consultoría → "Agencia - Tomas Barchiessi"
+
+- Renombrado el modelo `Consultoría` → `Agencia - Tomas Barchiessi` (sin tilde) en todo el dashboard. Refleja la transición a estructura por unidades de negocio con líderes (ver `Escalamos.io/decisiones_y_contexto_operativo.md`).
+- Color asignado: **cyan `#06B6D4`** (mismo que Juan Bangher por decisión de Julián). Si en uso real molesta no diferenciar visualmente Juan/Tomas, se ajusta en una iteración corta.
+- **Red de seguridad para datos históricos:** `normalizeModelo` ([maestro.js:177-182](src/lib/maestro.js)) ahora mapea `Consultoría` y `Consultoria` → `Agencia - Tomas Barchiessi`. Cubre 3 casos: (1) si Xero no propaga el rename retroactivamente, (2) clientes en `1- Servicios` con tipo viejo, (3) cache SWR durante la transición.
+- **Aplicación de `normalizeModelo` extendida:** ahora también pasa por `parseServicios.tipo` y `parseEgresos.modelo` (antes solo se aplicaba en `parseERUnificado` y `parsePending/Incobrables`). Esto garantiza que filtros y matching por modelo funcionen igual con datos viejos o nuevos.
+- **Bonus fix:** `computeLTVByModel` ahora incluye explícitamente al modelo nuevo (antes Consultoría faltaba — bug pre-existente heredado).
+- Listas hardcodeadas actualizadas: [App.jsx:282](src/App.jsx) (dropdown), [maestro.js:454, 558](src/lib/maestro.js) (computeModelBreakdown + computeLTVByModel), [OverviewModule.jsx:136, 141, 192](src/modules/OverviewModule.jsx), [FulfillmentModule.jsx:32, 50](src/modules/FulfillmentModule.jsx), [FinanzasModule.jsx:129, 448, 456, 540, 702, 789, 830](src/modules/FinanzasModule.jsx) (MODELO_ORDER, MODELO_COLORS, listas, inits).
+- **Acciones manuales pendientes (Julián):**
+  1. Renombrar el Tracking Category option en **Xero** → "Agencia - Tomas Barchiessi". Verificar que filas históricas se actualicen automáticamente (deberían, por referencia interna por ID).
+  2. Actualizar manualmente las filas con `tipo = Consultoría` en sheet `1- Servicios` (col C) → "Agencia - Tomas Barchiessi". Aplica a clientes activos e inactivos. (No es estrictamente necesario por el normalizeModelo, pero se recomienda por limpieza).
+  3. Si Tomás necesita acceso al Dashboard, setear `publicMetadata.models = ["Agencia - Tomas Barchiessi"]` en Clerk.
+- **Deuda heredada:** reporte Slack WF12 sigue sin saber del modelo nuevo (mismo patrón que Juan Bangher — ver §2026-04-28 y `Administracion/decisiones_y_contexto_operativo.md §11`).
+
+---
+
+## Cambio anterior (2026-04-28) — Eliminación sub-tab "Anexo BMR" en Finanzas
 
 - Eliminado el sub-tab **Anexo BMR** del módulo Finanzas (función `BMRTab` y render condicional). El sub-tab existía como solución provisoria para transparentar la liquidación de Juan Bangher (33% sobre ganancia neta de sus clientes) cuando todavía no había modelo propio. Ahora redundante: el filtro `Agencia - Juan Bangher` muestra el mismo PnL aislado.
 - Limpieza: removida prop `role` de `FinanzasModule` (solo se usaba para gatear el tab BMR — los demás sub-tabs son visibles para todos los roles que ya pueden ver Finanzas).

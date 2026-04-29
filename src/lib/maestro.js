@@ -48,7 +48,7 @@ export function parseServicios(raw = []) {
     .map(r => ({
       idCliente: r[0],
       nombre: r[1] || '',
-      tipo: r[2] || '',        // C: Boutique | Agencia | Agencia - Juan Bangher | Soft | Financiera | Consultoria
+      tipo: normalizeModelo(r[2] || ''),  // C: Boutique | Agencia | Agencia - Juan Bangher | Agencia - Tomas Barchiessi | Soft | Financiera
       estado: r[3] || '',      // D: Activo | Inactivo
       inicio: excelToISO(r[4]),
       fechaBaja: excelToISO(r[5]),
@@ -79,7 +79,7 @@ export function parseEgresos(raw = []) {
       recurrencia: r[1] || '',
       proveedor: r[2] || '',
       servicio: r[3] || '',
-      modelo: r[4] || '',
+      modelo: normalizeModelo(r[4] || ''),
       area: r[5] || '',
       monto: +r[6] || 0,
       montoPorMes: +r[7] || 0,
@@ -175,7 +175,10 @@ export function parseIncobrables(raw = []) {
 }
 
 function normalizeModelo(m) {
-  if (m === 'Consultoria') return 'Consultoría'
+  // Renombre 2026-04-29: el modelo "Consultoría" pasó a ser "Agencia - Tomas Barchiessi".
+  // Mapeamos ambas formas (con y sin tilde) por si Xero no propaga el rename del
+  // tracking category retroactivamente, o si quedan filas viejas en "1- Servicios".
+  if (m === 'Consultoria' || m === 'Consultoría') return 'Agencia - Tomas Barchiessi'
   return m
 }
 
@@ -451,7 +454,7 @@ export function computeChurn(servicios, periodKey, modelFilter) {
 // ─── Desglose por modelo ──────────────────────────────────────────────────────
 
 export function computeModelBreakdown(servicios) {
-  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Soft', 'Financiera', 'Consultoría']
+  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Tomas Barchiessi', 'Soft', 'Financiera']
   return models.map(model => {
     const f = servicios.filter(s =>
       s.estado.toLowerCase() === 'activo' &&
@@ -553,7 +556,7 @@ export function computeRecentChurn(servicios, modelFilter, dateRange) {
 
 // LTV by model
 export function computeLTVByModel(servicios) {
-  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Soft', 'Financiera']
+  const models = ['Boutique', 'Agencia', 'Agencia - Juan Bangher', 'Agencia - Tomas Barchiessi', 'Soft', 'Financiera']
   return models.map(model => {
     const f = servicios.filter(s => s.tipo === model && s.ltr > 0 && esComercial(s))
     const ltvPromedio = f.length > 0 ? f.reduce((s, x) => s + x.ltr, 0) / f.length : 0
