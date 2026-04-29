@@ -1,9 +1,22 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-29_ (renombre Consultoría → "Agencia - Barchiessi" como unidad de negocio)
+_Última actualización: 2026-04-29_ (fix col C nueva en ER + naming Barchiessi)
 
 ---
 
-## Último cambio (2026-04-29) — Renombre Consultoría → "Agencia - Barchiessi"
+## Último cambio (2026-04-29 PM) — Fix P&L "Sin datos" por nueva columna en sheet "Estado de Resultados"
+
+El sheet de Xero agregó una columna **C "Aux Orden"** (numérico de mes para sorting) entre B y la antigua C. Todas las columnas de datos se corrieron una posición a la derecha. El código seguía leyendo modelo de col C → veía números/vacío → filtraba toda la data → P&L mostraba "Sin datos del período" para cualquier filtro.
+
+**Cambios:**
+- [maestro.js — `parseERUnificado`](src/lib/maestro.js): shift +1 en todos los índices. Modelo ahora en `r[3]` (col D), revenue en `r[4]` (col E), etc. El filtro de filas vacías ahora chequea `r[3]` (modelo) en lugar de `r[2]`.
+- [api/sheets.js](api/sheets.js): rango ampliado de `A5:AH` → `A5:AI` para capturar LTR del ER (col AI tras el shift).
+- [maestro.js — `normalizeModelo`](src/lib/maestro.js): agregado mapeo `Agencia - Bangher` → `Agencia - Juan Bangher`. Xero usa solo apellido pero el dashboard mantiene nombre+apellido por compatibilidad con `1- Servicios`.
+
+**Aprendizaje:** cuando se toca la estructura del sheet "Estado de Resultados" (agregar/quitar/renombrar columnas), hay que actualizar a la vez `parseERUnificado` y el rango en `api/sheets.js`. No hay test de smoke todavía — si pasa de nuevo, el síntoma es "Sin datos del período" en P&L para todos los filtros.
+
+---
+
+## Cambio anterior (2026-04-29 AM) — Renombre Consultoría → "Agencia - Barchiessi"
 
 - Renombrado el modelo `Consultoría` → `Agencia - Barchiessi` (solo apellido, mismo patrón que `Agencia - Bangher` en Xero). Refleja la transición a estructura por unidades de negocio con líderes — ver `Escalamos.io/decisiones_y_contexto_operativo.md`.
 - **Convención de naming:** apellido sin nombre, sin tilde. En el dashboard el modelo Juan Bangher conserva el label completo "Agencia - Juan Bangher" por compatibilidad con datos previos; esa diferencia entre Xero (apellido) y dashboard (nombre + apellido) para Juan es deuda menor — no hace falta arreglarla ahora.
