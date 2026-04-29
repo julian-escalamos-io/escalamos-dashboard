@@ -276,7 +276,7 @@ function Dashboard() {
                 { value: 'todos',      label: 'Todos',      color: 'rgba(255,255,255,0.6)' },
                 { value: 'Boutique',   label: 'Boutique',   color: '#F59E0B' },
                 { value: 'Agencia',    label: 'Agencia',    color: '#60A5FA' },
-                { value: 'Agencia - Juan Bangher', label: 'Agencia · J. Bangher', color: '#06B6D4' },
+                { value: 'Agencia - Juan Bangher', label: 'Agencia - Juan Bangher', color: '#06B6D4' },
                 { value: 'Soft',       label: 'Soft',       color: 'rgba(255,255,255,0.5)' },
                 { value: 'Financiera', label: 'Financiera', color: '#34D399' },
                 { value: 'Consultoría', label: 'Consultoría', color: '#A855F7' },
