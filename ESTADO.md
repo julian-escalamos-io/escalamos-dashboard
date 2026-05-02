@@ -1,9 +1,30 @@
 # ESTADO — Dashboard Escalamos.io
-_Última actualización: 2026-04-29_ (fix col C nueva en ER + naming Barchiessi)
+_Última actualización: 2026-05-02_ (Overview = snapshot del "hoy" — todo proyectado salvo chart 12m)
 
 ---
 
-## Último cambio (2026-04-29 PM) — Fix P&L "Sin datos" por nueva columna en sheet "Estado de Resultados"
+## Último cambio (2026-05-02) — Overview como snapshot del "hoy"
+
+**Filosofía:** Overview es la imagen del estado actual del negocio, no un módulo histórico. Toda métrica del mes en curso se calcula proyectada (Servicios activos + Egresos). El ER de Xero solo aporta histórico (chart 12m + último cierre para LTR/Churn/NRR).
+
+**Síntoma resuelto:** en el mes en curso, columnas Ganancia/Margen/MoM de la tabla Desglose aparecían vacías ("—" / "-100%") porque leían fila del ER que aún no estaba cargada. Idem otras métricas con `filterMonthKey === mes en curso`.
+
+**Cambios:**
+- [App.jsx:340-341](src/App.jsx) — `DateRangePicker` oculto cuando `activeModule === 'overview'`. Filtro deja de tener sentido en una vista "hoy".
+- [OverviewModule.jsx](src/modules/OverviewModule.jsx):
+  - **Nuevo helper `lastClosedERMonthKey`**: última fila del ER que NO sea el mes calendario actual. Si el ER tiene mayo 2026, devuelve abril; si solo tiene hasta abril, devuelve abril. Reutilizado por LTR, NRR, Churn, MoM.
+  - **Helper `costoForModel(modelName)`**: replica el patrón de `costosDelMes` para CUALQUIER modelo — directos del modelo + indirectos generales ponderados por share del MRR del modelo en el total.
+  - **Tabla Desglose** (`modelos` useMemo): `ganancia = mrrModelo − costoForModel(model)`, `margen = ganancia / mrrModelo`. MoM compara `mrrModelo (servicios activos)` vs `mrrModelo del último cierre del ER`.
+  - **LTR** (`ltrFromER`): usa `lastClosedERMonthKey`. Sub-label cambiado a `"del último cierre (mes año)"`.
+  - **Pulso por frente Retención**: Life Span pasa a usar `serviciosKPIs.permanencia` (proyectado desde Servicios). Churn/NRR/MRR Neto/C.Bajas siguen del ER pero del último cierre.
+  - **Pulso por frente Adquisición**: usa `latestCohort = allCohorts[allCohorts.length - 1]` (snapshot "hoy"), ignora `selectedCohort`.
+  - **Cleanup**: removidos `filterMonthKey`, `filterER`, `prevFilterER` (sin uso tras el refactor).
+
+**Aprendizaje:** la pieza clave es que el ER de Xero se carga al cierre de cada mes — durante el mes en curso esa fila no existe, y cualquier métrica que dependa de `filterMonthKey === mes en curso` queda vacía. Para vistas "snapshot del hoy" hay que separar lo proyectable (Servicios + Egresos) de lo histórico (último cierre del ER + chart 12m).
+
+---
+
+## Cambio anterior (2026-04-29 PM) — Fix P&L "Sin datos" por nueva columna en sheet "Estado de Resultados"
 
 El sheet de Xero agregó una columna **C "Aux Orden"** (numérico de mes para sorting) entre B y la antigua C. Todas las columnas de datos se corrieron una posición a la derecha. El código seguía leyendo modelo de col C → veía números/vacío → filtraba toda la data → P&L mostraba "Sin datos del período" para cualquier filtro.
 
@@ -309,7 +330,7 @@ ER Proyectado | P&L | Cobros Pendientes
 
 ## Próximos pasos
 - [x] Restructure Overview (completado abr-22 con narrativa ejecutiva)
-- [ ] Margen proyectado por modelo (mes en curso) en tabla Desglose
+- [x] Margen proyectado por modelo (mes en curso) en tabla Desglose (resuelto 2026-05-02, todo Overview proyectado)
 - [ ] Tab dedicado de upsells/downsells con detalle (en vez de notas en sheet)
 - [ ] Verificar datos Fulfillment con datos reales completos
 - [ ] Evaluar persistencia del chat en localStorage
