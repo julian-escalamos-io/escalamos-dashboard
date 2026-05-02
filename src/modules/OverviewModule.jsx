@@ -231,15 +231,25 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   const gananciaProyectada = mrrProyectado - costosDelMes
   const margenProyectado = mrrProyectado > 0 ? gananciaProyectada / mrrProyectado : 0
 
-  // Crecimiento MoM y YoY
-  const mrrPrev = prevER ? (prevER.revenue || 0) : 0
-  const mrrYearAgo = useMemo(() => {
-    if (!currentMonthKey) return 0
-    const [y, m] = currentMonthKey.split('-')
-    const yearAgoKey = `${parseInt(y) - 1}-${m}`
-    const r = erRows.find(r => r.monthKey === yearAgoKey)
-    return r ? r.revenue : 0
-  }, [erRows, currentMonthKey])
+  // Crecimiento MoM y YoY — comparar mrrProyectado (hoy) vs revenue del modelo en el último cierre / mismo mes año pasado.
+  // Antes leía prevER (= anteúltimo mes del ER) sin filtro de modelo, lo cual no coincidía con la tabla.
+  const revenueModeloEn = (mk) => {
+    if (!mk) return 0
+    const rows = erUnificado.filter(r => r.monthKey === mk && !r.isAcumulado && !r.isTotal)
+    if (modelFilter === 'todos') {
+      // Sumamos todas las unidades (incluye Soft/Financiera) para coincidir con serviciosKPIs.mrr
+      return rows.reduce((s, r) => s + (r.revenue || 0), 0)
+    }
+    const row = rows.find(r => (r.modelo || '').toLowerCase().trim() === modelFilter.toLowerCase().trim())
+    return row?.revenue || 0
+  }
+
+  const mrrPrev = revenueModeloEn(lastClosedERMonthKey)
+  const yearAgoMonthKey = useMemo(() => {
+    const today = new Date()
+    return `${today.getFullYear() - 1}-${String(today.getMonth() + 1).padStart(2, '0')}`
+  }, [])
+  const mrrYearAgo = revenueModeloEn(yearAgoMonthKey)
 
   const crecimientoMoM = mrrPrev > 0 ? (mrrProyectado - mrrPrev) / mrrPrev : 0
   const crecimientoYoY = mrrYearAgo > 0 ? (mrrProyectado - mrrYearAgo) / mrrYearAgo : 0
@@ -380,6 +390,11 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
         const erCerradoModel = findErRow(lastClosedERMonthKey, m.model)
         const mrrPrevER = erCerradoModel?.revenue || 0
         const crecMoM = mrrPrevER > 0 ? (m.mrr - mrrPrevER) / mrrPrevER : 0
+        // MoM Ganancia: ganancia proyectada (hoy) vs ganancia neta del modelo en el último cierre.
+        const gananciaPrevER = erCerradoModel?.gananciaNeta ?? erCerradoModel?.ganancia ?? 0
+        const crecMoMGanancia = gananciaPrevER !== 0
+          ? (ganancia - gananciaPrevER) / Math.abs(gananciaPrevER)
+          : 0
         // LTGP: margen bruto preferido del modelo en el último cierre; fallback al margen bruto general del mes pasado.
         const margenBrutoModel = erCerradoModel?.revenue > 0 && erCerradoModel?.gananciaBruta
           ? erCerradoModel.gananciaBruta / erCerradoModel.revenue
@@ -389,11 +404,12 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
           model: m.model,
           clientes: m.clientesActivos,
           mrr: m.mrr,
+          crecMoM,
           aov: m.aov,
           ltgp: ltgpModel,
           ganancia,
           margen,
-          crecMoM,
+          crecMoMGanancia,
         }
       })
       .sort((a, b) => b.mrr - a.mrr)
@@ -455,11 +471,12 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
             { key: 'model', label: 'Modelo', render: v => <ModelBadge tipo={v} /> },
             { key: 'clientes', label: 'Clientes', align: 'right' },
             { key: 'mrr', label: 'MRR', align: 'right', render: v => <span style={{ color: ACCENT, fontWeight: 700 }}>{fmt(v)}</span> },
+            { key: 'crecMoM', label: 'MoM MRR', align: 'right', render: v => v !== 0 ? <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700, fontSize: 12 }}>{fmtDelta(v)}</span> : '—' },
             { key: 'aov', label: 'AOV', align: 'right', render: v => fmt(v) },
             { key: 'ltgp', label: 'LTGP', align: 'right', render: v => fmt(v) },
             { key: 'ganancia', label: 'Ganancia', align: 'right', render: v => <span style={{ color: v > 0 ? GREEN : v < 0 ? DANGER : 'rgba(26,31,54,0.4)', fontWeight: 700 }}>{fmt(v)}</span> },
             { key: 'margen', label: 'Margen', align: 'right', render: v => <span style={{ color: v > 0.25 ? GREEN : v > 0.1 ? 'rgba(26,31,54,0.7)' : DANGER, fontWeight: 700 }}>{fmtPct(v)}</span> },
-            { key: 'crecMoM', label: 'MoM', align: 'right', render: v => v !== 0 ? <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700, fontSize: 12 }}>{fmtDelta(v)}</span> : '—' },
+            { key: 'crecMoMGanancia', label: 'MoM Ganancia', align: 'right', render: v => v !== 0 ? <span style={{ color: v > 0 ? GREEN : DANGER, fontWeight: 700, fontSize: 12 }}>{fmtDelta(v)}</span> : '—' },
           ]}
           emptyText="Sin datos por modelo"
         />

@@ -3,7 +3,21 @@ _Última actualización: 2026-05-02_ (Overview = snapshot del "hoy" — todo pro
 
 ---
 
-## Último cambio (2026-05-02) — Overview como snapshot del "hoy"
+## Último cambio (2026-05-02 PM) — Fix MoM/YoY del card grande + columna MoM Ganancia en tabla
+
+**Bug detectado:** el MoM del card grande "MRR Proyectado" no coincidía con el de la tabla Desglose. Dos causas:
+1. **Mes incorrecto:** card usaba `prevER.revenue` (anteúltimo mes del ER, ej: marzo si abril es el último cierre), comparando `mayo proyectado vs marzo` en lugar de vs abril.
+2. **Sin filtro de modelo:** `prevER.revenue` toma revenue total del mes; con `modelFilter='Boutique'` el card mezclaba MRR de Boutique vs revenue total.
+
+**Fix:** ambos KPIs (MoM y YoY) ahora usan helper `revenueModeloEn(mk)` que filtra por modelo. MoM compara contra `lastClosedERMonthKey`; YoY contra mismo mes calendario hace 1 año.
+
+**UI tabla Desglose:**
+- Columna `MoM MRR` movida al lado de MRR (antes al final).
+- Nueva columna `MoM Ganancia` al final: ganancia proyectada del modelo vs ganancia neta del modelo en el último cierre. Maneja gananciaPrev negativa con `Math.abs` en el denominador.
+
+---
+
+## Cambio anterior (2026-05-02 AM) — Overview como snapshot del "hoy"
 
 **Filosofía:** Overview es la imagen del estado actual del negocio, no un módulo histórico. Toda métrica del mes en curso se calcula proyectada (Servicios activos + Egresos). El ER de Xero solo aporta histórico (chart 12m + último cierre para LTR/Churn/NRR).
 
