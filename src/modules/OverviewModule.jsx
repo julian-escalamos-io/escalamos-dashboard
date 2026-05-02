@@ -149,24 +149,10 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     return erRows.length ? erRows[erRows.length - 1].monthKey : null
   }, [erRows])
 
-  // filterMonthKey: derivado del dateRange (afecta Unidad económica, Pulso por frente, Desglose por modelo)
-  const filterMonthKey = useMemo(() => {
-    if (dateRange?.end) {
-      const k = `${dateRange.end.getFullYear()}-${String(dateRange.end.getMonth() + 1).padStart(2, '0')}`
-      if (erRows.find(r => r.monthKey === k)) return k
-    }
-    return currentMonthKey
-  }, [dateRange, erRows, currentMonthKey])
-
   const currentER = useMemo(() => {
     if (!erRows.length) return null
     return erRows.find(r => r.monthKey === currentMonthKey) || erRows[erRows.length - 1]
   }, [erRows, currentMonthKey])
-
-  const filterER = useMemo(() => {
-    if (!erRows.length) return null
-    return erRows.find(r => r.monthKey === filterMonthKey) || currentER
-  }, [erRows, filterMonthKey, currentER])
 
   const prevER = useMemo(() => {
     if (!currentER || !erRows.length) return null
@@ -174,11 +160,24 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     return idx > 0 ? erRows[idx - 1] : null
   }, [erRows, currentER])
 
-  const prevFilterER = useMemo(() => {
-    if (!filterER || !erRows.length) return null
-    const idx = erRows.findIndex(r => r.monthKey === filterER.monthKey)
-    return idx > 0 ? erRows[idx - 1] : null
-  }, [erRows, filterER])
+  // ── Último mes cerrado (vista "hoy"): la última fila del ER que NO es el mes calendario actual.
+  // Si Xero todavía no cargó el mes en curso, lastClosedER = currentER (último ER existente).
+  // Si el mes en curso ya está cargado en el ER, lastClosedER = mes anterior a ese.
+  const lastClosedERMonthKey = useMemo(() => {
+    if (!erRows.length) return null
+    const today = new Date()
+    const currentCalendarMK = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+    const last = erRows[erRows.length - 1]
+    if (last.monthKey === currentCalendarMK && erRows.length > 1) {
+      return erRows[erRows.length - 2].monthKey
+    }
+    return last.monthKey
+  }, [erRows])
+
+  const lastClosedER = useMemo(() => {
+    if (!lastClosedERMonthKey) return null
+    return erRows.find(r => r.monthKey === lastClosedERMonthKey) || null
+  }, [erRows, lastClosedERMonthKey])
 
   // KPIs proyectados desde Servicios
   const serviciosKPIs = useMemo(() => computeOverviewKPIs(serviciosData, modelFilter), [serviciosData, modelFilter])
@@ -212,6 +211,20 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     const totalIndirectos = indirectos.reduce((s, e) => s + egresoMes(e) * share, 0)
     return totalDirectos + totalIndirectos
   }, [egresos, isUnit, modelFilter, share])
+
+  // Helper: costo proyectado para un modelo específico (mismo patrón que costosDelMes,
+  // directos del modelo + indirectos generales ponderados por share del modelo en el MRR total).
+  const costoForModel = (modelName) => {
+    const egresoMes = (e) => Math.abs(e.montoPorMes || e.monto || 0)
+    const directos = (egresos || [])
+      .filter(e => e.modelo?.toLowerCase() === modelName.toLowerCase())
+      .reduce((s, e) => s + egresoMes(e), 0)
+    const shareModel = mrrByUnit.total > 0 ? (mrrByUnit[modelName] || 0) / mrrByUnit.total : 0
+    const indirectos = (egresos || [])
+      .filter(e => e.modelo?.toLowerCase() === 'todos')
+      .reduce((s, e) => s + egresoMes(e) * shareModel, 0)
+    return directos + indirectos
+  }
 
   // MRR Proyectado y Ganancia Proyectada
   const mrrProyectado = serviciosKPIs.mrr || 0
@@ -262,27 +275,30 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     })
   }, [erUnificado, modelFilter])
 
-  // ── Salud del modelo (filtrable por fecha) ────────────────────────────────
-  const cac = selectedCohort?.cac || 0
-  const margenBrutoMes = filterER && filterER.revenue > 0 ? Math.abs(filterER.gananciaBruta || 0) / filterER.revenue : 0.5
+  // ── Salud del modelo (snapshot "hoy" — último cohort y último cierre) ────
+  const latestCohort = (allCohorts && allCohorts.length > 0) ? allCohorts[allCohorts.length - 1] : selectedCohort
+  const cac = latestCohort?.cac || 0
+  const margenBrutoMes = lastClosedER && lastClosedER.revenue > 0
+    ? Math.abs(lastClosedER.gananciaBruta || 0) / lastClosedER.revenue
+    : 0.5
 
-  // LTR del ER (columna AH) — ponderado por clientes activos de modelos core
+  // LTR del ER (columna AH) — ponderado por clientes activos de modelos core, último mes cerrado
   const ltrFromER = useMemo(() => {
-    const rows = erUnificado.filter(r => r.monthKey === filterMonthKey && !r.isAcumulado && !r.isTotal)
+    const rows = erUnificado.filter(r => r.monthKey === lastClosedERMonthKey && !r.isAcumulado && !r.isTotal)
     const coreRows = modelFilter === 'todos'
       ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
       : rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
     const totalCli = coreRows.reduce((s, r) => s + (r.clientesActivos || 0), 0)
     if (totalCli === 0) return 0
     return coreRows.reduce((s, r) => s + (r.erLtr || 0) * (r.clientesActivos || 0), 0) / totalCli
-  }, [erUnificado, filterMonthKey, modelFilter])
+  }, [erUnificado, lastClosedERMonthKey, modelFilter])
 
   const ltvCacRatio = cac > 0 && ltrFromER > 0 ? ltrFromER / cac : 0
   const payback = cac > 0 && ltrFromER > 0 && serviciosKPIs.permanencia > 0 ? cac / (ltrFromER / serviciosKPIs.permanencia) : 0
 
-  // NRR ponderado del mes (de filas por modelo del ER)
+  // NRR ponderado del último mes cerrado (de filas por modelo del ER)
   const nrrWavg = useMemo(() => {
-    const monthRows = erUnificado.filter(r => r.monthKey === filterMonthKey && !r.isAcumulado && !r.isTotal)
+    const monthRows = erUnificado.filter(r => r.monthKey === lastClosedERMonthKey && !r.isAcumulado && !r.isTotal)
     const coreRows = modelFilter === 'todos'
       ? monthRows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
       : monthRows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
@@ -291,7 +307,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     const wsum = coreRows.reduce((s, r) => s + (r.nrr || 0) * (r.clientesActivos || 0), 0)
     const avg = wsum / totalCli
     return avg <= 2 ? avg * 100 : avg // decimal o entero
-  }, [erUnificado, filterMonthKey, modelFilter])
+  }, [erUnificado, lastClosedERMonthKey, modelFilter])
 
   const ltvCacColor = ltvCacRatio >= 3 ? GREEN : ltvCacRatio >= 2 ? AMBER : ltvCacRatio > 0 ? DANGER : 'rgba(26,31,54,0.3)'
   const paybackColor = payback === 0 ? 'rgba(26,31,54,0.3)' : payback <= 6 ? GREEN : payback <= 12 ? AMBER : DANGER
@@ -299,7 +315,8 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   const nrrColor = nrrWavg >= 100 ? GREEN : nrrWavg >= 90 ? AMBER : nrrWavg > 0 ? DANGER : 'rgba(26,31,54,0.3)'
 
   // ── Pulso por frente: Adquisición ──────────────────────────────────────────
-  const cohort = selectedCohort
+  // Overview es snapshot del "hoy" — usamos el último cohort disponible (definido arriba).
+  const cohort = latestCohort
   const tasaConversion = cohort && cohort.leadsCount > 0 ? (cohort.closuresCount / cohort.leadsCount) : 0
 
   // Sparkline de leads y churn — últimos 12 meses de allCohorts y erUnificado
@@ -324,9 +341,10 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
   }, [erUnificado, modelFilter])
 
   // ── Pulso por frente: Retención ────────────────────────────────────────────
-  // Métricas del mes desde el ER
+  // Métricas del último mes cerrado desde el ER (Churn / NRR / MRR Neto / C. Bajas).
+  // Life Span: proyectado desde Servicios (`serviciosKPIs.permanencia`).
   const monthFulfillment = useMemo(() => {
-    const rows = erUnificado.filter(r => r.monthKey === filterMonthKey && !r.isAcumulado && !r.isTotal)
+    const rows = erUnificado.filter(r => r.monthKey === lastClosedERMonthKey && !r.isAcumulado && !r.isTotal)
     const coreRows = modelFilter === 'todos'
       ? rows.filter(r => MODELOS_CORE.includes(r.modelo.toLowerCase()))
       : rows.filter(r => r.modelo.toLowerCase() === modelFilter.toLowerCase())
@@ -334,14 +352,16 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     const totalCli = sum('clientesActivos')
     const wavg = (f) => totalCli > 0 ? coreRows.reduce((s, r) => s + (r[f] || 0) * (r.clientesActivos || 0), 0) / totalCli : 0
     return {
-      lifeSpan: wavg('erLifeSpan'),
+      lifeSpan: serviciosKPIs.permanencia || 0,
       pctChurn: wavg('pctChurn'),
       mrrNeto: sum('mrrNeto'),
       clientesBajas: sum('clientesBajas'),
     }
-  }, [erUnificado, filterMonthKey, modelFilter])
+  }, [erUnificado, lastClosedERMonthKey, modelFilter, serviciosKPIs.permanencia])
 
-  // ── Desglose por modelo ───────────────────────────────────────────────────
+  // ── Desglose por modelo (PROYECTADO desde Servicios + Egresos) ────────────
+  // Ganancia/Margen: MRR del modelo (servicios activos) − costo del modelo (directos + indirectos por share).
+  // MoM: MRR proyectado del modelo (hoy) vs MRR del modelo en el ER del último mes cerrado.
   const modelos = useMemo(() => {
     if (!modelBreakdown.length) return []
     const findErRow = (mk, modelName) => {
@@ -354,15 +374,16 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
     return modelBreakdown
       .filter(m => m.clientesActivos > 0 && (modelFilter === 'todos' || m.model === modelFilter))
       .map(m => {
-        const erMes = findErRow(filterMonthKey, m.model)
-        const erMesPrev = findErRow(prevFilterER?.monthKey, m.model)
-        const ganancia = erMes?.gananciaNeta ?? erMes?.ganancia ?? 0
-        const revenue = erMes?.revenue || 0
-        const margen = revenue > 0 ? ganancia / revenue : 0
-        const mrrActualER = revenue
-        const mrrPrevER = erMesPrev?.revenue || 0
-        const crecMoM = mrrPrevER > 0 ? (mrrActualER - mrrPrevER) / mrrPrevER : 0
-        const margenBrutoModel = revenue > 0 && erMes?.gananciaBruta ? erMes.gananciaBruta / revenue : margenBrutoMes
+        const costoModel = costoForModel(m.model)
+        const ganancia = m.mrr - costoModel
+        const margen = m.mrr > 0 ? ganancia / m.mrr : 0
+        const erCerradoModel = findErRow(lastClosedERMonthKey, m.model)
+        const mrrPrevER = erCerradoModel?.revenue || 0
+        const crecMoM = mrrPrevER > 0 ? (m.mrr - mrrPrevER) / mrrPrevER : 0
+        // LTGP: margen bruto preferido del modelo en el último cierre; fallback al margen bruto general del mes pasado.
+        const margenBrutoModel = erCerradoModel?.revenue > 0 && erCerradoModel?.gananciaBruta
+          ? erCerradoModel.gananciaBruta / erCerradoModel.revenue
+          : margenBrutoMes
         const ltgpModel = m.ltvPromedio * margenBrutoModel
         return {
           model: m.model,
@@ -376,7 +397,9 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
         }
       })
       .sort((a, b) => b.mrr - a.mrr)
-  }, [modelBreakdown, modelFilter, erUnificado, filterMonthKey, prevFilterER, margenBrutoMes])
+  // costoForModel depende de egresos y mrrByUnit; las dejo implícitas vía closure.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelBreakdown, modelFilter, erUnificado, lastClosedERMonthKey, egresos, mrrByUnit, margenBrutoMes])
 
   if (!erRows.length && !serviciosData.length) {
     return <div style={{ padding: 40, textAlign: 'center', color: 'rgba(26,31,54,0.38)', fontSize: 14 }}>Sin datos disponibles.</div>
@@ -468,7 +491,7 @@ export function OverviewModule({ servicios, er, erUnificado = [], egresos = [], 
           label="LTR"
           value={ltrFromER > 0 ? fmt(ltrFromER) : '—'}
           color={ACCENT}
-          sub="lifetime revenue del ER"
+          sub={lastClosedERMonthKey ? `del último cierre (${mkLabel(lastClosedERMonthKey)})` : 'del último cierre'}
         />
         <HealthCard
           label="CAC"

@@ -337,8 +337,8 @@ function Dashboard() {
               </div>
             )}
 
-            {/* Date range picker — always visible */}
-            <DateRangePicker value={dateRange} onChange={setDateRange} />
+            {/* Date range picker — oculto en Overview (vista snapshot del "hoy") */}
+            {activeModule !== 'overview' && <DateRangePicker value={dateRange} onChange={setDateRange} />}
 
             <span style={{ fontSize: 10, fontWeight: 600, color: statusMsg.color === 'rgba(255,255,255,0.12)' ? 'rgba(255,255,255,0.2)' : statusMsg.color }}>{statusMsg.text}</span>
           </div>
